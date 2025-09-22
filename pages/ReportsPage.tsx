@@ -186,7 +186,7 @@ const FinancialOverview: React.FC = () => {
     );
 };
 
-const ReportsPage: React.FC = () => {
+const ReportsPage: React.FC = React.memo(() => {
     const [activeTab, setActiveTab] = useState<'overview' | 'ledger'>('overview');
 
     return (
@@ -214,6 +214,6 @@ const ReportsPage: React.FC = () => {
             </div>
         </div>
     );
-};
+});
 
 export default ReportsPage;

@@ -10,9 +10,8 @@ interface QuotesPageProps {
     onViewCustomer: (customerId: string) => void;
 }
 
-const QuotesPage: React.FC<QuotesPageProps> = ({ onViewCustomer }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, deleteQuote, convertQuoteToJob, convertQuoteToInvoice } = useData();
+const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) => {
+  const { state, dispatch } = useData();
   const [showForm, setShowForm] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [quoteToPreview, setQuoteToPreview] = useState<Quote | null>(null);
@@ -32,8 +31,7 @@ const QuotesPage: React.FC<QuotesPageProps> = ({ onViewCustomer }) => {
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this quote?')) {
-      // Fix: Replaced dispatch with specific data context functions.
-      deleteQuote(id);
+      dispatch({ type: 'DELETE_QUOTE', payload: id });
     }
   };
   
@@ -44,15 +42,13 @@ const QuotesPage: React.FC<QuotesPageProps> = ({ onViewCustomer }) => {
 
   const handleConvertToJob = (id: string) => {
     if (window.confirm('Are you sure you want to convert this quote to a job?')) {
-        // Fix: Replaced dispatch with specific data context functions.
-        convertQuoteToJob(id);
+        dispatch({ type: 'CONVERT_QUOTE_TO_JOB', payload: id });
     }
   };
 
   const handleConvertToInvoice = (id: string) => {
     if (window.confirm('Are you sure you want to convert this quote to an invoice?')) {
-        // Fix: Replaced dispatch with specific data context functions.
-        convertQuoteToInvoice(id);
+        dispatch({ type: 'CONVERT_QUOTE_TO_INVOICE', payload: id });
     }
   };
 
@@ -268,6 +264,6 @@ const QuotesPage: React.FC<QuotesPageProps> = ({ onViewCustomer }) => {
       )}
     </div>
   );
-};
+});
 
 export default QuotesPage;

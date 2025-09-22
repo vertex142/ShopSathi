@@ -1,47 +1,59 @@
-// Fix: Corrected the import syntax for React and useState.
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import Sidebar from './components/Sidebar';
-import DashboardPage from './pages/DashboardPage';
-import InvoicesPage from './pages/InvoicesPage';
-import QuotesPage from './pages/QuotesPage';
-import CustomersPage from './pages/CustomersPage';
-import CustomerProfilePage from './pages/CustomerProfilePage';
-import JobsPage from './pages/JobsPage';
-import ExpensesPage from './pages/ExpensesPage';
-import ReportsPage from './pages/ReportsPage';
-import SettingsPage from './pages/SettingsPage';
-import InventoryPage from './pages/InventoryPage';
-import SuppliersPage from './pages/SuppliersPage';
-import DeliveryChallansPage from './pages/DeliveryChallansPage';
-import PurchaseOrdersPage from './pages/PurchaseOrdersPage';
-import AccountsPage from './pages/AccountsPage';
-import JournalEntriesPage from './pages/JournalEntriesPage';
-import UserManualPage from './pages/UserManualPage';
 import { Page } from './types';
 import { NAV_GROUPS } from './constants';
 import AIAssistant from './components/AIAssistant';
 import Notifications from './components/Notifications';
 import GlobalSearch from './components/GlobalSearch';
-import { useAuth } from './context/AuthContext';
-import LoginPage from './pages/LoginPage';
-import { LoaderCircle } from 'lucide-react';
+import FullScreenLoader from './components/FullScreenLoader';
 
-const AppContent: React.FC = () => {
+// Lazy load all page components for code splitting
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const InvoicesPage = lazy(() => import('./pages/InvoicesPage'));
+const QuotesPage = lazy(() => import('./pages/QuotesPage'));
+const CustomersPage = lazy(() => import('./pages/CustomersPage'));
+const CustomerProfilePage = lazy(() => import('./pages/CustomerProfilePage'));
+const JobsPage = lazy(() => import('./pages/JobsPage'));
+const ExpensesPage = lazy(() => import('./pages/ExpensesPage'));
+const ReportsPage = lazy(() => import('./pages/ReportsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const InventoryPage = lazy(() => import('./pages/InventoryPage'));
+const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
+const SupplierProfilePage = lazy(() => import('./pages/SupplierProfilePage'));
+const DeliveryChallansPage = lazy(() => import('./pages/DeliveryChallansPage'));
+const PurchaseOrdersPage = lazy(() => import('./pages/PurchaseOrdersPage'));
+const AccountsPage = lazy(() => import('./pages/AccountsPage'));
+const JournalEntriesPage = lazy(() => import('./pages/JournalEntriesPage'));
+const UserManualPage = lazy(() => import('./pages/UserManualPage'));
+
+
+const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [viewingCustomerId, setViewingCustomerId] = useState<string | null>(null);
+  const [viewingSupplierId, setViewingSupplierId] = useState<string | null>(null);
 
   const handleSetCurrentPage = (page: Page) => {
     setCurrentPage(page);
-    setViewingCustomerId(null); // Reset customer view when changing main page
+    setViewingCustomerId(null);
+    setViewingSupplierId(null);
   };
   
   const handleViewCustomer = (customerId: string) => {
     setViewingCustomerId(customerId);
+    setViewingSupplierId(null);
+  };
+  
+  const handleViewSupplier = (supplierId: string) => {
+    setViewingSupplierId(supplierId);
+    setViewingCustomerId(null);
   };
 
   const renderPage = () => {
     if (viewingCustomerId) {
-        return <CustomerProfilePage customerId={viewingCustomerId} onBack={() => setViewingCustomerId(null)} onViewCustomer={handleViewCustomer} />;
+        return <CustomerProfilePage customerId={viewingCustomerId} onBack={() => setViewingCustomerId(null)} />;
+    }
+    if (viewingSupplierId) {
+        return <SupplierProfilePage supplierId={viewingSupplierId} onBack={() => setViewingSupplierId(null)} />;
     }
     
     switch (currentPage) {
@@ -58,9 +70,9 @@ const AppContent: React.FC = () => {
       case 'customers':
         return <CustomersPage onViewCustomer={handleViewCustomer} />;
       case 'suppliers':
-        return <SuppliersPage />;
+        return <SuppliersPage onViewSupplier={handleViewSupplier} />;
       case 'purchaseOrders':
-        return <PurchaseOrdersPage />;
+        return <PurchaseOrdersPage onViewSupplier={handleViewSupplier} />;
       case 'expenses':
         return <ExpensesPage />;
       case 'accounts':
@@ -83,7 +95,14 @@ const AppContent: React.FC = () => {
   const allNavItems = NAV_GROUPS.flatMap(group => group.items);
   const currentPageDetails = allNavItems.find(item => item.id === currentPage);
   const CurrentPageIcon = currentPageDetails?.icon;
-  const CurrentPageLabel = currentPageDetails?.label;
+  
+  let pageTitle = currentPageDetails?.label;
+    if (viewingCustomerId) {
+        pageTitle = 'Customer Profile';
+    } else if (viewingSupplierId) {
+        pageTitle = 'Supplier Profile';
+    }
+
 
   return (
     <div className="flex h-screen bg-gray-50 text-gray-800">
@@ -93,7 +112,7 @@ const AppContent: React.FC = () => {
             <div className="grid grid-cols-3 items-center gap-4">
                 <div className="flex items-center space-x-3">
                     {CurrentPageIcon && <CurrentPageIcon className="h-6 w-6 text-brand-blue" />}
-                    <h1 className="text-2xl font-semibold text-gray-800 truncate">{viewingCustomerId ? 'Customer Profile' : CurrentPageLabel}</h1>
+                    <h1 className="text-2xl font-semibold text-gray-800 truncate">{pageTitle}</h1>
                 </div>
                 <div className="flex justify-center">
                     <GlobalSearch setCurrentPage={handleSetCurrentPage} onViewCustomer={handleViewCustomer} />
@@ -104,31 +123,15 @@ const AppContent: React.FC = () => {
             </div>
         </header>
         <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
-            {renderPage()}
+            <Suspense fallback={<FullScreenLoader />}>
+              {renderPage()}
+            </Suspense>
         </div>
       </main>
       {process.env.API_KEY && <AIAssistant />}
     </div>
   );
 };
-
-const App: React.FC = () => {
-    const { user, loading } = useAuth();
-
-    if (loading) {
-        return (
-            <div className="h-screen w-full flex items-center justify-center">
-                <LoaderCircle className="h-12 w-12 animate-spin text-brand-blue" />
-            </div>
-        );
-    }
-    
-    if (!user) {
-        return <LoginPage />;
-    }
-
-    return <AppContent />;
-}
 
 
 export default App;

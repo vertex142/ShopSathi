@@ -3,12 +3,11 @@ import React from 'react';
 interface StatCardProps {
   title: string;
   value: string;
-  // Fix: Specify that the icon is a ReactElement that accepts SVG props to fix the cloneElement error.
-  icon: React.ReactElement<React.ComponentProps<'svg'>>;
+  IconComponent: React.ElementType;
   color: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, IconComponent, color }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
       <div>
@@ -16,7 +15,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
         <p className="text-2xl font-bold text-gray-800">{value}</p>
       </div>
       <div className={`p-3 rounded-full ${color}`}>
-        {React.cloneElement(icon, { className: "h-6 w-6 text-white" })}
+        <IconComponent className="h-6 w-6 text-white" />
       </div>
     </div>
   );

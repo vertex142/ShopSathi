@@ -10,18 +10,18 @@ interface JobKanbanBoardProps {
 }
 
 const JobKanbanBoard: React.FC<JobKanbanBoardProps> = ({ onEdit, onDelete, onViewDetails }) => {
-    const { state, updateJobOrder } = useData();
+    const { state, dispatch } = useData();
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, jobId: string) => {
         e.dataTransfer.setData("jobId", jobId);
     };
 
-    const handleDrop = async (e: React.DragEvent<HTMLDivElement>, status: JobStatus) => {
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>, status: JobStatus) => {
         e.preventDefault();
         const jobId = e.dataTransfer.getData("jobId");
         const job = state.jobOrders.find(j => j.id === jobId);
         if (job && job.status !== status) {
-            await updateJobOrder({ ...job, status });
+            dispatch({ type: 'UPDATE_JOB_ORDER', payload: { ...job, status } });
         }
         e.currentTarget.classList.remove('bg-blue-100', 'border-blue-400');
     };

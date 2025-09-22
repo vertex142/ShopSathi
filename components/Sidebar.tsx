@@ -2,8 +2,6 @@ import React from 'react';
 import type { Page } from '../types';
 import { NAV_GROUPS } from '../constants';
 import Logo from './Logo';
-import { useAuth } from '../context/AuthContext';
-import { LogOut } from 'lucide-react';
 
 interface SidebarProps {
   currentPage: Page;
@@ -11,18 +9,6 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
-  const { logout } = useAuth();
-  
-  const handleLogout = async () => {
-    try {
-      await logout();
-      // App will redirect automatically
-    } catch (error) {
-      console.error("Failed to log out", error);
-      alert("Failed to log out. Please try again.");
-    }
-  };
-
   return (
     <div className="w-64 bg-brand-blue text-white flex flex-col">
       <div className="p-6 flex items-center space-x-3 border-b border-brand-blue-light">
@@ -53,15 +39,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
           </div>
         ))}
       </nav>
-      <div className="p-2 border-t border-brand-blue-light">
-          <button
-            onClick={handleLogout}
-            className="flex items-center w-full px-4 py-2 my-1 text-sm font-medium transition-colors duration-200 rounded-md text-left text-blue-100 hover:bg-brand-blue-light hover:text-white"
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            Logout
-          </button>
-       </div>
        <div className="p-4 border-t border-brand-blue-light text-center text-xs text-blue-200">
           <p>&copy; {new Date().getFullYear()} ShopSathi</p>
           <p>Built by Shahidul Islam</p>

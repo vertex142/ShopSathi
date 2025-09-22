@@ -8,7 +8,7 @@ interface AccountFormProps {
 }
 
 const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
-    const { addAccount, updateAccount } = useData();
+    const { dispatch } = useData();
     const [formData, setFormData] = useState({
         name: account?.name || '',
         type: account?.type || AccountType.Expense,
@@ -23,20 +23,20 @@ const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
         });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (account) {
-            await updateAccount({ 
-                ...account, // Preserve id, userId, isSystemAccount, balance from original
+            dispatch({ type: 'UPDATE_ACCOUNT', payload: { 
+                ...account, // Preserve id, isSystemAccount, balance from original
                 name: formData.name, 
                 type: formData.type,
-            });
+            }});
         } else {
             // For new accounts, balance is set from form, and it's not a system account
-            await addAccount({
+            dispatch({ type: 'ADD_ACCOUNT', payload: {
                 ...formData,
                 isSystemAccount: false,
-            });
+            }});
         }
         onClose();
     };

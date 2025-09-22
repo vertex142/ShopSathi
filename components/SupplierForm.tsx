@@ -1,8 +1,5 @@
-
-
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
-// Fix: Corrected type to omit userId for new suppliers, aligning with context function signatures.
 import { Supplier } from '../types';
 
 interface SupplierFormProps {
@@ -12,10 +9,8 @@ interface SupplierFormProps {
 }
 
 const SupplierForm: React.FC<SupplierFormProps> = ({ supplier, onClose, onSave }) => {
-    // Fix: Replaced dispatch with specific data context functions.
-    const { state, addSupplier, updateSupplier } = useData();
-    // Fix: Corrected form state type to omit userId, which is handled by the context.
-    const [formData, setFormData] = useState<Omit<Supplier, 'id' | 'userId'>>({
+    const { state, dispatch } = useData();
+    const [formData, setFormData] = useState<Omit<Supplier, 'id'>>({
         name: supplier?.name || '',
         email: supplier?.email || '',
         phone: supplier?.phone || '',
@@ -38,18 +33,15 @@ const SupplierForm: React.FC<SupplierFormProps> = ({ supplier, onClose, onSave }
         setFormData({ ...formData, linkedInventoryItemIds: selectedIds });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         let savedSupplier: Supplier;
         if (supplier) {
-            savedSupplier = { ...formData, id: supplier.id, userId: supplier.userId };
-            // Fix: Call updateSupplier with the full Supplier object.
-            await updateSupplier(savedSupplier);
+            savedSupplier = { ...formData, id: supplier.id };
+            dispatch({ type: 'UPDATE_SUPPLIER', payload: savedSupplier });
         } else {
-            // This is a temporary object for the onSave callback. The real ID and userId will be set by Firebase.
-            savedSupplier = { ...formData, id: crypto.randomUUID(), userId: '' }; // Temp ID
-            // Fix: Call addSupplier with form data (userId is added by context).
-            await addSupplier(formData);
+            savedSupplier = { ...formData, id: crypto.randomUUID() }; // Temp ID for onSave
+            dispatch({ type: 'ADD_SUPPLIER', payload: formData });
         }
         onSave(savedSupplier);
         onClose();

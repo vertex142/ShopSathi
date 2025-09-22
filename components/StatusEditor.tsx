@@ -5,7 +5,6 @@ interface StatusEditorProps {
     item: any;
     status: string;
     statusEnum: { [key: string]: string };
-    // Fix: Changed updateActionType to a simple string.
     updateActionType: string;
     getStatusColor: (status: string) => string;
     disabledStatuses?: string[];
@@ -19,31 +18,14 @@ const StatusEditor: React.FC<StatusEditorProps> = ({
     getStatusColor,
     disabledStatuses = [],
 }) => {
-    // Fix: Destructure all necessary update functions from useData.
-    const { updateInvoice, updateQuote, updateJobOrder, updatePurchaseOrder } = useData();
+    const { dispatch } = useData();
     const [isEditing, setIsEditing] = useState(false);
 
     const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = e.target.value;
         const payload = { ...item, status: newStatus };
         
-        // Fix: Use a switch statement to call the correct update function.
-        switch(updateActionType) {
-            case 'UPDATE_INVOICE':
-                updateInvoice(payload);
-                break;
-            case 'UPDATE_QUOTE':
-                updateQuote(payload);
-                break;
-            case 'UPDATE_JOB_ORDER':
-                updateJobOrder(payload);
-                break;
-            case 'UPDATE_PURCHASE_ORDER':
-                updatePurchaseOrder(payload);
-                break;
-            default:
-                console.error(`Unknown updateActionType: ${updateActionType}`);
-        }
+        dispatch({ type: updateActionType, payload });
         setIsEditing(false);
     };
 

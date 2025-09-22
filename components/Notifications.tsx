@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { Page } from '../types';
@@ -10,7 +9,7 @@ interface NotificationsProps {
 }
 
 const Notifications: React.FC<NotificationsProps> = ({ setCurrentPage }) => {
-    const { state, markAllNotificationsAsRead } = useData();
+    const { state, dispatch } = useData();
     const [isOpen, setIsOpen] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +22,7 @@ const Notifications: React.FC<NotificationsProps> = ({ setCurrentPage }) => {
     }, [state.notifications]);
 
     const handleMarkAllAsRead = () => {
-        markAllNotificationsAsRead();
+        dispatch({ type: 'MARK_ALL_NOTIFICATIONS_AS_READ', payload: null });
     };
 
     const handleNotificationClick = (linkTo?: Page) => {

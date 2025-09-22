@@ -42,7 +42,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                 </header>
 
                 {/* Printable Invoice Content */}
-                <div id="printable-invoice" className="p-8 overflow-y-auto flex-grow bg-white">
+                <div id={`printable-invoice-${invoice.id}`} className="p-8 overflow-y-auto flex-grow bg-white">
                     {/* Invoice Header */}
                     <div className="flex justify-between items-start pb-8 border-b">
                         <div>

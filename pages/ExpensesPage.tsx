@@ -9,10 +9,8 @@ interface ExpenseFormProps {
 }
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
-    // Fix: Replaced dispatch with specific data context functions.
-    const { state, addExpense, updateExpense } = useData();
-    // Fix: Corrected form state type to omit userId, which is handled by the context.
-    const [formData, setFormData] = useState<Omit<Expense, 'id' | 'userId'>>({
+    const { state, dispatch } = useData();
+    const [formData, setFormData] = useState<Omit<Expense, 'id'>>({
         date: expense?.date || new Date().toISOString().split('T')[0],
         description: expense?.description || '',
         amount: expense?.amount || 0,
@@ -37,13 +35,11 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
         }
 
         setIsSaving(true);
-        setTimeout(async () => {
+        setTimeout(() => {
             if (expense) {
-                // Fix: Call updateExpense with the full Expense object.
-                await updateExpense({ ...formData, id: expense.id, userId: expense.userId });
+                dispatch({ type: 'UPDATE_EXPENSE', payload: { ...formData, id: expense.id } });
             } else {
-                // Fix: Call addExpense with form data (userId is added by context).
-                await addExpense(formData);
+                dispatch({ type: 'ADD_EXPENSE', payload: formData });
             }
             onClose();
         }, 500);
@@ -106,9 +102,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
     );
 };
 
-const ExpensesPage: React.FC = () => {
-    // Fix: Replaced dispatch with specific data context functions.
-    const { state, deleteExpense } = useData();
+const ExpensesPage: React.FC = React.memo(() => {
+    const { state, dispatch } = useData();
     const [showForm, setShowForm] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
@@ -119,8 +114,7 @@ const ExpensesPage: React.FC = () => {
 
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this expense? This will also reverse the transaction in your accounts.')) {
-            // Fix: Replaced dispatch with specific data context functions.
-            deleteExpense(id);
+            dispatch({ type: 'DELETE_EXPENSE', payload: id });
         }
     };
     
@@ -177,6 +171,6 @@ const ExpensesPage: React.FC = () => {
             {showForm && <ExpenseForm expense={selectedExpense} onClose={() => setShowForm(false)} />}
         </div>
     );
-};
+});
 
 export default ExpensesPage;

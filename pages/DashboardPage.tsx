@@ -1,4 +1,3 @@
-
 import React from 'react';
 import StatCard from '../components/StatCard';
 import { useData } from '../context/DataContext';
@@ -7,14 +6,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import GreetingCard from '../components/GreetingCard';
 import QuickActions from '../components/QuickActions';
 import AIActions from '../components/AIActions';
-// Fix: Replaced 'PackageWarning' with 'AlertTriangle' to resolve an import error, as 'PackageWarning' may not be available in all versions of 'lucide-react'.
 import { CircleDollarSign, Clock, TrendingDown, Users, AlertTriangle } from 'lucide-react';
 
 interface DashboardPageProps {
   setCurrentPage: (page: Page) => void;
 }
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ setCurrentPage }) => {
+const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage }) => {
   const { state } = useData();
 
   const getInvoiceTotals = (invoice: Invoice) => {
@@ -82,11 +80,11 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setCurrentPage }) => {
       {process.env.API_KEY && <AIActions />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <StatCard title="Income (This Month)" value={`$${totalIncomeThisMonth.toFixed(2)}`} icon={<CircleDollarSign />} color="bg-green-500" />
-        <StatCard title="Total Dues" value={`$${totalDues.toFixed(2)}`} icon={<Clock />} color="bg-yellow-500" />
-        <StatCard title="Expenses (This Month)" value={`$${totalExpensesThisMonth.toFixed(2)}`} icon={<TrendingDown />} color="bg-red-500" />
-        <StatCard title="Total Customers" value={state.customers.length.toString()} icon={<Users />} color="bg-blue-500" />
-        <StatCard title="Low Stock Items" value={lowStockItems.toString()} icon={<AlertTriangle />} color="bg-orange-500" />
+        <StatCard title="Income (This Month)" value={`$${totalIncomeThisMonth.toFixed(2)}`} IconComponent={CircleDollarSign} color="bg-green-500" />
+        <StatCard title="Total Dues" value={`$${totalDues.toFixed(2)}`} IconComponent={Clock} color="bg-yellow-500" />
+        <StatCard title="Expenses (This Month)" value={`$${totalExpensesThisMonth.toFixed(2)}`} IconComponent={TrendingDown} color="bg-red-500" />
+        <StatCard title="Total Customers" value={state.customers.length.toString()} IconComponent={Users} color="bg-blue-500" />
+        <StatCard title="Low Stock Items" value={lowStockItems.toString()} IconComponent={AlertTriangle} color="bg-orange-500" />
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
@@ -139,7 +137,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setCurrentPage }) => {
                     return (
                         <li key={exp.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
                             <div>
-                                {/* FIX: The 'Expense' type does not have a 'category' property. The expense category is determined by the debit account name. */}
                                 <p className="font-semibold text-gray-800">{expenseAccount?.name || 'Uncategorized'}</p>
                                 <p className="text-sm text-gray-500">{exp.description}</p>
                             </div>
@@ -153,6 +150,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setCurrentPage }) => {
       </div>
     </div>
   );
-};
+});
 
 export default DashboardPage;

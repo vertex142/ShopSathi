@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { Invoice, InvoiceStatus, Payment } from '../types';
@@ -15,9 +13,8 @@ interface InvoicesPageProps {
     onViewCustomer: (customerId: string) => void;
 }
 
-const InvoicesPage: React.FC<InvoicesPageProps> = ({ onViewCustomer }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, deleteInvoice, convertInvoiceToChallan, addPaymentToInvoice } = useData();
+const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }) => {
+  const { state, dispatch } = useData();
   const [showForm, setShowForm] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceForPayment, setInvoiceForPayment] = useState<Invoice | null>(null);
@@ -40,15 +37,13 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({ onViewCustomer }) => {
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this invoice?')) {
-      // Fix: Replaced dispatch with specific data context functions.
-      deleteInvoice(id);
+      dispatch({ type: 'DELETE_INVOICE', payload: id });
     }
   };
 
   const handleConvertToChallan = (id: string) => {
     if (window.confirm('Are you sure you want to convert this invoice to a Delivery Challan?')) {
-        // Fix: Replaced dispatch with specific data context functions.
-        convertInvoiceToChallan(id);
+        dispatch({ type: 'CONVERT_INVOICE_TO_CHALLAN', payload: id });
     }
   };
   
@@ -59,8 +54,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({ onViewCustomer }) => {
 
   const handleAddPayment = (payment: Payment) => {
     if (invoiceForPayment) {
-        // Fix: Replaced dispatch with specific data context functions.
-        addPaymentToInvoice(invoiceForPayment.id, payment);
+        dispatch({ type: 'ADD_PAYMENT_TO_INVOICE', payload: { invoiceId: invoiceForPayment.id, payment } });
         setPaymentForReceipt({ invoice: invoiceForPayment, payment });
         setInvoiceForPayment(null);
     }
@@ -319,6 +313,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = ({ onViewCustomer }) => {
       )}
     </div>
   );
-};
+});
 
 export default InvoicesPage;

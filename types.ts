@@ -5,7 +5,6 @@ export type Page = 'dashboard' | 'invoices' | 'quotes' | 'jobs' | 'customers' | 
 export interface NavItem {
   id: Page;
   label: string;
-  // Fix: Use a more general type for the icon to be compatible with lucide-react icons.
   icon: React.ElementType;
 }
 
@@ -16,7 +15,6 @@ export interface NavGroup {
 
 export interface Notification {
   id: string;
-  userId: string;
   message: string;
   type: 'invoice-overdue' | 'invoice-reminder' | 'low-stock';
   relatedId: string; // ID of the invoice or inventory item
@@ -27,7 +25,6 @@ export interface Notification {
 
 export interface Customer {
   id: string;
-  userId: string;
   name: string;
   email: string;
   phone: string;
@@ -37,7 +34,6 @@ export interface Customer {
 
 export interface Supplier {
   id: string;
-  userId: string;
   name: string;
   email: string;
   phone: string;
@@ -67,7 +63,6 @@ export enum QuoteStatus {
 
 export interface Quote {
     id: string;
-    userId: string;
     quoteNumber: string;
     customerId: string;
     issueDate: string;
@@ -94,6 +89,7 @@ export interface Payment {
   date: string;
   amount: number;
   method: string;
+  accountId: string; // The asset account (Cash, Bank) used for this transaction
   notes?: string;
 }
 
@@ -101,7 +97,6 @@ export const PAYMENT_METHODS = ['Cash', 'Bank Transfer', 'Credit Card', 'Other']
 
 export interface Invoice {
   id:string;
-  userId: string;
   invoiceNumber: string;
   customerId: string;
   issueDate: string;
@@ -127,7 +122,6 @@ export interface DeliveryChallanItem {
 
 export interface DeliveryChallan {
   id: string;
-  userId: string;
   challanNumber: string;
   customerId: string;
   issueDate: string;
@@ -179,7 +173,6 @@ export interface OldJobCostBreakdown {
 
 export interface JobOrder {
   id: string;
-  userId: string;
   jobName: string;
   customerId: string;
   orderDate: string;
@@ -206,7 +199,6 @@ export interface JobOrder {
 
 export interface Expense {
   id: string;
-  userId: string;
   date: string;
   description: string;
   amount: number;
@@ -224,7 +216,11 @@ export interface CompanySettings {
   tagline: string;
   services: string;
   footerText: string;
-  termsAndConditions: { id: string; text: string }[];
+  // DEPRECATED: termsAndConditions is kept for backward compatibility during import.
+  termsAndConditions?: { id: string; text: string }[];
+  invoiceTerms: { id: string; text: string }[];
+  quoteTerms: { id: string; text: string }[];
+  purchaseOrderTerms: { id: string; text: string }[];
   preparedByLabel: string;
   authorizedSignatureLabel: string;
   authorizedSignatureImage?: string; // base64 string
@@ -232,7 +228,6 @@ export interface CompanySettings {
 
 export interface InventoryItem {
   id: string;
-  userId: string;
   name: string;
   sku: string; // Stock Keeping Unit
   category: string; // e.g., Paper, Ink, Toner, Finishing Supplies
@@ -248,6 +243,8 @@ export enum PurchaseOrderStatus {
     PartiallyReceived = 'PARTIALLY_RECEIVED',
     Completed = 'COMPLETED',
     Cancelled = 'CANCELLED',
+    PartiallyPaid = 'PARTIALLY_PAID',
+    Paid = 'PAID',
 }
 
 export interface PurchaseOrderItem {
@@ -261,7 +258,6 @@ export interface PurchaseOrderItem {
 
 export interface PurchaseOrder {
     id: string;
-    userId: string;
     poNumber: string;
     supplierId: string;
     orderDate: string;
@@ -269,7 +265,9 @@ export interface PurchaseOrder {
     items: PurchaseOrderItem[];
     status: PurchaseOrderStatus;
     notes: string;
+    payments: Payment[];
     selectedTerms?: string[];
+    stockReceived?: boolean;
 }
 
 export enum AccountType {
@@ -282,7 +280,6 @@ export enum AccountType {
 
 export interface Account {
   id: string;
-  userId: string;
   name: string;
   type: AccountType;
   balance: number;
@@ -299,7 +296,6 @@ export interface JournalEntryItem {
 
 export interface JournalEntry {
   id: string;
-  userId: string;
   date: string;
   memo: string;
   items: JournalEntryItem[];
@@ -332,5 +328,4 @@ export interface AppState {
   notifications: Notification[];
 }
 
-// Fix: Export the Action type to be used in components like StatusEditor.
 export type Action = { type: string, payload: any };

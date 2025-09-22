@@ -9,8 +9,8 @@ interface JournalEntryFormProps {
 }
 
 const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) => {
-    const { state, addJournalEntry, updateJournalEntry } = useData();
-    const [formData, setFormData] = useState<Omit<JournalEntry, 'id' | 'userId'>>({
+    const { state, dispatch } = useData();
+    const [formData, setFormData] = useState<Omit<JournalEntry, 'id'>>({
         date: entry?.date || new Date().toISOString().split('T')[0],
         memo: entry?.memo || '',
         items: entry?.items || [
@@ -64,16 +64,16 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
 
     const isBalanced = totalDebit === totalCredit && totalDebit > 0;
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!isBalanced) {
             alert('The journal entry is not balanced. Total debits must equal total credits and be greater than zero.');
             return;
         }
         if (entry) {
-            await updateJournalEntry({ ...formData, id: entry.id, userId: entry.userId });
+            dispatch({ type: 'UPDATE_JOURNAL_ENTRY', payload: { ...formData, id: entry.id } });
         } else {
-            await addJournalEntry(formData);
+            dispatch({ type: 'ADD_JOURNAL_ENTRY', payload: formData });
         }
         onClose();
     };
@@ -82,7 +82,7 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full max-h-[90vh] flex flex-col">
                 <h2 className="text-2xl font-bold mb-6 flex-shrink-0">{entry ? 'Edit Journal Entry' : 'Create Journal Entry'}</h2>
-                <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto pr-2 space-y-6">
+                <form id="journal-entry-form" onSubmit={handleSubmit} className="flex-grow overflow-y-auto pr-2 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
@@ -140,20 +140,18 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
                                         <td className="py-2 pl-2 text-center">
                                              <button type="button" onClick={() => removeItem(index)} className="text-red-500 hover:text-red-700">
                                                 <Trash2 className="h-5 w-5" />
-                                            </button>
+                                             </button>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
-                            <tfoot>
+                             <tfoot className="border-t">
                                 <tr>
-                                    <td className="pt-2">
-                                        <button type="button" onClick={addItem} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Add Line</button>
-                                    </td>
-                                    <td className={`py-2 px-2 text-right font-bold ${!isBalanced ? 'text-red-600' : 'text-gray-800'}`}>
+                                    <td className="py-2 pr-2 text-right font-semibold">Totals</td>
+                                    <td className={`py-2 px-2 text-right font-bold ${!isBalanced ? 'text-red-500' : 'text-green-600'}`}>
                                         ${totalDebit.toFixed(2)}
                                     </td>
-                                     <td className={`py-2 pl-2 text-right font-bold ${!isBalanced ? 'text-red-600' : 'text-gray-800'}`}>
+                                    <td className={`py-2 pl-2 text-right font-bold ${!isBalanced ? 'text-red-500' : 'text-green-600'}`}>
                                         ${totalCredit.toFixed(2)}
                                     </td>
                                     <td></td>
@@ -161,18 +159,20 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
                             </tfoot>
                         </table>
                     </div>
-                </form>
-                {/* Footer outside the form to stick to the bottom */}
-                <div className="flex-shrink-0 pt-6 mt-auto border-t">
-                     {!isBalanced && (
-                        <p className="text-sm text-red-600 text-center mb-4">Totals must match and be greater than zero to save.</p>
-                     )}
-                    <div className="flex justify-end space-x-4">
-                        <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                        <button type="button" onClick={handleSubmit} disabled={!isBalanced} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light disabled:opacity-50 disabled:cursor-not-allowed">
-                            {entry ? 'Update Entry' : 'Save Entry'}
-                        </button>
+                     <div className="flex-shrink-0 pt-4">
+                        <button type="button" onClick={addItem} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Add Line Item</button>
                     </div>
+                </form>
+                <div className="flex-shrink-0 flex justify-end space-x-4 pt-6 mt-4 border-t">
+                    <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button 
+                        type="submit" 
+                        form="journal-entry-form"
+                        disabled={!isBalanced}
+                        className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {entry ? 'Update Entry' : 'Save Entry'}
+                    </button>
                 </div>
             </div>
         </div>

@@ -3,8 +3,8 @@ import { useData } from '../context/DataContext';
 import { JournalEntry } from '../types';
 import JournalEntryForm from '../components/JournalEntryForm';
 
-const JournalEntriesPage: React.FC = () => {
-    const { state, deleteJournalEntry } = useData();
+const JournalEntriesPage: React.FC = React.memo(() => {
+    const { state, dispatch } = useData();
     const [showForm, setShowForm] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
 
@@ -15,7 +15,7 @@ const JournalEntriesPage: React.FC = () => {
 
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this journal entry? This action will reverse the transaction and affect account balances.')) {
-            deleteJournalEntry(id);
+            dispatch({ type: 'DELETE_JOURNAL_ENTRY', payload: id });
         }
     };
     
@@ -65,6 +65,6 @@ const JournalEntriesPage: React.FC = () => {
             {showForm && <JournalEntryForm entry={selectedEntry} onClose={() => setShowForm(false)} />}
         </div>
     );
-};
+});
 
 export default JournalEntriesPage;

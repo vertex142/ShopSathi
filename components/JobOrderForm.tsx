@@ -1,7 +1,4 @@
-
-
 import React, { useState, useMemo } from 'react';
-// Fix: Corrected type to omit userId for new job orders, aligning with context function signatures.
 import type { JobOrder, JobCostBreakdown, Customer } from '../types';
 import { JobStatus } from '../types';
 import { useData } from '../context/DataContext';
@@ -17,10 +14,8 @@ interface JobOrderFormProps {
 }
 
 const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, addJobOrder, updateJobOrder } = useData();
-  // Fix: Corrected form state type to omit userId, which is handled by the context.
-  const [formData, setFormData] = useState<Omit<JobOrder, 'id' | 'userId'>>({
+  const { state, dispatch } = useData();
+  const [formData, setFormData] = useState<Omit<JobOrder, 'id'>>({
     jobName: job?.jobName || '',
     customerId: job?.customerId || (state.customers.length > 0 ? state.customers[0].id : ''),
     orderDate: job?.orderDate || new Date().toISOString().split('T')[0],
@@ -128,14 +123,12 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
     setShowCustomerForm(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (job) {
-      // Fix: Call updateJobOrder with the full JobOrder object.
-      await updateJobOrder({ ...formData, id: job.id, userId: job.userId });
+      dispatch({ type: 'UPDATE_JOB_ORDER', payload: { ...formData, id: job.id } });
     } else {
-      // Fix: Call addJobOrder with form data (userId is added by context).
-      await addJobOrder(formData);
+      dispatch({ type: 'ADD_JOB_ORDER', payload: formData });
     }
     onClose();
   };

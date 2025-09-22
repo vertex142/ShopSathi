@@ -1,7 +1,4 @@
-
-
 import React, { useState, useEffect, useMemo } from 'react';
-// Fix: Corrected type to omit userId for new invoices, aligning with context function signatures.
 import type { Invoice, InvoiceItem, Customer } from '../types';
 import { InvoiceStatus } from '../types';
 import { useData } from '../context/DataContext';
@@ -16,10 +13,8 @@ interface InvoiceFormProps {
 }
 
 const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, addInvoice, updateInvoice } = useData();
-  // Fix: Corrected form state type to omit userId, which is handled by the context.
-  const [formData, setFormData] = useState<Omit<Invoice, 'id' | 'userId'>>({
+  const { state, dispatch } = useData();
+  const [formData, setFormData] = useState<Omit<Invoice, 'id'>>({
     invoiceNumber: invoice?.invoiceNumber || generateNextDocumentNumber(state.invoices, 'invoiceNumber', 'INV-'),
     customerId: invoice?.customerId || (state.customers.length > 0 ? state.customers[0].id : ''),
     issueDate: invoice?.issueDate || new Date().toISOString().split('T')[0],
@@ -149,15 +144,11 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    // Fix: Replaced dispatch with a timeout to simulate async operation.
-    // In a real app, you would await the async function.
-    setTimeout(async () => {
+    setTimeout(() => {
         if (invoice) {
-          // Fix: Call updateInvoice with the full Invoice object.
-          await updateInvoice({ ...formData, id: invoice.id, userId: invoice.userId });
+          dispatch({ type: 'UPDATE_INVOICE', payload: { ...formData, id: invoice.id } });
         } else {
-          // Fix: Call addInvoice with the form data (userId is added by context).
-          await addInvoice(formData);
+          dispatch({ type: 'ADD_INVOICE', payload: formData });
         }
         onClose();
     }, 500);
@@ -366,7 +357,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                     onChange={handleTermsChange}
                     className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm h-24"
                 >
-                    {(state.settings.termsAndConditions || []).map(term => (
+                    {(state.settings.invoiceTerms || []).map(term => (
                         <option key={term.id} value={term.text}>{term.text}</option>
                     ))}
                 </select>

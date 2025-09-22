@@ -3,9 +3,8 @@ import { useData } from '../context/DataContext';
 import { InventoryItem } from '../types';
 import InventoryItemForm from '../components/InventoryItemForm';
 
-const InventoryPage: React.FC = () => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, deleteInventoryItem } = useData();
+const InventoryPage: React.FC = React.memo(() => {
+  const { state, dispatch } = useData();
   const [showForm, setShowForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
@@ -16,8 +15,7 @@ const InventoryPage: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this inventory item?')) {
-      // Fix: Replaced dispatch with specific data context functions.
-      deleteInventoryItem(id);
+      dispatch({ type: 'DELETE_INVENTORY_ITEM', payload: id });
     }
   };
   
@@ -95,6 +93,6 @@ const InventoryPage: React.FC = () => {
       )}
     </div>
   );
-};
+});
 
 export default InventoryPage;

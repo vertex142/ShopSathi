@@ -1,24 +1,24 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { Invoice, Quote, JobOrder, InvoiceStatus, QuoteStatus, Payment, TimelineEvent } from '../types';
 import StatCard from '../components/StatCard';
 import EmailModal from '../components/EmailModal';
 import ProjectTimeline from '../components/ProjectTimeline';
+import ReceivePaymentModal from '../components/ReceivePaymentModal';
 import { ArrowLeft, FileText, ClipboardCheck, CircleDollarSign, Receipt, TrendingDown, BookOpen, Printer, LoaderCircle, Briefcase } from 'lucide-react';
 import { exportElementAsPDF } from '../utils/pdfExporter';
 
 interface CustomerProfilePageProps {
   customerId: string;
   onBack: () => void;
-  onViewCustomer: (customerId: string) => void;
 }
 
-const CustomerProfilePage: React.FC<CustomerProfilePageProps> = ({ customerId, onBack, onViewCustomer }) => {
-  const { state } = useData();
+const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ customerId, onBack }) => {
+  const { state, dispatch } = useData();
   const [activeTab, setActiveTab] = useState<'invoices' | 'quotes' | 'ledger' | 'projects'>('invoices');
   const [invoiceToEmail, setInvoiceToEmail] = useState<Invoice | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const customer = useMemo(() => state.customers.find(c => c.id === customerId), [state.customers, customerId]);
   const customerInvoices = useMemo(() => state.invoices.filter(inv => inv.customerId === customerId), [state.invoices, customerId]);
@@ -50,6 +50,11 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = ({ customerId, o
       totalDue: totalBilled + openingBalance - totalPaid,
     };
   }, [customerInvoices, customer]);
+
+  const handleReceivePayment = (payment: Omit<Payment, 'id'>) => {
+    dispatch({ type: 'RECEIVE_CUSTOMER_PAYMENT', payload: { customerId, payment } });
+    setShowPaymentModal(false);
+  };
 
   const ledgerTransactions = useMemo(() => {
     if (!customer) return [];
@@ -185,21 +190,29 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = ({ customerId, o
 
   return (
     <div className="container mx-auto space-y-8">
-        <div className="flex items-center mb-6">
-            <button onClick={onBack} className="flex items-center bg-gray-200 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-300 transition-colors mr-4">
-                <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div>
-                <h1 className="text-3xl font-bold text-gray-800">{customer.name}</h1>
-                <p className="text-gray-500">{customer.email} &bull; {customer.phone}</p>
+        <div className="flex justify-between items-start">
+            <div className="flex items-center">
+                <button onClick={onBack} className="flex items-center bg-gray-200 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-300 transition-colors mr-4">
+                    <ArrowLeft className="h-5 w-5" />
+                </button>
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-800">{customer.name}</h1>
+                    <p className="text-gray-500">{customer.email} &bull; {customer.phone}</p>
+                </div>
             </div>
+            {customerStats.totalDue > 0 && (
+                <button onClick={() => setShowPaymentModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
+                    <Receipt className="h-5 w-5 mr-2" />
+                    Receive Payment
+                </button>
+            )}
         </div>
         
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard title="Total Billed" value={`$${customerStats.totalBilled.toFixed(2)}`} icon={<CircleDollarSign />} color="bg-blue-500" />
-            <StatCard title="Total Paid" value={`$${customerStats.totalPaid.toFixed(2)}`} icon={<Receipt />} color="bg-green-500" />
-            <StatCard title="Current Due" value={`$${customerStats.totalDue.toFixed(2)}`} icon={<TrendingDown />} color="bg-red-500" />
+            <StatCard title="Total Billed" value={`$${customerStats.totalBilled.toFixed(2)}`} IconComponent={CircleDollarSign} color="bg-blue-500" />
+            <StatCard title="Total Paid" value={`$${customerStats.totalPaid.toFixed(2)}`} IconComponent={Receipt} color="bg-green-500" />
+            <StatCard title="Current Due" value={`$${customerStats.totalDue.toFixed(2)}`} IconComponent={TrendingDown} color="bg-red-500" />
         </div>
         
         {/* Tabs for Invoices and Quotes */}
@@ -371,8 +384,16 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = ({ customerId, o
                 onClose={() => setInvoiceToEmail(null)}
             />
         )}
+        {showPaymentModal && (
+            <ReceivePaymentModal
+                customer={customer}
+                totalDue={customerStats.totalDue}
+                onClose={() => setShowPaymentModal(false)}
+                onConfirm={handleReceivePayment}
+            />
+        )}
     </div>
   );
-};
+});
 
 export default CustomerProfilePage;

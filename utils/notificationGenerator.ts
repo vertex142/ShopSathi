@@ -1,5 +1,3 @@
-
-
 import { AppState, Notification } from '../types';
 import { InvoiceStatus } from '../types';
 
@@ -21,10 +19,8 @@ export const generateNotifications = (state: AppState): Notification[] => {
                 n => n.type === 'invoice-overdue' && n.relatedId === invoice.id
             );
             if (!existingNotification) {
-                // FIX: Add missing userId property to the notification object.
                 newNotifications.push({
                     id: crypto.randomUUID(),
-                    userId: invoice.userId,
                     message: `Invoice #${invoice.invoiceNumber} is overdue.`,
                     type: 'invoice-overdue',
                     relatedId: invoice.id,
@@ -46,10 +42,8 @@ export const generateNotifications = (state: AppState): Notification[] => {
                     n => n.type === 'invoice-reminder' && n.relatedId === reminderKey
                 );
                 if (!existingNotification) {
-                    // FIX: Add missing userId property to the notification object.
                     newNotifications.push({
                         id: crypto.randomUUID(),
-                        userId: invoice.userId,
                         message: `Payment reminder for Invoice #${invoice.invoiceNumber} is due today.`,
                         type: 'invoice-reminder',
                         relatedId: reminderKey, // Use a unique key for the reminder instance
@@ -72,10 +66,8 @@ export const generateNotifications = (state: AppState): Notification[] => {
             // This prevents spamming on every state change if stock is low.
             // A more advanced system might re-notify if the user dismisses it and stock level changes again.
             if (!existingNotification) {
-                // FIX: Add missing userId property to the notification object.
                 newNotifications.push({
                     id: crypto.randomUUID(),
-                    userId: item.userId,
                     message: `Low stock: "${item.name}" has only ${item.stockQuantity} units left.`,
                     type: 'low-stock',
                     relatedId: item.id,

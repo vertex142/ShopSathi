@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import type { Invoice } from '../types';
 import { useData } from '../context/DataContext';
-import { LoaderCircle, Send } from 'lucide-react';
+import { FileDown, Mail } from 'lucide-react';
+import { exportElementAsPDF } from '../utils/pdfExporter';
+import InvoicePreview from './InvoicePreview'; // For hidden rendering
 
 interface EmailModalProps {
   invoice: Invoice;
@@ -11,6 +13,8 @@ interface EmailModalProps {
 const EmailModal: React.FC<EmailModalProps> = ({ invoice, onClose }) => {
     const { state } = useData();
     const customer = state.customers.find(c => c.id === invoice.customerId);
+    const [subject, setSubject] = useState('');
+    const [body, setBody] = useState('');
 
     const getInvoiceTotals = (inv: Invoice) => {
         const subtotal = inv.items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
@@ -21,11 +25,7 @@ const EmailModal: React.FC<EmailModalProps> = ({ invoice, onClose }) => {
     };
 
     const { balanceDue } = getInvoiceTotals(invoice);
-
-    const [subject, setSubject] = useState('');
-    const [body, setBody] = useState('');
-    const [isSending, setIsSending] = useState(false);
-
+    
     useEffect(() => {
         if (customer && invoice) {
             setSubject(`Invoice ${invoice.invoiceNumber} from ${state.settings.name}`);
@@ -45,26 +45,18 @@ The team at ${state.settings.name}`
         }
     }, [invoice, customer, state.settings.name, balanceDue]);
 
-    const handleSend = async () => {
+    const handleOpenEmailClient = () => {
         if (!customer) {
             alert('Customer not found.');
             return;
         }
-        setIsSending(true);
-        console.log({
-            to: customer.email,
-            subject,
-            body,
-        });
-        // Simulate sending email
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSending(false);
-        alert(`Email successfully sent to ${customer.email}`);
+        const mailtoLink = `mailto:${customer.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
         onClose();
     };
 
+
     if (!customer) {
-        // Handle case where customer might not be found
         return (
              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                 <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
@@ -82,6 +74,16 @@ The team at ${state.settings.name}`
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] flex flex-col">
                 <h2 className="text-2xl font-bold mb-6">Email Invoice {invoice.invoiceNumber}</h2>
+                <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 mb-4 rounded-r-lg">
+                    <h3 className="font-bold">Workflow</h3>
+                    <p className="text-sm">
+                        1. Download the PDF of the invoice to your computer.
+                        <br/>
+                        2. Click "Open in Email Client", which will create a new pre-filled email.
+                        <br/>
+                        3. Attach the downloaded PDF to the email and send it.
+                    </p>
+                </div>
                 <div className="space-y-4 flex-grow overflow-y-auto pr-2">
                     <div>
                         <label htmlFor="to" className="block text-sm font-medium text-gray-700">To</label>
@@ -93,29 +95,35 @@ The team at ${state.settings.name}`
                     </div>
                     <div>
                         <label htmlFor="body" className="block text-sm font-medium text-gray-700">Body</label>
-                        <textarea id="body" name="body" value={body} onChange={(e) => setBody(e.target.value)} rows={10} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
+                        <textarea id="body" name="body" value={body} onChange={(e) => setBody(e.target.value)} rows={8} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
                     </div>
                 </div>
-                <div className="flex justify-end space-x-4 pt-6 mt-auto border-t">
-                    <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" disabled={isSending}>Cancel</button>
-                    <button 
-                        type="button" 
-                        onClick={handleSend}
-                        className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center w-32 disabled:opacity-75"
-                        disabled={isSending}
-                    >
-                        {isSending ? (
-                            <>
-                                <LoaderCircle className="animate-spin h-5 w-5 mr-2" />
-                                Sending...
-                            </>
-                        ) : (
-                            <>
-                                <Send className="h-5 w-5 mr-2" />
-                                Send Email
-                            </>
-                        )}
-                    </button>
+                <div className="flex justify-between items-center pt-6 mt-auto border-t">
+                    <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+                    <div className="flex space-x-2">
+                        <button
+                            type="button"
+                            onClick={() => exportElementAsPDF(`printable-invoice-${invoice.id}`, `Invoice_${invoice.invoiceNumber}`)}
+                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center"
+                        >
+                            <FileDown className="h-5 w-5 mr-2" />
+                            Download PDF
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleOpenEmailClient}
+                            className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center"
+                        >
+                            <Mail className="h-5 w-5 mr-2" />
+                            Open in Email Client
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {/* Hidden preview component for PDF export */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+                <div id={`printable-invoice-${invoice.id}`} style={{ width: '8.5in', height: '11in' }}>
+                    <InvoicePreview invoice={invoice} onClose={() => {}} />
                 </div>
             </div>
         </div>

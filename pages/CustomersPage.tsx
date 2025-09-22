@@ -7,8 +7,8 @@ interface CustomersPageProps {
     onViewCustomer: (customerId: string) => void;
 }
 
-const CustomersPage: React.FC<CustomersPageProps> = ({ onViewCustomer }) => {
-    const { state, deleteCustomer } = useData();
+const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer }) => {
+    const { state, dispatch } = useData();
     const [showForm, setShowForm] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
@@ -19,7 +19,7 @@ const CustomersPage: React.FC<CustomersPageProps> = ({ onViewCustomer }) => {
 
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this customer? This will not delete their invoices.')) {
-            deleteCustomer(id);
+            dispatch({ type: 'DELETE_CUSTOMER', payload: id });
         }
     };
 
@@ -70,9 +70,9 @@ const CustomersPage: React.FC<CustomersPageProps> = ({ onViewCustomer }) => {
                  {state.customers.length === 0 && <p className="text-center py-10 text-gray-500">No customers found. Add one to get started!</p>}
             </div>
 
-            {showForm && <CustomerForm customer={selectedCustomer} onClose={() => setShowForm(false)} onSave={() => {}} />}
+            {showForm && <CustomerForm customer={selectedCustomer} onClose={() => setShowForm(false)} onSave={() => setShowForm(false)} />}
         </div>
     );
-};
+});
 
 export default CustomersPage;

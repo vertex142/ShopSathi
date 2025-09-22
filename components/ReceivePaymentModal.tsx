@@ -1,27 +1,23 @@
 
 import React, { useState } from 'react';
-import type { Invoice, Payment } from '../types';
+import type { Customer, Payment } from '../types';
 import { PAYMENT_METHODS, AccountType } from '../types';
 import { useData } from '../context/DataContext';
 
-interface PaymentModalProps {
-  invoice: Invoice;
+interface ReceivePaymentModalProps {
+  customer: Customer;
+  totalDue: number;
   onClose: () => void;
-  onConfirm: (payment: Payment) => void;
+  onConfirm: (payment: Omit<Payment, 'id'>) => void;
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ invoice, onClose, onConfirm }) => {
+const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ customer, totalDue, onClose, onConfirm }) => {
   const { state } = useData();
-  const subtotal = invoice.items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
-  const grandTotal = subtotal + (invoice.previousDue || 0) - (invoice.discount || 0);
-  const totalPaid = (invoice.payments || []).reduce((acc, p) => acc + p.amount, 0);
-  const balanceDue = grandTotal - totalPaid;
-
   const assetAccounts = state.accounts.filter(a => a.type === AccountType.Asset);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    amount: balanceDue > 0 ? balanceDue : 0,
+    amount: totalDue > 0 ? totalDue : 0,
     method: PAYMENT_METHODS[0],
     // FIX: Initialize accountId to satisfy the Payment type.
     accountId: assetAccounts.length > 0 ? assetAccounts[0].id : '',
@@ -39,11 +35,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ invoice, onClose, onConfirm
   const handleConfirm = () => {
     // FIX: Check for accountId before confirming.
     if (formData.amount > 0 && formData.accountId) {
-        const newPayment: Payment = {
-            id: crypto.randomUUID(),
-            ...formData,
-        };
-        onConfirm(newPayment);
+        onConfirm(formData);
     } else {
         alert("Payment amount must be greater than zero and an account must be selected.");
     }
@@ -52,9 +44,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ invoice, onClose, onConfirm
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50" role="dialog" aria-modal="true" aria-labelledby="payment-modal-title">
       <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-        <h2 id="payment-modal-title" className="text-xl font-bold mb-2">Add Payment</h2>
+        <h2 id="payment-modal-title" className="text-xl font-bold mb-2">Receive Payment</h2>
         <p className="mb-4 text-sm text-gray-600">
-          For invoice <span className="font-semibold">{invoice.invoiceNumber}</span>. Balance Due: <span className="font-bold">${balanceDue.toFixed(2)}</span>
+          From customer <span className="font-semibold">{customer.name}</span>. Total Due: <span className="font-bold">${totalDue.toFixed(2)}</span>
         </p>
         <div className="space-y-4">
             <div>
@@ -62,7 +54,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ invoice, onClose, onConfirm
               <input type="date" id="date" name="date" value={formData.date} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
             </div>
             <div>
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
+              <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount Received</label>
               <input type="number" id="amount" name="amount" value={formData.amount} onChange={handleChange} required min="0.01" step="0.01" className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
             </div>
             <div>
@@ -97,4 +89,4 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ invoice, onClose, onConfirm
   );
 };
 
-export default PaymentModal;
+export default ReceivePaymentModal;

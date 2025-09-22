@@ -1,7 +1,4 @@
-
-
 import React, { useState } from 'react';
-// Fix: Corrected type to omit userId for new challans, aligning with context function signatures.
 import type { DeliveryChallan, DeliveryChallanItem, Customer } from '../types';
 import { useData } from '../context/DataContext';
 import { Trash2, Plus } from 'lucide-react';
@@ -14,10 +11,8 @@ interface DeliveryChallanFormProps {
 }
 
 const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onClose }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, addDeliveryChallan, updateDeliveryChallan } = useData();
-  // Fix: Corrected form state type to omit userId, which is handled by the context.
-  const [formData, setFormData] = useState<Omit<DeliveryChallan, 'id' | 'userId'>>({
+  const { state, dispatch } = useData();
+  const [formData, setFormData] = useState<Omit<DeliveryChallan, 'id'>>({
     challanNumber: challan?.challanNumber || generateNextDocumentNumber(state.deliveryChallans, 'challanNumber', 'DCH-'),
     customerId: challan?.customerId || (state.customers.length > 0 ? state.customers[0].id : ''),
     issueDate: challan?.issueDate || new Date().toISOString().split('T')[0],
@@ -72,14 +67,12 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
     setShowCustomerForm(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (challan) {
-      // Fix: Call updateDeliveryChallan with the full DeliveryChallan object.
-      await updateDeliveryChallan({ ...formData, id: challan.id, userId: challan.userId });
+      dispatch({ type: 'UPDATE_DELIVERY_CHALLAN', payload: { ...formData, id: challan.id } });
     } else {
-      // Fix: Call addDeliveryChallan with form data (userId is added by context).
-      await addDeliveryChallan(formData);
+      dispatch({ type: 'ADD_DELIVERY_CHALLAN', payload: formData });
     }
     onClose();
   };

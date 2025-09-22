@@ -6,9 +6,12 @@ import PurchaseOrderPreview from '../components/PurchaseOrderPreview';
 import StatusEditor from '../components/StatusEditor';
 import { Search, X } from 'lucide-react';
 
-const PurchaseOrdersPage: React.FC = () => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, deletePurchaseOrder } = useData();
+interface PurchaseOrdersPageProps {
+    onViewSupplier: (supplierId: string) => void;
+}
+
+const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onViewSupplier }) => {
+  const { state, dispatch } = useData();
   const [showForm, setShowForm] = useState(false);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
   const [poToPreview, setPoToPreview] = useState<PurchaseOrder | null>(null);
@@ -24,8 +27,7 @@ const PurchaseOrdersPage: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this purchase order?')) {
-      // Fix: Replaced dispatch with specific data context functions.
-      deletePurchaseOrder(id);
+      dispatch({ type: 'DELETE_PURCHASE_ORDER', payload: id });
     }
   };
 
@@ -41,11 +43,15 @@ const PurchaseOrdersPage: React.FC = () => {
   const getStatusColor = (status: PurchaseOrderStatus) => {
     switch (status) {
       case PurchaseOrderStatus.Completed:
-        return 'bg-green-100 text-green-800';
-      case PurchaseOrderStatus.Ordered:
         return 'bg-blue-100 text-blue-800';
-      case PurchaseOrderStatus.PartiallyReceived:
+      case PurchaseOrderStatus.Paid:
+        return 'bg-green-100 text-green-800';
+      case PurchaseOrderStatus.PartiallyPaid:
         return 'bg-yellow-100 text-yellow-800';
+      case PurchaseOrderStatus.Ordered:
+        return 'bg-indigo-100 text-indigo-800';
+      case PurchaseOrderStatus.PartiallyReceived:
+        return 'bg-purple-100 text-purple-800';
       case PurchaseOrderStatus.Cancelled:
         return 'bg-red-100 text-red-800';
       case PurchaseOrderStatus.Pending:
@@ -144,7 +150,11 @@ const PurchaseOrdersPage: React.FC = () => {
                   return (
                     <tr key={po.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{po.poNumber}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{supplier?.name || 'N/A'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button onClick={() => onViewSupplier(po.supplierId)} className="hover:underline text-brand-blue">
+                            {supplier?.name || 'N/A'}
+                        </button>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{po.orderDate}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{po.expectedDeliveryDate}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">${getPOTotal(po).toFixed(2)}</td>
@@ -192,6 +202,6 @@ const PurchaseOrdersPage: React.FC = () => {
       )}
     </div>
   );
-};
+});
 
 export default PurchaseOrdersPage;

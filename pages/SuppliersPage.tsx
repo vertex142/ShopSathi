@@ -1,13 +1,14 @@
-
-
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Supplier, InventoryItem } from '../types';
 import SupplierForm from '../components/SupplierForm';
 
-const SuppliersPage: React.FC = () => {
-    // Fix: Replaced dispatch with specific data context functions.
-    const { state, deleteSupplier } = useData();
+interface SuppliersPageProps {
+    onViewSupplier: (supplierId: string) => void;
+}
+
+const SuppliersPage: React.FC<SuppliersPageProps> = React.memo(({ onViewSupplier }) => {
+    const { state, dispatch } = useData();
     const [showForm, setShowForm] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
@@ -18,8 +19,7 @@ const SuppliersPage: React.FC = () => {
 
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this supplier?')) {
-            // Fix: Replaced dispatch with specific data context functions.
-            deleteSupplier(id);
+            dispatch({ type: 'DELETE_SUPPLIER', payload: id });
         }
     };
 
@@ -58,7 +58,11 @@ const SuppliersPage: React.FC = () => {
 
                                 return (
                                 <tr key={supplier.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{supplier.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <button onClick={() => onViewSupplier(supplier.id)} className="text-sm font-medium text-brand-blue hover:underline">
+                                            {supplier.name}
+                                        </button>
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{supplier.email}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{supplier.phone}</td>
                                     <td className="px-6 py-4 whitespace-normal text-sm text-gray-500 max-w-xs">
@@ -83,6 +87,6 @@ const SuppliersPage: React.FC = () => {
             {showForm && <SupplierForm supplier={selectedSupplier} onClose={() => setShowForm(false)} onSave={() => {}} />}
         </div>
     );
-};
+});
 
 export default SuppliersPage;

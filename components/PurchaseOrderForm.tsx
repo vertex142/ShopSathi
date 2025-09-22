@@ -1,7 +1,4 @@
-
-
 import React, { useState, useMemo } from 'react';
-// Fix: Corrected type to omit userId for new POs, aligning with context function signatures.
 import type { PurchaseOrder, PurchaseOrderItem, Supplier } from '../types';
 import { PurchaseOrderStatus } from '../types';
 import { useData } from '../context/DataContext';
@@ -15,10 +12,8 @@ interface PurchaseOrderFormProps {
 }
 
 const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, onClose }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, addPurchaseOrder, updatePurchaseOrder } = useData();
-  // Fix: Corrected form state type to omit userId, which is handled by the context.
-  const [formData, setFormData] = useState<Omit<PurchaseOrder, 'id' | 'userId'>>({
+  const { state, dispatch } = useData();
+  const [formData, setFormData] = useState<Omit<PurchaseOrder, 'id'>>({
     poNumber: purchaseOrder?.poNumber || generateNextDocumentNumber(state.purchaseOrders, 'poNumber', 'PO-'),
     supplierId: purchaseOrder?.supplierId || (state.suppliers.length > 0 ? state.suppliers[0].id : ''),
     orderDate: purchaseOrder?.orderDate || new Date().toISOString().split('T')[0],
@@ -26,6 +21,9 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
     items: purchaseOrder?.items || [{ id: crypto.randomUUID(), name: '', description: '', quantity: 1, unitCost: 0 }],
     status: purchaseOrder?.status || PurchaseOrderStatus.Pending,
     notes: purchaseOrder?.notes || '',
+    // FIX: The 'payments' property is required by the PurchaseOrder type but was missing.
+    // Initialize it to an empty array for new POs or use existing payments when editing.
+    payments: purchaseOrder?.payments || [],
     selectedTerms: purchaseOrder?.selectedTerms || [],
   });
   const [showSupplierForm, setShowSupplierForm] = useState(false);
@@ -80,14 +78,12 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
     setShowSupplierForm(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (purchaseOrder) {
-      // Fix: Call updatePurchaseOrder with the full PurchaseOrder object.
-      await updatePurchaseOrder({ ...formData, id: purchaseOrder.id, userId: purchaseOrder.userId });
+      dispatch({ type: 'UPDATE_PURCHASE_ORDER', payload: { ...formData, id: purchaseOrder.id } });
     } else {
-      // Fix: Call addPurchaseOrder with form data (userId is added by context).
-      await addPurchaseOrder(formData);
+      dispatch({ type: 'ADD_PURCHASE_ORDER', payload: formData });
     }
     onClose();
   };
@@ -196,7 +192,7 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
                     onChange={handleTermsChange}
                     className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm h-24"
                 >
-                    {(state.settings.termsAndConditions || []).map(term => (
+                    {(state.settings.purchaseOrderTerms || []).map(term => (
                         <option key={term.id} value={term.text}>{term.text}</option>
                     ))}
                 </select>

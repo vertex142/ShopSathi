@@ -9,9 +9,8 @@ import { List, Trello } from 'lucide-react';
 
 type ViewMode = 'list' | 'kanban';
 
-const JobsPage: React.FC = () => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, deleteJobOrder } = useData();
+const JobsPage: React.FC = React.memo(() => {
+  const { state, dispatch } = useData();
   const [showForm, setShowForm] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobOrder | null>(null);
   const [jobForDetails, setJobForDetails] = useState<JobOrder | null>(null);
@@ -24,8 +23,7 @@ const JobsPage: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this job order?')) {
-      // Fix: Replaced dispatch with specific data context functions.
-      deleteJobOrder(id);
+      dispatch({ type: 'DELETE_JOB_ORDER', payload: id });
     }
   };
   
@@ -137,6 +135,6 @@ const JobsPage: React.FC = () => {
       )}
     </div>
   );
-};
+});
 
 export default JobsPage;

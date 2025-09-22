@@ -1,7 +1,4 @@
-
-
 import React, { useState, useMemo } from 'react';
-// Fix: Corrected type to omit userId for new quotes, aligning with context function signatures.
 import type { Quote, QuoteItem, Customer } from '../types';
 import { QuoteStatus } from '../types';
 import { useData } from '../context/DataContext';
@@ -16,10 +13,8 @@ interface QuoteFormProps {
 }
 
 const QuoteForm: React.FC<QuoteFormProps> = ({ quote, onClose }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, addQuote, updateQuote } = useData();
-  // Fix: Corrected form state type to omit userId, which is handled by the context.
-  const [formData, setFormData] = useState<Omit<Quote, 'id' | 'userId'>>({
+  const { state, dispatch } = useData();
+  const [formData, setFormData] = useState<Omit<Quote, 'id'>>({
     quoteNumber: quote?.quoteNumber || generateNextDocumentNumber(state.quotes, 'quoteNumber', 'QTE-'),
     customerId: quote?.customerId || (state.customers.length > 0 ? state.customers[0].id : ''),
     issueDate: quote?.issueDate || new Date().toISOString().split('T')[0],
@@ -103,13 +98,11 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ quote, onClose }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setTimeout(async () => {
+    setTimeout(() => {
         if (quote) {
-          // Fix: Call updateQuote with the full Quote object.
-          await updateQuote({ ...formData, id: quote.id, userId: quote.userId });
+          dispatch({ type: 'UPDATE_QUOTE', payload: { ...formData, id: quote.id } });
         } else {
-          // Fix: Call addQuote with form data (userId is added by context).
-          await addQuote(formData);
+          dispatch({ type: 'ADD_QUOTE', payload: formData });
         }
         onClose();
     }, 500);
@@ -275,7 +268,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ quote, onClose }) => {
                     onChange={handleTermsChange}
                     className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm h-24"
                 >
-                    {(state.settings.termsAndConditions || []).map(term => (
+                    {(state.settings.quoteTerms || []).map(term => (
                         <option key={term.id} value={term.text}>{term.text}</option>
                     ))}
                 </select>

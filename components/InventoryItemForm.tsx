@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// Fix: Corrected type to omit userId for new items, aligning with context function signatures.
 import type { InventoryItem } from '../types';
 import { useData } from '../context/DataContext';
 
@@ -9,10 +8,8 @@ interface InventoryItemFormProps {
 }
 
 const InventoryItemForm: React.FC<InventoryItemFormProps> = ({ item, onClose }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { addInventoryItem, updateInventoryItem } = useData();
-  // Fix: Corrected form state type to omit userId, which is handled by the context.
-  const [formData, setFormData] = useState<Omit<InventoryItem, 'id' | 'userId'>>({
+  const { dispatch } = useData();
+  const [formData, setFormData] = useState<Omit<InventoryItem, 'id'>>({
     name: item?.name || '',
     sku: item?.sku || '',
     category: item?.category || '',
@@ -30,14 +27,12 @@ const InventoryItemForm: React.FC<InventoryItemFormProps> = ({ item, onClose }) 
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (item) {
-      // Fix: Call updateInventoryItem with the full InventoryItem object.
-      await updateInventoryItem({ ...formData, id: item.id, userId: item.userId });
+      dispatch({ type: 'UPDATE_INVENTORY_ITEM', payload: { ...formData, id: item.id } });
     } else {
-      // Fix: Call addInventoryItem with form data (userId is added by context).
-      await addInventoryItem(formData);
+      dispatch({ type: 'ADD_INVENTORY_ITEM', payload: formData });
     }
     onClose();
   };

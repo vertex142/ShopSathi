@@ -9,9 +9,8 @@ interface DeliveryChallansPageProps {
     onViewCustomer: (customerId: string) => void;
 }
 
-const DeliveryChallansPage: React.FC<DeliveryChallansPageProps> = ({ onViewCustomer }) => {
-  // Fix: Replaced dispatch with specific data context functions.
-  const { state, deleteDeliveryChallan } = useData();
+const DeliveryChallansPage: React.FC<DeliveryChallansPageProps> = React.memo(({ onViewCustomer }) => {
+  const { state, dispatch } = useData();
   const [showForm, setShowForm] = useState(false);
   const [selectedChallan, setSelectedChallan] = useState<DeliveryChallan | null>(null);
   const [challanToPreview, setChallanToPreview] = useState<DeliveryChallan | null>(null);
@@ -26,8 +25,7 @@ const DeliveryChallansPage: React.FC<DeliveryChallansPageProps> = ({ onViewCusto
 
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this delivery challan?')) {
-      // Fix: Replaced dispatch with specific data context functions.
-      deleteDeliveryChallan(id);
+      dispatch({ type: 'DELETE_DELIVERY_CHALLAN', payload: id });
     }
   };
   
@@ -163,6 +161,6 @@ const DeliveryChallansPage: React.FC<DeliveryChallansPageProps> = ({ onViewCusto
       )}
     </div>
   );
-};
+});
 
 export default DeliveryChallansPage;

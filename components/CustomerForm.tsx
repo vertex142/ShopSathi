@@ -9,8 +9,8 @@ interface CustomerFormProps {
 }
 
 const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }) => {
-    const { addCustomer, updateCustomer } = useData();
-    const [formData, setFormData] = useState<Omit<Customer, 'id' | 'userId'>>({
+    const { dispatch } = useData();
+    const [formData, setFormData] = useState<Omit<Customer, 'id'>>({
         name: customer?.name || '',
         email: customer?.email || '',
         phone: customer?.phone || '',
@@ -26,16 +26,16 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
         });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (customer) {
-            await updateCustomer({ ...formData, id: customer.id, userId: customer.userId });
-            onSave({ ...formData, id: customer.id, userId: customer.userId });
+            const updatedCustomer = { ...formData, id: customer.id };
+            dispatch({ type: 'UPDATE_CUSTOMER', payload: updatedCustomer });
+            onSave(updatedCustomer);
         } else {
-            // The userId will be added by the context function
-            await addCustomer(formData);
-            // We don't have the ID here, but the parent component will get it from the real-time update
-            onSave({ ...formData, id: 'temp-id', userId: 'temp-userId' } as Customer);
+            const newCustomer = { ...formData, id: crypto.randomUUID() };
+            dispatch({ type: 'ADD_CUSTOMER', payload: newCustomer });
+            onSave(newCustomer);
         }
         onClose();
     };

@@ -3,8 +3,8 @@ import { useData } from '../context/DataContext';
 import { Account, AccountType } from '../types';
 import AccountForm from '../components/AccountForm';
 
-const AccountsPage: React.FC = () => {
-    const { state, deleteAccount } = useData();
+const AccountsPage: React.FC = React.memo(() => {
+    const { state, dispatch } = useData();
     const [showForm, setShowForm] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
@@ -24,7 +24,7 @@ const AccountsPage: React.FC = () => {
             return;
         }
         if (window.confirm('Are you sure you want to delete this account?')) {
-            deleteAccount(id);
+            dispatch({ type: 'DELETE_ACCOUNT', payload: id });
         }
     };
     
@@ -107,6 +107,6 @@ const AccountsPage: React.FC = () => {
             {showForm && <AccountForm account={selectedAccount} onClose={() => setShowForm(false)} />}
         </div>
     );
-};
+});
 
 export default AccountsPage;
