@@ -20,21 +20,61 @@
     </script>
     <style>
       /* Styles for PDF export to ensure clean output */
-      body.pdf-capturing .shadow-md,
-      body.pdf-capturing .shadow-lg,
-      body.pdf-capturing .shadow-sm {
-        box-shadow: none !important;
-        border: 1px solid #e5e7eb; /* Add a border to replace shadow */
-      }
       body.pdf-capturing {
         background-color: #ffffff !important;
       }
-      body.pdf-capturing .bg-white {
-        background-color: #ffffff !important;
-      }
-      /* Hide export buttons from the captured PDF */
-      body.pdf-capturing .export-button {
+      body.pdf-capturing .export-button,
+      body.pdf-capturing .non-printable {
         display: none !important;
+      }
+       body.pdf-capturing .printable-document {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb;
+      }
+
+      /* Dedicated Print Styles */
+      @media print {
+        body {
+          background-color: #fff;
+          -webkit-print-color-adjust: exact; /* Chrome, Safari */
+          color-adjust: exact; /* Firefox */
+        }
+        #root > div > div:first-child, /* Sidebar */
+        #root > div > main > header, /* Main header */
+        .non-printable {
+          display: none !important;
+        }
+        main {
+          height: auto !important;
+          overflow: visible !important;
+        }
+        main > div {
+          padding: 0 !important;
+        }
+        .printable-container {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          background: white !important;
+          z-index: 9999 !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          display: block !important;
+        }
+        .printable-document {
+          box-shadow: none !important;
+          border: none !important;
+          max-height: none !important;
+          height: 100% !important;
+          width: 100% !important;
+          border-radius: 0 !important;
+        }
+         .printable-content {
+          overflow-y: visible !important;
+          padding: 2rem !important;
+        }
       }
     </style>
   <script type="importmap">

@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { InvoiceStatus } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Legend as PieLegend } from 'recharts';
 import GeneralLedgerReport from '../components/GeneralLedgerReport';
+import ProfitAndLossReport from '../components/ProfitAndLossReport';
 import { Download, LoaderCircle } from 'lucide-react';
 import { exportElementAsPDF } from '../utils/pdfExporter';
 
@@ -187,7 +188,7 @@ const FinancialOverview: React.FC = () => {
 };
 
 const ReportsPage: React.FC = React.memo(() => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'ledger'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'pnl'>('overview');
 
     return (
         <div className="space-y-6">
@@ -205,12 +206,19 @@ const ReportsPage: React.FC = React.memo(() => {
                     >
                         General Ledger
                     </button>
+                    <button
+                        onClick={() => setActiveTab('pnl')}
+                        className={`${activeTab === 'pnl' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                        Profit & Loss
+                    </button>
                 </nav>
             </div>
 
             <div>
                 {activeTab === 'overview' && <FinancialOverview />}
                 {activeTab === 'ledger' && <GeneralLedgerReport />}
+                {activeTab === 'pnl' && <ProfitAndLossReport />}
             </div>
         </div>
     );

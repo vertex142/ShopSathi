@@ -25,15 +25,14 @@ const MoneyReceiptPreview: React.FC<MoneyReceiptPreviewProps> = ({ invoice, paym
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4 print:p-0">
-            <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl h-[90vh] flex flex-col print:h-auto print:shadow-none">
-                {/* Header with actions - hidden on print */}
-                <header className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg print:hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4 printable-container non-printable">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col printable-document">
+                <header className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg non-printable">
                     <h2 className="text-xl font-semibold text-gray-800">Money Receipt</h2>
                     <div className="flex items-center space-x-2">
                         <button onClick={handlePrint} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                             <Printer className="h-4 w-4 mr-2" />
-                            Print
+                            Print / Save PDF
                         </button>
                         <button onClick={onClose} className="text-gray-500 hover:text-gray-800 p-2 rounded-full">
                             <X className="h-6 w-6" />
@@ -41,65 +40,70 @@ const MoneyReceiptPreview: React.FC<MoneyReceiptPreviewProps> = ({ invoice, paym
                     </div>
                 </header>
 
-                {/* Printable Receipt Content */}
-                <div id="printable-receipt" className="p-8 overflow-y-auto flex-grow bg-white">
-                    <div className="flex justify-between items-start pb-6 border-b">
-                        <div>
-                            {settings.logo && <img src={settings.logo} alt="Company Logo" className="h-16 w-auto mb-4" />}
-                            <h1 className="text-2xl font-bold text-gray-800">{settings.name}</h1>
-                            <p className="text-sm text-gray-500">{settings.address}</p>
-                            <p className="text-sm text-gray-500">{settings.email} | {settings.phone1}</p>
-                        </div>
-                        <div className="text-right">
-                            <h2 className="text-3xl font-bold uppercase text-gray-400">Money Receipt</h2>
-                            <p className="text-sm text-gray-600 mt-2">Receipt #: <span className="font-semibold">MR-{invoice.invoiceNumber}-{invoice.payments.length}</span></p>
-                            <p className="text-sm text-gray-600">Payment Date: <span className="font-semibold">{payment.date}</span></p>
-                        </div>
-                    </div>
+                <div className="flex-grow overflow-y-auto bg-gray-100 p-8">
+                    <div className="bg-white shadow-lg p-10 relative printable-content" id="printable-receipt">
+                         <div className="border-t-8 border-brand-blue pb-8">
+                            <header className="flex justify-between items-start pt-8 mb-10">
+                                <div className="flex items-center">
+                                {settings.logo && <img src={settings.logo} alt="Company Logo" className="h-16 w-auto mr-6" />}
+                                    <div>
+                                        <h1 className="text-3xl font-bold text-gray-900">{settings.name}</h1>
+                                        <p className="text-sm text-gray-500 max-w-xs">{settings.address}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <h2 className="text-4xl font-bold uppercase text-gray-400 tracking-widest">Receipt</h2>
+                                    <p className="text-md text-gray-600 mt-1"># MR-{invoice.invoiceNumber}-{invoice.payments.length}</p>
+                                    <p className="text-sm text-gray-600 mt-2"><strong>Date:</strong> {payment.date}</p>
+                                </div>
+                            </header>
+                            
+                            <section className="mt-8 text-base space-y-4">
+                                <p className="leading-relaxed">
+                                    <strong className="font-semibold text-gray-700">Received from:</strong> {customer?.name || 'N/A'}
+                                </p>
+                                <p className="leading-relaxed">
+                                    <strong className="font-semibold text-gray-700">Amount in words:</strong> <span className="capitalize">{numberToWords(payment.amount)} Only.</span>
+                                </p>
+                                <p className="leading-relaxed">
+                                    <strong className="font-semibold text-gray-700">Payment for:</strong> Invoice #{invoice.invoiceNumber} via {payment.method}.
+                                </p>
+                            </section>
 
-                    <div className="mt-6">
-                        <p className="text-gray-700 leading-relaxed">
-                            Received with thanks from <strong className="text-gray-900">{customer?.name || 'N/A'}</strong>, the sum of <strong className="text-gray-900">${payment.amount.toFixed(2)}</strong> (<span className="capitalize font-semibold">{numberToWords(payment.amount)} Dollars Only</span>) via <strong>{payment.method}</strong> against Invoice #<strong>{invoice.invoiceNumber}</strong>.
-                        </p>
-                    </div>
+                            <section className="mt-10 text-center border-2 border-green-500 bg-green-50 py-6 px-4 rounded-lg">
+                                <p className="uppercase tracking-wider text-green-700 font-semibold">Amount Paid</p>
+                                <p className="text-5xl font-bold tracking-tight text-green-600">${payment.amount.toFixed(2)}</p>
+                            </section>
 
-                    <div className="mt-8">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">Payment Summary</h3>
-                        <table className="min-w-full">
-                            <tbody>
-                                <tr className="border-b">
-                                    <td className="py-2 text-gray-600">Invoice Total:</td>
-                                    <td className="py-2 text-right font-medium">${grandTotal.toFixed(2)}</td>
-                                </tr>
-                                <tr className="border-b bg-green-50">
-                                    <td className="py-2 text-gray-600">Amount Paid this time:</td>
-                                    <td className="py-2 text-right font-semibold text-green-700">${payment.amount.toFixed(2)}</td>
-                                </tr>
-                                <tr className="border-b bg-red-50">
-                                    <td className="py-2 font-bold text-gray-800">Balance Due:</td>
-                                    <td className="py-2 text-right font-bold text-red-700">${balanceDueAfterThisPayment.toFixed(2)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        {payment.notes && (
-                            <div className="mt-4 text-sm text-gray-600">
-                                <strong>Notes:</strong> {payment.notes}
-                            </div>
-                        )}
-                    </div>
-                    
-                    <div className="mt-24 flex justify-between items-end text-sm">
-                        <div className="text-center">
-                            <p className="pt-8 border-t w-48"></p>
-                            <p className="font-semibold">Customer Signature</p>
-                        </div>
-                         <div className="text-center">
-                            {settings.authorizedSignatureImage ? (
-                                <img src={settings.authorizedSignatureImage} alt="Signature" className="h-16 mx-auto" />
-                            ) : (
-                                <div className="pt-8 w-48"></div>
-                            )}
-                            <p className="border-t w-48 font-semibold pt-1">{settings.authorizedSignatureLabel}</p>
+                            <section className="mt-8 flex justify-end">
+                                <div className="w-full max-w-xs space-y-2 text-sm">
+                                    <div className="flex justify-between py-2 border-b">
+                                        <span className="text-gray-600">Invoice Total:</span>
+                                        <span className="font-medium text-gray-800">${grandTotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b">
+                                        <span className="text-gray-600">Amount Paid This Time:</span>
+                                        <span className="font-medium text-green-600">${payment.amount.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 bg-gray-100 px-2 rounded font-bold">
+                                        <span className="text-gray-800">Remaining Balance:</span>
+                                        <span className="text-red-600">${balanceDueAfterThisPayment.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </section>
+                            
+                            <footer className="mt-24 pt-8 border-t text-sm text-gray-600">
+                                <div className="flex justify-end items-end">
+                                    <div className="text-center">
+                                        {settings.authorizedSignatureImage ? (
+                                            <img src={settings.authorizedSignatureImage} alt="Signature" className="h-16 mx-auto" />
+                                        ) : (
+                                            <div className="pt-8 w-48"></div>
+                                        )}
+                                        <p className="border-t w-48 font-semibold pt-1 mt-1">{settings.authorizedSignatureLabel}</p>
+                                    </div>
+                                </div>
+                            </footer>
                         </div>
                     </div>
                 </div>

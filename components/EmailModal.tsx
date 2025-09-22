@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import type { Invoice } from '../types';
 import { useData } from '../context/DataContext';
-import { FileDown, Mail } from 'lucide-react';
+import { Download, Copy, Check } from 'lucide-react';
 import { exportElementAsPDF } from '../utils/pdfExporter';
-import InvoicePreview from './InvoicePreview'; // For hidden rendering
+import InvoicePreview from './InvoicePreview';
 
 interface EmailModalProps {
   invoice: Invoice;
@@ -13,8 +13,8 @@ interface EmailModalProps {
 const EmailModal: React.FC<EmailModalProps> = ({ invoice, onClose }) => {
     const { state } = useData();
     const customer = state.customers.find(c => c.id === invoice.customerId);
-    const [subject, setSubject] = useState('');
-    const [body, setBody] = useState('');
+    const [emailContent, setEmailContent] = useState({ subject: '', body: '' });
+    const [isCopied, setIsCopied] = useState(false);
 
     const getInvoiceTotals = (inv: Invoice) => {
         const subtotal = inv.items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
@@ -28,33 +28,19 @@ const EmailModal: React.FC<EmailModalProps> = ({ invoice, onClose }) => {
     
     useEffect(() => {
         if (customer && invoice) {
-            setSubject(`Invoice ${invoice.invoiceNumber} from ${state.settings.name}`);
-            setBody(
-`Dear ${customer.name},
-
-Please find attached your invoice ${invoice.invoiceNumber}.
-
-Amount Due: $${balanceDue.toFixed(2)}
-Due Date: ${invoice.dueDate}
-
-Thank you for your business.
-
-Sincerely,
-The team at ${state.settings.name}`
-            );
+            setEmailContent({
+                subject: `Invoice ${invoice.invoiceNumber} from ${state.settings.name}`,
+                body: `Dear ${customer.name},\n\nPlease find attached your invoice ${invoice.invoiceNumber}.\n\nAmount Due: $${balanceDue.toFixed(2)}\nDue Date: ${invoice.dueDate}\n\nThank you for your business.\n\nSincerely,\nThe team at ${state.settings.name}`
+            });
         }
     }, [invoice, customer, state.settings.name, balanceDue]);
-
-    const handleOpenEmailClient = () => {
-        if (!customer) {
-            alert('Customer not found.');
-            return;
-        }
-        const mailtoLink = `mailto:${customer.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        window.location.href = mailtoLink;
-        onClose();
+    
+    const handleCopyToClipboard = () => {
+        const fullEmailText = `Subject: ${emailContent.subject}\n\n${emailContent.body}`;
+        navigator.clipboard.writeText(fullEmailText);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
     };
-
 
     if (!customer) {
         return (
@@ -73,58 +59,70 @@ The team at ${state.settings.name}`
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] flex flex-col">
-                <h2 className="text-2xl font-bold mb-6">Email Invoice {invoice.invoiceNumber}</h2>
-                <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 mb-4 rounded-r-lg">
-                    <h3 className="font-bold">Workflow</h3>
-                    <p className="text-sm">
-                        1. Download the PDF of the invoice to your computer.
-                        <br/>
-                        2. Click "Open in Email Client", which will create a new pre-filled email.
-                        <br/>
-                        3. Attach the downloaded PDF to the email and send it.
-                    </p>
+                <h2 className="text-2xl font-bold mb-4">Share Invoice {invoice.invoiceNumber}</h2>
+                <p className="text-sm text-gray-600 mb-6">Follow these steps to send the invoice to <span className="font-semibold">{customer.email}</span>.</p>
+                
+                <div className="space-y-6">
+                    <div className="flex items-start space-x-4">
+                        <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-brand-blue text-white font-bold text-lg">1</div>
+                        <div>
+                            <h3 className="font-semibold text-gray-800">Download the Invoice PDF</h3>
+                            <p className="text-sm text-gray-500 mb-3">Save the invoice to your computer. You'll attach this file to your email.</p>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    // Temporarily show the element to render it, then hide it
+                                    const el = document.getElementById(`printable-invoice-${invoice.id}`);
+                                    const container = el?.closest('.printable-container');
+                                    if(el && container) {
+                                        container.classList.remove('non-printable');
+                                        exportElementAsPDF(`printable-invoice-${invoice.id}`, `Invoice_${invoice.invoiceNumber}`).finally(() => {
+                                             container.classList.add('non-printable');
+                                        });
+                                    }
+                                }}
+                                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center text-sm"
+                            >
+                                <Download className="h-4 w-4 mr-2" />
+                                Download PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div className="flex items-start space-x-4">
+                         <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-brand-blue text-white font-bold text-lg">2</div>
+                        <div>
+                             <h3 className="font-semibold text-gray-800">Prepare Your Email</h3>
+                            <p className="text-sm text-gray-500 mb-3">Copy the content below and paste it into a new email in your favorite client (Gmail, Outlook, etc.). Then, attach the PDF you just downloaded.</p>
+                            <div className="bg-gray-50 p-4 rounded-lg border">
+                                <div className="mb-2">
+                                    <label className="text-xs font-semibold text-gray-500">SUBJECT</label>
+                                    <p className="text-sm text-gray-800">{emailContent.subject}</p>
+                                </div>
+                                <div className="border-t pt-2">
+                                    <label className="text-xs font-semibold text-gray-500">BODY</label>
+                                    <p className="text-sm text-gray-800 whitespace-pre-wrap">{emailContent.body}</p>
+                                </div>
+                            </div>
+                             <button
+                                onClick={handleCopyToClipboard}
+                                className={`mt-3 w-full flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${isCopied ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                            >
+                                {isCopied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                                {isCopied ? 'Copied to Clipboard!' : 'Copy Email Content'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div className="space-y-4 flex-grow overflow-y-auto pr-2">
-                    <div>
-                        <label htmlFor="to" className="block text-sm font-medium text-gray-700">To</label>
-                        <input type="email" id="to" name="to" value={customer.email} disabled className="mt-1 block w-full p-2 bg-gray-100 text-gray-500 border border-gray-300 rounded-md shadow-sm"/>
-                    </div>
-                    <div>
-                        <label htmlFor="subject" className="block text-sm font-medium text-gray-700">Subject</label>
-                        <input type="text" id="subject" name="subject" value={subject} onChange={(e) => setSubject(e.target.value)} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                    </div>
-                    <div>
-                        <label htmlFor="body" className="block text-sm font-medium text-gray-700">Body</label>
-                        <textarea id="body" name="body" value={body} onChange={(e) => setBody(e.target.value)} rows={8} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
-                    </div>
-                </div>
-                <div className="flex justify-between items-center pt-6 mt-auto border-t">
-                    <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                    <div className="flex space-x-2">
-                        <button
-                            type="button"
-                            onClick={() => exportElementAsPDF(`printable-invoice-${invoice.id}`, `Invoice_${invoice.invoiceNumber}`)}
-                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center"
-                        >
-                            <FileDown className="h-5 w-5 mr-2" />
-                            Download PDF
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleOpenEmailClient}
-                            className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center"
-                        >
-                            <Mail className="h-5 w-5 mr-2" />
-                            Open in Email Client
-                        </button>
-                    </div>
+
+                <div className="flex justify-end pt-6 mt-auto border-t">
+                    <button type="button" onClick={onClose} className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900">Done</button>
                 </div>
             </div>
-            {/* Hidden preview component for PDF export */}
-            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-                <div id={`printable-invoice-${invoice.id}`} style={{ width: '8.5in', height: '11in' }}>
-                    <InvoicePreview invoice={invoice} onClose={() => {}} />
-                </div>
+            {/* Hidden preview component for PDF export. It's inside a printable-container that is also hidden by default */}
+            <div className="printable-container non-printable" style={{ position: 'absolute', left: '-9999px', top: '-9999px', zIndex: -1 }}>
+                 <div style={{ width: '8.5in' }}>
+                     <InvoicePreview invoice={invoice} onClose={() => {}} />
+                 </div>
             </div>
         </div>
     );
