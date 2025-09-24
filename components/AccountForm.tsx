@@ -12,7 +12,7 @@ const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
     const [formData, setFormData] = useState({
         name: account?.name || '',
         type: account?.type || AccountType.Expense,
-        balance: account?.balance || 0,
+        openingBalance: account?.openingBalance || 0,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -27,14 +27,17 @@ const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
         e.preventDefault();
         if (account) {
             dispatch({ type: 'UPDATE_ACCOUNT', payload: { 
-                ...account, // Preserve id, isSystemAccount, balance from original
+                ...account, // Preserve id, balance, isSystemAccount from original
                 name: formData.name, 
-                type: formData.type,
+                openingBalance: formData.openingBalance,
+                type: account.isSystemAccount ? account.type : formData.type, // Prevent type change for system accounts
             }});
         } else {
             // For new accounts, balance is set from form, and it's not a system account
             dispatch({ type: 'ADD_ACCOUNT', payload: {
-                ...formData,
+                name: formData.name,
+                type: formData.type,
+                openingBalance: formData.openingBalance,
                 isSystemAccount: false,
             }});
         }
@@ -42,43 +45,54 @@ const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
     };
     
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
-                <h2 className="text-2xl font-bold mb-6">{account ? 'Edit Account' : 'Add New Account'}</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[480px] flex flex-col">
+                <header className="flex-shrink-0 p-6 border-b">
+                    <h2 className="text-2xl font-bold">{account ? 'Edit Account' : 'Add New Account'}</h2>
+                </header>
+                <main className="flex-grow p-6 space-y-4 overflow-y-auto">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700">Account Name</label>
                         <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
                     </div>
                      <div>
                         <label htmlFor="type" className="block text-sm font-medium text-gray-700">Account Type</label>
-                        <select id="type" name="type" value={formData.type} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm">
+                        <select 
+                            id="type" 
+                            name="type" 
+                            value={formData.type} 
+                            onChange={handleChange} 
+                            required 
+                            className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            disabled={account?.isSystemAccount}
+                            title={account?.isSystemAccount ? "The type of a system account cannot be changed." : ""}
+                        >
                             {Object.values(AccountType).map(type => (
                                 <option key={type} value={type} className="capitalize">{type.toLowerCase()}</option>
                             ))}
                         </select>
+                        {account?.isSystemAccount && <p className="text-xs text-gray-500 mt-1">System accounts are essential for core app functions.</p>}
                     </div>
                      <div>
-                        <label htmlFor="balance" className="block text-sm font-medium text-gray-700">Opening Balance ($)</label>
+                        <label htmlFor="openingBalance" className="block text-sm font-medium text-gray-700">Opening Balance ($)</label>
                         <input 
                             type="number" 
-                            id="balance" 
-                            name="balance" 
-                            value={formData.balance} 
+                            id="openingBalance" 
+                            name="openingBalance" 
+                            value={formData.openingBalance} 
                             onChange={handleChange} 
                             step="0.01"
                             required 
                             className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
-                            disabled={!!account} // Cannot change balance directly after creation
                         />
-                        {account && <p className="text-xs text-gray-500 mt-1">Account balance must be updated via journal entries.</p>}
+                        <p className="text-xs text-gray-500 mt-1">Set the account's starting balance when you begin using the app. This is kept separate from ongoing transactions.</p>
                     </div>
-                    <div className="flex justify-end space-x-4 pt-4">
-                        <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                        <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{account ? 'Update' : 'Save'}</button>
-                    </div>
-                </form>
-            </div>
+                </main>
+                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
+                    <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{account ? 'Update' : 'Save'}</button>
+                </footer>
+            </form>
         </div>
     );
 };

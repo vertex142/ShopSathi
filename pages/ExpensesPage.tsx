@@ -49,10 +49,12 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
     const paymentAccounts = state.accounts.filter(a => a.type === AccountType.Asset || a.type === AccountType.Liability);
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
-                <h2 className="text-2xl font-bold mb-6">{expense ? 'Edit Expense' : 'Add New Expense'}</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+                <header className="flex-shrink-0 p-6 border-b">
+                    <h2 className="text-2xl font-bold">{expense ? 'Edit Expense' : 'Add New Expense'}</h2>
+                </header>
+                <main className="flex-grow p-6 space-y-4 overflow-y-auto">
                     <div>
                         <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
                         <input type="date" id="date" name="date" value={formData.date} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
@@ -79,25 +81,25 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
                         <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
                         <input type="number" id="amount" name="amount" value={formData.amount} onChange={handleChange} required min="0.01" step="0.01" className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
                     </div>
-                    <div className="flex justify-end space-x-4 pt-4">
-                        <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" disabled={isSaving}>Cancel</button>
-                        <button 
-                            type="submit" 
-                            className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center w-28 disabled:opacity-75"
-                            disabled={isSaving}
-                        >
-                            {isSaving ? (
-                                <>
-                                    <LoaderCircle className="animate-spin h-5 w-5 mr-2" />
-                                    Saving...
-                                </>
-                            ) : (
-                                expense ? 'Update' : 'Save'
-                            )}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </main>
+                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
+                    <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" disabled={isSaving}>Cancel</button>
+                    <button 
+                        type="submit" 
+                        className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center w-28 disabled:opacity-75"
+                        disabled={isSaving}
+                    >
+                        {isSaving ? (
+                            <>
+                                <LoaderCircle className="animate-spin h-5 w-5 mr-2" />
+                                Saving...
+                            </>
+                        ) : (
+                            expense ? 'Update' : 'Save'
+                        )}
+                    </button>
+                </footer>
+            </form>
         </div>
     );
 };

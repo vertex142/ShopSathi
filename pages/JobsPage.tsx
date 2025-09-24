@@ -53,10 +53,10 @@ const JobsPage: React.FC = React.memo(() => {
         <h1 className="text-3xl font-bold text-gray-800">Job Orders</h1>
         <div className="flex items-center space-x-4">
           <div className="flex items-center bg-gray-200 rounded-lg p-1">
-            <button onClick={() => setViewMode('list')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'list' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`}>
+            <button onClick={() => setViewMode('list')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'list' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`} title="List View">
                 <List className="h-5 w-5 inline-block" />
             </button>
-            <button onClick={() => setViewMode('kanban')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'kanban' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`}>
+            <button onClick={() => setViewMode('kanban')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'kanban' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`} title="Kanban Board View">
                 <Trello className="h-5 w-5 inline-block" />
             </button>
           </div>

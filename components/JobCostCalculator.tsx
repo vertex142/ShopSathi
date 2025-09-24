@@ -76,8 +76,8 @@ const JobCostCalculator: React.FC<JobCostCalculatorProps> = ({ job, onSave, onCl
 
     const handlePrint = async () => {
         setIsPrinting(true);
-        await new Promise(resolve => setTimeout(resolve, 300));
-        printDocument();
+        await new Promise(resolve => setTimeout(resolve, 50));
+        await printDocument('job-cost-sheet', `costing-${job.jobName.replace(/\s/g, '_')}.pdf`);
         setIsPrinting(false);
     };
     

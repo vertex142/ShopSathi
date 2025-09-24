@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
-import { InvoiceStatus, AccountType } from '../types';
+import { AccountType } from '../types';
 import { Download, LoaderCircle } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
 
@@ -20,73 +20,32 @@ const GeneralLedgerReport: React.FC = () => {
     const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
     const [isExporting, setIsExporting] = useState(false);
 
+    const selectedAccount = useMemo(() => state.accounts.find(a => a.id === selectedAccountId), [selectedAccountId, state.accounts]);
+
     const handleExport = async () => {
-        if (!selectedAccountId) {
+        if (!selectedAccount) {
             alert('Please select an account to export the report.');
             return;
         }
         setIsExporting(true);
         await new Promise(resolve => setTimeout(resolve, 300));
-        printDocument();
+        await printDocument('general-ledger-report-content', `ledger-${selectedAccount?.name.replace(/\s+/g, '_')}.pdf`);
         setIsExporting(false);
-    };
-
-    const getInvoiceTotals = (invoice: any) => {
-        const subtotal = invoice.items.reduce((sum: number, item: any) => sum + item.quantity * item.rate, 0);
-        return subtotal + (invoice.previousDue || 0) - (invoice.discount || 0);
     };
 
     const transactions = useMemo(() => {
         if (!selectedAccountId) return [];
 
-        let allTransactions: Transaction[] = [];
-
-        // Invoices (Debit to Accounts Receivable, Credit to Sales Revenue)
-        if (selectedAccountId === 'asset-ar' || selectedAccountId === 'revenue-sales') {
-            state.invoices.forEach(inv => {
-                if (inv.status !== InvoiceStatus.Draft) {
-                    const total = getInvoiceTotals(inv);
-                    if (selectedAccountId === 'asset-ar') {
-                        allTransactions.push({ date: inv.issueDate, details: `Invoice #${inv.invoiceNumber} to ${state.customers.find(c => c.id === inv.customerId)?.name}`, debit: total, credit: 0, type: 'Invoice' });
-                    }
-                    if (selectedAccountId === 'revenue-sales') {
-                        allTransactions.push({ date: inv.issueDate, details: `Sale to ${state.customers.find(c => c.id === inv.customerId)?.name}`, debit: 0, credit: total, type: 'Sale' });
-                    }
-                }
-            });
-        }
-        
-        // Payments (Debit to Cash/Bank, Credit to Accounts Receivable)
-        state.invoices.forEach(inv => {
-            (inv.payments || []).forEach(p => {
-                // For now, assuming all payments go to cash. A more complex system would specify the asset account.
-                if (selectedAccountId === 'asset-cash') {
-                    allTransactions.push({ date: p.date, details: `Payment from ${state.customers.find(c => c.id === inv.customerId)?.name}`, debit: p.amount, credit: 0, type: 'Payment' });
-                }
-                if (selectedAccountId === 'asset-ar') {
-                    allTransactions.push({ date: p.date, details: `Payment for #${inv.invoiceNumber}`, debit: 0, credit: p.amount, type: 'Payment' });
-                }
-            });
-        });
-
-        // Expenses
-        state.expenses.forEach(exp => {
-            if (exp.debitAccountId === selectedAccountId) {
-                 allTransactions.push({ date: exp.date, details: exp.description, debit: exp.amount, credit: 0, type: 'Expense' });
-            }
-             if (exp.creditAccountId === selectedAccountId) {
-                 allTransactions.push({ date: exp.date, details: exp.description, debit: 0, credit: exp.amount, type: 'Expense' });
-            }
-        });
-
-        // Journal Entries
-        state.journalEntries.forEach(entry => {
-            entry.items.forEach(item => {
-                if (item.accountId === selectedAccountId) {
-                    allTransactions.push({ date: entry.date, details: entry.memo, debit: item.debit, credit: item.credit, type: 'Journal' });
-                }
-            });
-        });
+        const allTransactions = state.journalEntries
+            .flatMap(entry => entry.items.map(item => ({ ...item, date: entry.date, memo: entry.memo })))
+            .filter(item => item.accountId === selectedAccountId)
+            .map(item => ({
+                date: item.date,
+                details: item.memo || 'Journal Entry',
+                debit: item.debit,
+                credit: item.credit,
+                type: 'Journal',
+            }));
         
         const filtered = allTransactions.filter(t => 
             (!startDate || t.date >= startDate) &&
@@ -95,24 +54,45 @@ const GeneralLedgerReport: React.FC = () => {
 
         return filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    }, [selectedAccountId, startDate, endDate, state]);
+    }, [selectedAccountId, startDate, endDate, state.journalEntries]);
     
-    const selectedAccount = state.accounts.find(a => a.id === selectedAccountId);
-
-    // This calculates a running balance for the selected period only, starting from zero.
-    // For a true ledger, a starting balance calculated up to the start date would be needed.
-    let runningBalance = 0;
-
+    let runningBalance = selectedAccount?.openingBalance || 0;
 
     return (
         <div className="bg-white p-6 rounded-lg shadow-md space-y-6 printable-page">
+            {/* Screen-only Header */}
+            <header className="flex justify-between items-start pb-6 mb-6 border-b non-printable">
+                <div className="text-center">
+                    {state.settings.logo && (
+                        <>
+                            <img src={state.settings.logo} alt="Logo" className="h-20 w-auto max-w-[8rem] object-contain" />
+                            <p className="text-sm text-gray-500 mt-2 max-w-[12rem] break-words">{state.settings.tagline}</p>
+                        </>
+                    )}
+                </div>
+                <div className="text-right">
+                    <h2 className="text-3xl font-bold text-brand-blue">{state.settings.name}</h2>
+                    <p className="text-md text-gray-600 mt-2">{state.settings.address}</p>
+                    <p className="text-md text-gray-600">{state.settings.phone1}</p>
+                    {state.settings.phone2 && <p className="text-md text-gray-600">{state.settings.phone2}</p>}
+                    <p className="text-md text-gray-600">{state.settings.email}</p>
+                </div>
+            </header>
             <div className="printable-header">
-                {state.settings.logo && <img src={state.settings.logo} alt="Logo" className="h-12 object-contain" />}
-                <div className="text-right text-xs">
-                    <p className="font-bold text-base">{state.settings.name}</p>
-                    <p>{state.settings.address}</p>
-                    <p>Phone: {state.settings.phone1}</p>
-                    <p>Email: {state.settings.email}</p>
+                <div className="text-center">
+                    {state.settings.logo && (
+                        <>
+                            <img src={state.settings.logo} alt="Logo" className="h-14 object-contain" />
+                            <p className="text-[8pt] text-gray-600 mt-1 max-w-[15ch] leading-tight">{state.settings.tagline}</p>
+                        </>
+                    )}
+                </div>
+                <div className="text-right text-[9pt]">
+                    <h2 className="text-xl font-bold text-brand-blue">{state.settings.name}</h2>
+                    <p className="leading-snug">{state.settings.address}</p>
+                    <p className="leading-snug">{state.settings.phone1}</p>
+                    {state.settings.phone2 && <p className="leading-snug">{state.settings.phone2}</p>}
+                    <p className="leading-snug">{state.settings.email}</p>
                 </div>
             </div>
              <div className="flex justify-between items-center non-printable">
@@ -173,25 +153,27 @@ const GeneralLedgerReport: React.FC = () => {
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Debit</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Running Balance</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
+                            <tr className="bg-gray-50 font-semibold">
+                                <td colSpan={4} className="px-6 py-4">Opening Balance</td>
+                                <td className="px-6 py-4 text-right">${runningBalance.toFixed(2)}</td>
+                            </tr>
                            {transactions.map((tx, index) => {
                                 const change = tx.debit - tx.credit;
                                 if (selectedAccount?.type === AccountType.Asset || selectedAccount?.type === AccountType.Expense) {
                                     runningBalance += change;
-                                } else {
-                                    runningBalance -= change;
+                                } else { // Liability, Equity, Revenue
+                                    runningBalance -= change; // Credits increase these accounts, debits decrease
                                 }
                                return (
                                 <tr key={index}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.date}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{tx.details}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.type}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{tx.debit > 0 ? `$${tx.debit.toFixed(2)}` : '-'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{tx.credit > 0 ? `$${tx.credit.toFixed(2)}` : '-'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-800">${runningBalance.toFixed(2)}</td>
@@ -199,13 +181,13 @@ const GeneralLedgerReport: React.FC = () => {
                            )})}
                            {transactions.length === 0 && (
                              <tr>
-                                <td colSpan={6} className="text-center py-10 text-gray-500">No transactions for this period.</td>
+                                <td colSpan={5} className="text-center py-10 text-gray-500">No transactions for this period.</td>
                              </tr>
                            )}
                         </tbody>
                         <tfoot className="bg-gray-100">
                              <tr>
-                                <td colSpan={5} className="px-6 py-3 text-right text-sm font-bold text-gray-700 uppercase">Ending Balance</td>
+                                <td colSpan={4} className="px-6 py-3 text-right text-sm font-bold text-gray-700 uppercase">Ending Balance</td>
                                 <td className="px-6 py-3 text-right text-sm font-bold text-gray-800">${runningBalance.toFixed(2)}</td>
                              </tr>
                         </tfoot>

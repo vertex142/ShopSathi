@@ -42,34 +42,39 @@ const JobKanbanBoard: React.FC<JobKanbanBoardProps> = ({ onEdit, onDelete, onVie
     }));
 
     return (
-        <div className="flex space-x-4 overflow-x-auto pb-4">
-            {columns.map(({ status, title, jobs }) => (
-                <div
-                    key={status}
-                    className="w-80 bg-gray-100 rounded-lg shadow-inner flex-shrink-0"
-                    onDrop={(e) => handleDrop(e, status)}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                >
-                    <div className="p-4 border-b">
-                        <h3 className="font-semibold text-gray-700">{title} ({jobs.length})</h3>
+        <div>
+            <div className="text-sm text-gray-600 mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <strong>💡 Pro Tip:</strong> Drag and drop jobs between columns to quickly update their status.
+            </div>
+            <div className="flex space-x-4 overflow-x-auto pb-4">
+                {columns.map(({ status, title, jobs }) => (
+                    <div
+                        key={status}
+                        className="w-80 bg-gray-100 rounded-lg shadow-inner flex-shrink-0"
+                        onDrop={(e) => handleDrop(e, status)}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                    >
+                        <div className="p-4 border-b">
+                            <h3 className="font-semibold text-gray-700">{title} ({jobs.length})</h3>
+                        </div>
+                        <div className="p-2 space-y-2 h-full">
+                            {jobs.map(job => (
+                                <JobKanbanCard
+                                    key={job.id}
+                                    job={job}
+                                    customer={state.customers.find(c => c.id === job.customerId)}
+                                    onDragStart={handleDragStart}
+                                    onEdit={onEdit}
+                                    onDelete={onDelete}
+                                    onViewDetails={onViewDetails}
+                                />
+                            ))}
+                            {jobs.length === 0 && <div className="text-center p-4 text-sm text-gray-400">No jobs in this stage.</div>}
+                        </div>
                     </div>
-                    <div className="p-2 space-y-2 h-full">
-                        {jobs.map(job => (
-                            <JobKanbanCard
-                                key={job.id}
-                                job={job}
-                                customer={state.customers.find(c => c.id === job.customerId)}
-                                onDragStart={handleDragStart}
-                                onEdit={onEdit}
-                                onDelete={onDelete}
-                                onViewDetails={onViewDetails}
-                            />
-                        ))}
-                        {jobs.length === 0 && <div className="text-center p-4 text-sm text-gray-400">No jobs in this stage.</div>}
-                    </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 };

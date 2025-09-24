@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 
 if (!process.env.API_KEY) {
@@ -79,5 +78,39 @@ export const generateActionableInsight = async (prompt: string, context: object)
     } catch (error) {
         console.error("Error generating actionable insight:", error);
         throw new Error("Failed to generate insight with AI.");
+    }
+};
+
+// FIX: Add suggestChatReply function to provide AI-powered chat suggestions.
+export const suggestChatReply = async (chatHistory: string, companyName: string): Promise<string> => {
+    if (!process.env.API_KEY) {
+        return Promise.reject(new Error("API key not configured."));
+    }
+    try {
+        const prompt = `You are a helpful customer service assistant for a printing company called "${companyName}". 
+        Based on the following recent chat history, suggest a professional, concise, and helpful reply from the staff's perspective.
+        Do not add a salutation like "Hi" or a signature like "Thanks". Just provide the message body.
+
+        Chat History:
+        ${chatHistory}
+        
+        Suggested Staff Reply:`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 100,
+                thinkingConfig: { thinkingBudget: 0 }
+            }
+        });
+
+        return response.text.trim();
+    } catch (error) {
+        console.error("Error suggesting chat reply:", error);
+        throw new Error("Failed to suggest chat reply with AI.");
     }
 };

@@ -226,10 +226,10 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                                         <button onClick={() => setQuoteToPreview(quote)} className="text-blue-600 hover:text-blue-900">Preview</button>
                                         {quote.status === QuoteStatus.Accepted && !quote.convertedToJobId && (
-                                          <button onClick={() => handleConvertToJob(quote.id)} className="text-purple-600 hover:text-purple-900">To Job</button>
+                                          <button onClick={() => handleConvertToJob(quote.id)} className="text-purple-600 hover:text-purple-900" title="Convert this accepted quote into a new job order">To Job</button>
                                         )}
                                         {quote.status === QuoteStatus.Accepted && !quote.convertedToInvoiceId && (
-                                          <button onClick={() => handleConvertToInvoice(quote.id)} className="text-green-600 hover:text-green-900">To Invoice</button>
+                                          <button onClick={() => handleConvertToInvoice(quote.id)} className="text-green-600 hover:text-green-900" title="Convert this accepted quote into a new draft invoice">To Invoice</button>
                                         )}
                                         <button onClick={() => handleEdit(quote)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
                                         <button onClick={() => handleDelete(quote.id)} className="text-red-600 hover:text-red-900">Delete</button>

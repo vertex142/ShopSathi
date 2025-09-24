@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type Page = 'dashboard' | 'invoices' | 'quotes' | 'jobs' | 'customers' | 'expenses' | 'settings' | 'reports' | 'inventory' | 'suppliers' | 'deliveryChallans' | 'purchaseOrders' | 'accounts' | 'journalEntries' | 'userManual' | 'chat';
+export type Page = 'dashboard' | 'invoices' | 'quotes' | 'jobs' | 'customers' | 'expenses' | 'settings' | 'reports' | 'inventory' | 'suppliers' | 'deliveryChallans' | 'purchaseOrders' | 'accounts' | 'journalEntries' | 'userManual';
 
 export interface NavItem {
   id: Page;
@@ -293,7 +293,8 @@ export interface Account {
   id: string;
   name: string;
   type: AccountType;
-  balance: number;
+  balance: number; // Transactional balance
+  openingBalance: number; // Manually set opening balance
   isSystemAccount?: boolean; // To prevent deletion of core accounts
 }
 
@@ -323,13 +324,12 @@ export interface TimelineEvent {
     relatedId: string;
 }
 
+// FIX: Added ChatMessage and ChatConversation interfaces for the chat feature.
 export interface ChatMessage {
     id: string;
-// FIX: The `author` type was too restrictive and did not account for 'system' messages used to initialize conversations. Added 'system' to the union type.
-    author: 'staff' | 'customer' | 'system';
     text: string;
     timestamp: number;
-    readByStaff: boolean;
+    author: 'customer' | 'staff' | 'system';
 }
 
 export interface ChatConversation {
@@ -354,6 +354,7 @@ export interface AppState {
   accounts: Account[];
   journalEntries: JournalEntry[];
   notifications: Notification[];
+  // FIX: Added chatConversations to AppState.
   chatConversations: ChatConversation[];
 }
 

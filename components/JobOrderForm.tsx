@@ -228,10 +228,10 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                             </label>
                         )}
                         <div className="flex space-x-2">
-                            <button type="button" onClick={() => handleAiAnalysis("Analyze the primary colors in this design and list them with hex codes.")} disabled={!formData.designImage || isAnalyzing} className="text-xs flex items-center p-2 border rounded-md hover:bg-gray-100 disabled:opacity-50">
+                            <button type="button" onClick={() => handleAiAnalysis("Analyze the primary colors in this design and list them with hex codes.")} disabled={!formData.designImage || isAnalyzing} className="text-xs flex items-center p-2 border rounded-md hover:bg-gray-100 disabled:opacity-50" title="Use AI to analyze the design and suggest primary colors with hex codes.">
                                 {isAnalyzing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Palette className="h-4 w-4 mr-1"/>} Analyze Colors
                             </button>
-                            <button type="button" onClick={() => handleAiAnalysis("Based on this image, suggest a professional, one-sentence job description.")} disabled={!formData.designImage || isAnalyzing} className="text-xs flex items-center p-2 border rounded-md hover:bg-gray-100 disabled:opacity-50">
+                            <button type="button" onClick={() => handleAiAnalysis("Based on this image, suggest a professional, one-sentence job description.")} disabled={!formData.designImage || isAnalyzing} className="text-xs flex items-center p-2 border rounded-md hover:bg-gray-100 disabled:opacity-50" title="Use AI to analyze the design and suggest a professional job description.">
                                 {isAnalyzing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4 mr-1"/>} Suggest Desc.
                             </button>
                         </div>
@@ -309,6 +309,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                   <button type="button" onClick={addMaterial} className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500 disabled:opacity-50" disabled={state.inventoryItems.length === 0}>
                       + Add Material
                   </button>
+                  <p className="text-xs text-gray-500 mt-1">Inventory will be automatically deducted when the job status is changed to 'Completed' or 'Delivered'.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t mt-6">
@@ -322,7 +323,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                       </button>
                   </div>
                   <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-gray-800">Profitability Analysis</h4>
+                      <h4 className="font-semibold text-gray-800 border-b border-dotted cursor-help" title="This analysis compares the sale price against the estimated and actual costs entered in the cost calculator.">Profitability Analysis</h4>
                       <div className="grid grid-cols-2 gap-x-4">
                           <div className="font-medium text-sm text-gray-500"></div>
                           <div className="font-medium text-sm text-gray-500">Estimated</div>

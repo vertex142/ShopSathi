@@ -41,10 +41,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
     };
     
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
-                <h2 className="text-2xl font-bold mb-6">{customer ? 'Edit Customer' : 'Add New Customer'}</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
+            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+                <header className="flex-shrink-0 p-6 border-b">
+                    <h2 className="text-2xl font-bold">{customer ? 'Edit Customer' : 'Add New Customer'}</h2>
+                </header>
+                <main className="flex-grow p-6 space-y-4 overflow-y-auto">
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
                         <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
@@ -74,12 +76,12 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
                             className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
                         />
                     </div>
-                    <div className="flex justify-end space-x-4 pt-4">
-                        <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                        <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{customer ? 'Update' : 'Save'}</button>
-                    </div>
-                </form>
-            </div>
+                </main>
+                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
+                    <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{customer ? 'Update' : 'Save'}</button>
+                </footer>
+            </form>
         </div>
     );
 };

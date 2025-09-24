@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
-import { AppState, Action, CompanySettings, AccountType, InvoiceStatus, JobStatus, QuoteStatus, DeliveryChallanItem, PurchaseOrderStatus, PurchaseOrder, JobOrder, Payment, JournalEntry, Expense, Invoice, Quote, DeliveryChallan, JournalEntryItem, ChatMessage } from '../types';
+// FIX: Import ChatMessage and ChatConversation types.
+import { AppState, Action, CompanySettings, AccountType, InvoiceStatus, JobStatus, QuoteStatus, DeliveryChallanItem, PurchaseOrderStatus, PurchaseOrder, JobOrder, Payment, JournalEntry, Expense, Invoice, Quote, DeliveryChallan, JournalEntryItem, ChatConversation, ChatMessage } from '../types';
 import { generateNotifications } from '../utils/notificationGenerator';
 import { generateNextDocumentNumber } from '../utils/documentNumber';
 
@@ -23,19 +24,20 @@ const defaultSettings: CompanySettings = {
 };
 
 const initialAccounts = [
-    { id: 'asset-cash', name: 'Cash on Hand', type: AccountType.Asset, balance: 0, isSystemAccount: true },
-    { id: 'asset-ar', name: 'Accounts Receivable', type: AccountType.Asset, balance: 0, isSystemAccount: true },
-    { id: 'asset-inventory', name: 'Inventory', type: AccountType.Asset, balance: 0, isSystemAccount: true },
-    { id: 'liability-ap', name: 'Accounts Payable', type: AccountType.Liability, balance: 0, isSystemAccount: true },
-    { id: 'equity-owner', name: "Owner's Equity", type: AccountType.Equity, balance: 0, isSystemAccount: true },
-    { id: 'revenue-sales', name: 'Sales Revenue', type: AccountType.Revenue, balance: 0, isSystemAccount: true },
-    { id: 'expense-cogs', name: 'Cost of Goods Sold', type: AccountType.Expense, balance: 0, isSystemAccount: true },
+    { id: 'asset-cash', name: 'Cash on Hand', type: AccountType.Asset, balance: 0, openingBalance: 0, isSystemAccount: true },
+    { id: 'asset-ar', name: 'Accounts Receivable', type: AccountType.Asset, balance: 0, openingBalance: 0, isSystemAccount: true },
+    { id: 'asset-inventory', name: 'Inventory', type: AccountType.Asset, balance: 0, openingBalance: 0, isSystemAccount: true },
+    { id: 'liability-ap', name: 'Accounts Payable', type: AccountType.Liability, balance: 0, openingBalance: 0, isSystemAccount: true },
+    { id: 'equity-owner', name: "Owner's Equity", type: AccountType.Equity, balance: 0, openingBalance: 0, isSystemAccount: true },
+    { id: 'revenue-sales', name: 'Sales Revenue', type: AccountType.Revenue, balance: 0, openingBalance: 0, isSystemAccount: true },
+    { id: 'expense-cogs', name: 'Cost of Goods Sold', type: AccountType.Expense, balance: 0, openingBalance: 0, isSystemAccount: true },
 ];
 
 const initialState: AppState = {
   customers: [], suppliers: [], invoices: [], quotes: [], jobOrders: [], expenses: [],
   inventoryItems: [], deliveryChallans: [], purchaseOrders: [], accounts: initialAccounts,
-  journalEntries: [], notifications: [], settings: defaultSettings, chatConversations: [],
+  // FIX: Add chatConversations to initial state.
+  journalEntries: [], notifications: [], chatConversations: [], settings: defaultSettings,
 };
 
 const dataReducer = (state: AppState, action: Action): AppState => {
@@ -457,11 +459,25 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         return { ...state, purchaseOrders: state.purchaseOrders.filter(p => p.id !== action.payload) };
         
     // --- ACCOUNTS ---
-    case 'ADD_ACCOUNT':
-        const newAccount = { ...action.payload, id: crypto.randomUUID(), balance: action.payload.balance || 0 };
+    case 'ADD_ACCOUNT': {
+        const newAccountPayload = action.payload;
+        const newAccount = { 
+            ...newAccountPayload, 
+            id: crypto.randomUUID(), 
+            balance: 0, // Transactional balance starts at 0
+            openingBalance: newAccountPayload.openingBalance || 0 
+        };
         return { ...state, accounts: [...state.accounts, newAccount] };
-    case 'UPDATE_ACCOUNT':
-        return { ...state, accounts: state.accounts.map(a => a.id === action.payload.id ? action.payload : a) };
+    }
+    case 'UPDATE_ACCOUNT': {
+        const updatedAccountPayload = action.payload;
+        return { 
+            ...state, 
+            accounts: state.accounts.map(a => 
+                a.id === updatedAccountPayload.id ? updatedAccountPayload : a
+            ) 
+        };
+    }
     case 'DELETE_ACCOUNT':
         return { ...state, accounts: state.accounts.filter(a => a.id !== action.payload) };
 
@@ -502,47 +518,6 @@ const dataReducer = (state: AppState, action: Action): AppState => {
             ...state,
             journalEntries: state.journalEntries.filter(je => je.id !== action.payload),
             accounts: accountsForDelete,
-        };
-    }
-    // --- CHAT ---
-    case 'SEND_CHAT_MESSAGE': {
-// FIX: The type assertion for `author` was too narrow. It has been updated to include 'system' to match the updated ChatMessage type.
-      const { customerId, text, author } = action.payload as { customerId: string, text: string, author: 'staff' | 'customer' | 'system' };
-      const conversations = [...state.chatConversations];
-      let conversation = conversations.find(c => c.customerId === customerId);
-      
-      const newMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        author,
-        text,
-        timestamp: Date.now(),
-        readByStaff: author === 'staff',
-      };
-
-      if (conversation) {
-        conversation.messages.push(newMessage);
-        conversation.lastMessageTimestamp = newMessage.timestamp;
-        conversation.unreadByStaff = author === 'customer';
-      } else {
-        conversation = {
-          id: customerId,
-          customerId,
-          messages: [newMessage],
-          lastMessageTimestamp: newMessage.timestamp,
-          unreadByStaff: author === 'customer',
-        };
-        conversations.push(conversation);
-      }
-      
-      return { ...state, chatConversations: conversations };
-    }
-    case 'MARK_CHAT_AS_READ': {
-        const conversationId = action.payload as string;
-        return {
-            ...state,
-            chatConversations: state.chatConversations.map(c => 
-                c.id === conversationId ? { ...c, unreadByStaff: false } : c
-            )
         };
     }
 
@@ -636,6 +611,49 @@ const dataReducer = (state: AppState, action: Action): AppState => {
             ...state,
             invoices: state.invoices.map(inv => inv.id === invoice.id ? updatedInvoice : inv),
             deliveryChallans: [...state.deliveryChallans, { ...newChallan, id: newChallanId }],
+        };
+    }
+
+    // FIX: Add reducer cases for chat functionality.
+    // --- CHAT ---
+    case 'SEND_CHAT_MESSAGE': {
+        const { customerId, text, author } = action.payload;
+        const existingConversation = state.chatConversations.find(c => c.id === customerId);
+        const timestamp = Date.now();
+        const newMessage: ChatMessage = { id: crypto.randomUUID(), text, author, timestamp };
+
+        if (existingConversation) {
+            const updatedConversation = {
+                ...existingConversation,
+                messages: [...existingConversation.messages, newMessage],
+                lastMessageTimestamp: timestamp,
+                unreadByStaff: author === 'customer',
+            };
+            return {
+                ...state,
+                chatConversations: state.chatConversations.map(c => c.id === customerId ? updatedConversation : c),
+            };
+        } else {
+            const newConversation: ChatConversation = {
+                id: customerId,
+                customerId,
+                messages: [newMessage],
+                lastMessageTimestamp: timestamp,
+                unreadByStaff: author === 'customer',
+            };
+            return {
+                ...state,
+                chatConversations: [...state.chatConversations, newConversation],
+            };
+        }
+    }
+    case 'MARK_CHAT_AS_READ': {
+        const conversationId = action.payload;
+        return {
+            ...state,
+            chatConversations: state.chatConversations.map(c =>
+                c.id === conversationId ? { ...c, unreadByStaff: false } : c
+            ),
         };
     }
 

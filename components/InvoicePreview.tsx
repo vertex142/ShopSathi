@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Invoice } from '../types';
-import { InvoiceStatus } from '../types';
 import { useData } from '../context/DataContext';
 import { X, Printer } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
@@ -23,22 +22,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
     const balanceDue = grandTotal - totalPaid;
     const hasPayments = invoice.payments && invoice.payments.length > 0;
     
-    const getWatermark = () => {
-        switch (invoice.status) {
-            case InvoiceStatus.Paid:
-                return { text: 'PAID', color: 'text-green-100' };
-            case InvoiceStatus.Overdue:
-                return { text: 'OVERDUE', color: 'text-red-100' };
-            case InvoiceStatus.PartiallyPaid:
-                return { text: 'PARTIALLY PAID', color: 'text-yellow-100' };
-            case InvoiceStatus.Draft:
-                 return { text: 'DRAFT', color: 'text-gray-200' };
-            default:
-                return null;
-        }
-    };
-
-    const watermark = getWatermark();
+    const printableId = `printable-invoice-${invoice.id}`;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4 printable-container">
@@ -46,7 +30,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                 <header className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg non-printable">
                     <h2 className="text-xl font-semibold text-gray-800">Invoice Preview: {invoice.invoiceNumber}</h2>
                     <div className="flex items-center space-x-2">
-                        <button onClick={printDocument} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        <button onClick={() => printDocument(printableId, `invoice-${invoice.invoiceNumber}.pdf`)} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                             <Printer className="h-4 w-4 mr-2" />
                             Print / Save PDF
                         </button>
@@ -57,27 +41,47 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                 </header>
 
                 <div className="flex-grow overflow-y-auto bg-gray-100 p-8 printable-content">
-                    <div className="bg-white shadow-lg p-10 relative printable-page" id={`printable-invoice-${invoice.id}`}>
+                    <div className="bg-white shadow-lg p-10 relative printable-page" id={printableId}>
+                        {/* Screen-only Header */}
+                        <header className="flex justify-between items-start pb-6 mb-6 border-b non-printable">
+                            <div className="text-center">
+                                {settings.logo && (
+                                    <>
+                                        <img src={settings.logo} alt="Logo" className="h-20 w-auto max-w-[8rem] object-contain" />
+                                        <p className="text-sm text-gray-500 mt-2 max-w-[12rem] break-words">{settings.tagline}</p>
+                                    </>
+                                )}
+                            </div>
+                            <div className="text-right">
+                                <h2 className="text-3xl font-bold text-brand-blue">{settings.name}</h2>
+                                <p className="text-md text-gray-600 mt-2">{settings.address}</p>
+                                <p className="text-md text-gray-600">{settings.phone1}</p>
+                                {settings.phone2 && <p className="text-md text-gray-600">{settings.phone2}</p>}
+                                <p className="text-md text-gray-600">{settings.email}</p>
+                            </div>
+                        </header>
+
                         {/* Print-only Header (repeats on each page) */}
                         <div className="printable-header">
-                            {settings.logo && <img src={settings.logo} alt="Logo" className="h-12 object-contain" />}
-                            <div className="text-right text-xs">
-                                <p className="font-bold text-base">{settings.name}</p>
-                                <p>{settings.address}</p>
-                                <p>Phone: {settings.phone1}</p>
-                                <p>Email: {settings.email}</p>
+                            <div className="text-center">
+                                {settings.logo && (
+                                    <>
+                                        <img src={settings.logo} alt="Logo" className="h-14 object-contain" />
+                                        <p className="text-[8pt] text-gray-600 mt-1 max-w-[15ch] leading-tight">{settings.tagline}</p>
+                                    </>
+                                )}
+                            </div>
+                            <div className="text-right text-[9pt]">
+                                <h2 className="text-xl font-bold text-brand-blue">{settings.name}</h2>
+                                <p className="leading-snug">{settings.address}</p>
+                                <p className="leading-snug">{settings.phone1}</p>
+                                {settings.phone2 && <p className="leading-snug">{settings.phone2}</p>}
+                                <p className="leading-snug">{settings.email}</p>
                             </div>
                         </div>
 
-                        {watermark && (
-                            <div className={`absolute inset-0 flex items-center justify-center`} style={{ zIndex: 0 }}>
-                                <p className={`text-8xl md:text-9xl font-extrabold -rotate-45 opacity-60 ${watermark.color}`} style={{ letterSpacing: '0.1em' }}>
-                                    {watermark.text}
-                                </p>
-                            </div>
-                        )}
-                        <div className="pb-8 relative" style={{ zIndex: 1 }}>
-                             <div className="flex justify-between items-start pt-8 mb-10">
+                        <div className="pb-8">
+                             <div className="flex justify-between items-start mb-10">
                                  <div>
                                     <h3 className="text-sm font-semibold uppercase text-gray-500 tracking-wider mb-2">Billed To</h3>
                                     <p className="text-lg font-bold text-gray-800">{customer?.name || 'N/A'}</p>

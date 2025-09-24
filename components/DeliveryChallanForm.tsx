@@ -79,10 +79,12 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
 
   return (
     <>
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6">{challan ? 'Edit Delivery Challan' : 'Create Delivery Challan'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-full flex flex-col">
+        <header className="flex-shrink-0 p-6 border-b">
+            <h2 className="text-2xl font-bold">{challan ? 'Edit Delivery Challan' : 'Create Delivery Challan'}</h2>
+        </header>
+        <main className="flex-grow p-6 space-y-6 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label htmlFor="customerId" className="block text-sm font-medium text-gray-700">Customer</label>
@@ -157,14 +159,12 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
                 <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
                 <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
              </div>
-
-
-            <div className="flex justify-end space-x-4 pt-4 border-t mt-4">
-                <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{challan ? 'Update Challan' : 'Save Challan'}</button>
-            </div>
-        </form>
-      </div>
+        </main>
+        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg">
+            <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+            <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{challan ? 'Update Challan' : 'Save Challan'}</button>
+        </footer>
+      </form>
     </div>
     {showCustomerForm && (
         <CustomerForm 

@@ -6,16 +6,15 @@ import EmailModal from '../components/EmailModal';
 import ProjectTimeline from '../components/ProjectTimeline';
 import ReceivePaymentModal from '../components/ReceivePaymentModal';
 import InvoicePreview from '../components/InvoicePreview';
-import { ArrowLeft, FileText, ClipboardCheck, CircleDollarSign, Receipt, TrendingDown, BookOpen, Printer, LoaderCircle, Briefcase, MessageSquare } from 'lucide-react';
+import { ArrowLeft, FileText, ClipboardCheck, CircleDollarSign, Receipt, TrendingDown, BookOpen, Printer, LoaderCircle, Briefcase } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
 
 interface CustomerProfilePageProps {
   customerId: string;
   onBack: () => void;
-  onStartChat: (customerId: string) => void;
 }
 
-const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ customerId, onBack, onStartChat }) => {
+const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ customerId, onBack }) => {
   const { state, dispatch } = useData();
   const [activeTab, setActiveTab] = useState<'invoices' | 'quotes' | 'ledger' | 'projects'>('invoices');
   const [invoiceToEmail, setInvoiceToEmail] = useState<Invoice | null>(null);
@@ -143,7 +142,7 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
   const handlePrintLedger = async () => {
     setIsPrinting(true);
     await new Promise(resolve => setTimeout(resolve, 300));
-    printDocument();
+    await printDocument('customer-ledger', `ledger-${customer.name.replace(/\s+/g, '_')}.pdf`);
     setIsPrinting(false);
   };
 
@@ -180,10 +179,6 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
           </div>
         </div>
         <div className="flex items-center space-x-2">
-            <button onClick={() => onStartChat(customer.id)} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2" />
-                Start Chat
-            </button>
             {customerStats.totalDue > 0 && (
             <button onClick={() => setShowPaymentModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
                 <Receipt className="h-5 w-5 mr-2" />
@@ -313,21 +308,48 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
                 Print / Save
               </button>
             </div>
-            <div className="overflow-x-auto printable-content p-4">
-              <div id="customer-ledger" className="printable-page">
+            <div className="overflow-x-auto">
+              <div id="customer-ledger" className="printable-page p-4">
+                {/* Screen-only Header */}
+                <header className="flex justify-between items-start pb-6 mb-6 border-b non-printable">
+                    <div className="text-center">
+                        {state.settings.logo && (
+                            <>
+                                <img src={state.settings.logo} alt="Logo" className="h-20 w-auto max-w-[8rem] object-contain" />
+                                <p className="text-sm text-gray-500 mt-2 max-w-[12rem] break-words">{state.settings.tagline}</p>
+                            </>
+                        )}
+                    </div>
+                    <div className="text-right">
+                        <h2 className="text-3xl font-bold text-brand-blue">{state.settings.name}</h2>
+                        <p className="text-md text-gray-600 mt-2">{state.settings.address}</p>
+                        <p className="text-md text-gray-600">{state.settings.phone1}</p>
+                        {state.settings.phone2 && <p className="text-md text-gray-600">{state.settings.phone2}</p>}
+                        <p className="text-md text-gray-600">{state.settings.email}</p>
+                    </div>
+                </header>
+
                 {/* Print-only Header */}
                 <div className="printable-header">
-                    {state.settings.logo && <img src={state.settings.logo} alt="Logo" className="h-12 object-contain" />}
-                    <div className="text-right text-xs">
-                        <p className="font-bold text-base">{state.settings.name}</p>
-                        <p>{state.settings.address}</p>
-                        <p>Phone: {state.settings.phone1}</p>
-                        <p>Email: {state.settings.email}</p>
+                    <div className="text-center">
+                        {state.settings.logo && (
+                            <>
+                                <img src={state.settings.logo} alt="Logo" className="h-14 object-contain" />
+                                <p className="text-[8pt] text-gray-600 mt-1 max-w-[15ch] leading-tight">{state.settings.tagline}</p>
+                            </>
+                        )}
+                    </div>
+                    <div className="text-right text-[9pt]">
+                        <h2 className="text-xl font-bold text-brand-blue">{state.settings.name}</h2>
+                        <p className="leading-snug">{state.settings.address}</p>
+                        <p className="leading-snug">{state.settings.phone1}</p>
+                        {state.settings.phone2 && <p className="leading-snug">{state.settings.phone2}</p>}
+                        <p className="leading-snug">{state.settings.email}</p>
                     </div>
                 </div>
 
                 {/* Report Title for Print */}
-                <div className="text-center mb-6 pt-8">
+                <div className="text-center mb-6">
                     <h2 className="text-2xl font-bold">Customer Ledger</h2>
                     <p className="text-lg">{customer.name}</p>
                     <p className="text-sm text-gray-600">As of {new Date().toLocaleDateString()}</p>

@@ -61,7 +61,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
     setFormData({ ...formData, [name]: type === 'number' ? parseFloat(value) || 0 : value });
   };
   
-  // FIX: The event handler was using e.currentTarget, which can have a broad type. Switched to e.target, which is correctly typed for a ChangeEvent on an HTMLInputElement, resolving the 'property does not exist on type unknown' error.
+  // FIX: Switched to using `e.target` which is correctly typed for an HTMLInputElement, resolving the 'property does not exist on type unknown' error that can occur with the broader type of e.currentTarget.
   const handleItemChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const newItems = [...formData.items];
     const field = e.target.name as keyof Omit<InvoiceItem, 'id'>;
@@ -167,10 +167,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
 
   return (
     <>
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6">{invoice ? 'Edit Invoice' : 'Create Invoice'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-full flex flex-col">
+        <header className="flex-shrink-0 p-6 border-b">
+            <h2 className="text-2xl font-bold">{invoice ? 'Edit Invoice' : 'Create Invoice'}</h2>
+        </header>
+        <main className="flex-grow p-6 space-y-6 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label htmlFor="customerId" className="block text-sm font-medium text-gray-700">Customer</label>
@@ -232,7 +234,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                                         className="p-2 w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"
                                     />
                                     {process.env.API_KEY && (
-                                        <button type="button" onClick={() => handleEnhance(index)} disabled={enhancingItemId === item.id} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-yellow-500 hover:text-yellow-700 disabled:opacity-50">
+                                        <button type="button" onClick={() => handleEnhance(index)} disabled={enhancingItemId === item.id} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-yellow-500 hover:text-yellow-700 disabled:opacity-50" title="Use AI to rewrite your description for a more professional tone.">
                                             {enhancingItemId === item.id ? (
                                                 <LoaderCircle className="animate-spin h-5 w-5" />
                                             ) : (
@@ -263,8 +265,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                             <span className="text-gray-600">Subtotal:</span>
                             <span className="font-medium">${subtotal.toFixed(2)}</span>
                         </div>
-                         <div className="flex justify-between">
-                            <span className="text-gray-600">Previous Due:</span>
+                         <div className="flex justify-between" title="This is the total outstanding balance from this customer's previous invoices, calculated automatically.">
+                            <span className="text-gray-600 border-b border-dotted cursor-help">Previous Due:</span>
                             <span className="font-medium">${formData.previousDue.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -354,6 +356,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                                 <Bell className="h-4 w-4 mr-1 text-yellow-600"/>
                                 Set Payment Reminder
                             </label>
+                            <p id="reminder-description" className="text-gray-500 text-xs">A notification will be generated on the reminder date.</p>
                         </div>
                     </div>
                      {reminderEnabled && (
@@ -388,26 +391,25 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple terms.</p>
             </div>
-
-            <div className="flex justify-end space-x-4">
-                <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" disabled={isSaving}>Cancel</button>
-                <button 
-                    type="submit" 
-                    className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center w-36 disabled:opacity-75"
-                    disabled={isSaving}
-                >
-                    {isSaving ? (
-                        <>
-                            <LoaderCircle className="animate-spin h-5 w-5 mr-2" />
-                            Saving...
-                        </>
-                    ) : (
-                        invoice ? 'Update Invoice' : 'Save Invoice'
-                    )}
-                </button>
-            </div>
-        </form>
-      </div>
+        </main>
+        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg">
+            <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" disabled={isSaving}>Cancel</button>
+            <button 
+                type="submit" 
+                className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center w-36 disabled:opacity-75"
+                disabled={isSaving}
+            >
+                {isSaving ? (
+                    <>
+                        <LoaderCircle className="animate-spin h-5 w-5 mr-2" />
+                        Saving...
+                    </>
+                ) : (
+                    invoice ? 'Update Invoice' : 'Save Invoice'
+                )}
+            </button>
+        </footer>
+      </form>
     </div>
     {showCustomerForm && (
         <CustomerForm 

@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useData } from '../context/DataContext';
-import { ChatConversation, Customer } from '../types';
-import { Search, Send, MessageSquare, User, Bot } from 'lucide-react';
+// FIX: Import ChatConversation and ChatMessage types to resolve missing member error.
+import { ChatConversation, Customer, ChatMessage } from '../types';
+import { Search, Send, MessageSquare, User, Bot, Sparkles, LoaderCircle } from 'lucide-react';
+// FIX: Import suggestChatReply function to resolve missing member error.
+import { suggestChatReply } from '../services/geminiService';
 
 interface ChatPageProps {
     initialCustomerId: string | null;
@@ -13,6 +16,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ initialCustomerId, onCustomerSelect
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
     const [messageText, setMessageText] = useState('');
     const [customerSearch, setCustomerSearch] = useState('');
+    const [isAiReplying, setIsAiReplying] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const conversationsWithDetails = useMemo(() => {
@@ -48,8 +52,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ initialCustomerId, onCustomerSelect
     
     const handleSelectConversation = (customerId: string) => {
         setSelectedConversationId(customerId);
-// FIX: Added a check to prevent creating a new system message if a conversation already exists for the selected customer.
-        const conversationExists = state.chatConversations.some(c => c.customerId === customerId);
+        // FIX: Added a check to prevent creating a new system message if a conversation already exists for the selected customer.
+        const conversationExists = state.chatConversations.some(c => c.id === customerId);
         if (!conversationExists) {
             // Dispatch an action to create conversation if it doesn't exist
             dispatch({ type: 'SEND_CHAT_MESSAGE', payload: { customerId, text: '', author: 'system' } });
@@ -76,6 +80,26 @@ const ChatPage: React.FC<ChatPageProps> = ({ initialCustomerId, onCustomerSelect
             type: 'SEND_CHAT_MESSAGE',
             payload: { customerId: selectedConversationId, text: randomReply, author: 'customer' },
         });
+    };
+
+    const handleAiReply = async () => {
+        if (!selectedConversation) return;
+        setIsAiReplying(true);
+
+        const history = selectedConversation.messages
+            .filter(m => m.author !== 'system') // Don't include system messages
+            .slice(-5) // Get last 5 messages for context
+            .map(m => `${m.author === 'staff' ? 'Staff' : 'Customer'}: ${m.text}`)
+            .join('\n');
+
+        try {
+            const reply = await suggestChatReply(history, state.settings.name);
+            setMessageText(reply);
+        } catch (error) {
+            alert("Could not generate an AI reply. Please try again.");
+        } finally {
+            setIsAiReplying(false);
+        }
     };
 
     const filteredCustomers = useMemo(() => {
@@ -139,10 +163,26 @@ const ChatPage: React.FC<ChatPageProps> = ({ initialCustomerId, onCustomerSelect
                                 <h2 className="text-lg font-semibold">{selectedCustomer?.name}</h2>
                                 <button onClick={() => onCustomerSelect(selectedCustomer!.id)} className="text-sm text-brand-blue hover:underline">View Profile</button>
                             </div>
-                            <button onClick={handleSimulateReply} className="flex items-center text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-300">
-                                <Bot className="h-4 w-4 mr-2"/>
-                                Simulate Customer Reply
-                            </button>
+                            <div className="flex items-center space-x-2">
+                                {process.env.API_KEY && (
+                                     <button
+                                        onClick={handleAiReply}
+                                        disabled={isAiReplying}
+                                        className="flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1.5 rounded-md hover:bg-purple-200 disabled:opacity-50"
+                                    >
+                                        {isAiReplying ? (
+                                            <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
+                                        ) : (
+                                            <Sparkles className="h-4 w-4 mr-2" />
+                                        )}
+                                        Suggest Reply
+                                    </button>
+                                )}
+                                <button onClick={handleSimulateReply} className="flex items-center text-sm bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-300">
+                                    <Bot className="h-4 w-4 mr-2"/>
+                                    Simulate Customer Reply
+                                </button>
+                            </div>
                         </header>
                         <main className="flex-grow p-6 overflow-y-auto bg-gray-50 space-y-4">
                             {selectedConversation.messages.map(msg => (

@@ -33,7 +33,7 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
     setFormData({ ...formData, [name]: type === 'number' ? parseFloat(value) || 0 : value });
   };
 
-  // FIX: The event handler was using e.currentTarget, which can have a broad type. Switched to e.target, which is correctly typed for a ChangeEvent on an HTMLInputElement, resolving the 'property does not exist on type unknown' error.
+  // FIX: Switched to using `e.target` which is correctly typed for an HTMLInputElement, resolving the 'property does not exist on type unknown' error that can occur with the broader type of e.currentTarget.
   const handleItemChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const newItems = [...formData.items];
     const field = e.target.name as keyof Omit<PurchaseOrderItem, 'id'>;
@@ -95,10 +95,12 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
 
   return (
     <>
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6">{purchaseOrder ? 'Edit Purchase Order' : 'Create Purchase Order'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-full flex flex-col">
+        <header className="flex-shrink-0 p-6 border-b">
+            <h2 className="text-2xl font-bold">{purchaseOrder ? 'Edit Purchase Order' : 'Create Purchase Order'}</h2>
+        </header>
+        <main className="flex-grow p-6 space-y-6 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="supplierId" className="block text-sm font-medium text-gray-700">Supplier</label>
@@ -199,13 +201,12 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
                 </select>
                 <p className="text-xs text-gray-500 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple terms.</p>
             </div>
-
-          <div className="flex justify-end space-x-4">
+        </main>
+        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg">
             <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
             <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{purchaseOrder ? 'Update PO' : 'Save PO'}</button>
-          </div>
-        </form>
-      </div>
+        </footer>
+      </form>
     </div>
     {showSupplierForm && (
         <SupplierForm

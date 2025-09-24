@@ -1,5 +1,5 @@
 import type { NavGroup } from './types';
-import { LayoutDashboard, FileText, Users, Briefcase, TrendingDown, Settings, AreaChart, Package, ClipboardCheck, Truck, FileCheck, ShoppingCart, Library, BookCopy, BookUser, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Briefcase, TrendingDown, Settings, AreaChart, Package, ClipboardCheck, Truck, FileCheck, ShoppingCart, Library, BookCopy, BookUser } from 'lucide-react';
 
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -15,7 +15,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'invoices', label: 'Invoices', icon: FileText },
       { id: 'deliveryChallans', label: 'Delivery Challans', icon: FileCheck },
       { id: 'customers', label: 'Customers', icon: Users },
-      { id: 'chat', label: 'Chat', icon: MessageSquare },
     ],
   },
   {

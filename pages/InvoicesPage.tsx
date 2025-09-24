@@ -220,7 +220,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                                 <tr key={invoice.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{invoice.invoiceNumber}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <button onClick={() => onViewCustomer(invoice.customerId)} className="hover:underline text-brand-blue">
+                                        <button onClick={() => onViewCustomer(invoice.customerId)} className="hover:underline text-brand-blue" title={`View profile for ${customer?.name}`}>
                                             {customer?.name || 'N/A'}
                                         </button>
                                     </td>
@@ -228,7 +228,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {invoice.dueDate}
                                         {invoice.reminderDate && (
-                                            <span className="inline-flex items-center ml-2" title={`Reminder on: ${invoice.reminderDate}`}>
+                                            <span className="inline-flex items-center ml-2" title={`A notification reminder is set for this invoice on: ${invoice.reminderDate}`}>
                                                 <Bell className="h-4 w-4 text-yellow-600" />
                                             </span>
                                         )}
@@ -249,11 +249,11 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex justify-end items-center space-x-4">
                                             <button onClick={() => setInvoiceToPreview(invoice)} className="text-blue-600 hover:text-blue-900">Preview</button>
-                                            <button onClick={() => setInvoiceToEmail(invoice)} className="text-cyan-600 hover:text-cyan-900">Email</button>
+                                            <button onClick={() => setInvoiceToEmail(invoice)} className="text-cyan-600 hover:text-cyan-900" title="Get a pre-written email template to send this invoice.">Email</button>
                                             {invoice.status !== InvoiceStatus.Paid && (
-                                              <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900">Add Payment</button>
+                                              <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900" title="Record a new payment for this invoice.">Add Payment</button>
                                             )}
-                                            <button onClick={() => handleConvertToChallan(invoice.id)} className="text-purple-600 hover:text-purple-900 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!!invoice.challanId} title={invoice.challanId ? "Already converted" : "Convert to Challan"}>
+                                            <button onClick={() => handleConvertToChallan(invoice.id)} className="text-purple-600 hover:text-purple-900 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!!invoice.challanId} title={invoice.challanId ? "Already converted" : "Generate a new delivery challan from this invoice"}>
                                                 To Challan
                                             </button>
                                             <button onClick={() => handleEdit(invoice)} className="text-indigo-600 hover:text-indigo-900">Edit</button>

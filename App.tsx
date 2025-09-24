@@ -25,46 +25,34 @@ const PurchaseOrdersPage = lazy(() => import('./pages/PurchaseOrdersPage'));
 const AccountsPage = lazy(() => import('./pages/AccountsPage'));
 const JournalEntriesPage = lazy(() => import('./pages/JournalEntriesPage'));
 const UserManualPage = lazy(() => import('./pages/UserManualPage'));
-const ChatPage = lazy(() => import('./pages/ChatPage'));
 
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [viewingCustomerId, setViewingCustomerId] = useState<string | null>(null);
   const [viewingSupplierId, setViewingSupplierId] = useState<string | null>(null);
-  const [chatWithCustomerId, setChatWithCustomerId] = useState<string | null>(null);
 
   const handleSetCurrentPage = (page: Page) => {
     setCurrentPage(page);
     setViewingCustomerId(null);
     setViewingSupplierId(null);
-    setChatWithCustomerId(null);
   };
   
   const handleViewCustomer = (customerId: string) => {
     setViewingCustomerId(customerId);
     setViewingSupplierId(null);
-    setChatWithCustomerId(null);
     setCurrentPage('customers'); // Set a base page context
   };
   
   const handleViewSupplier = (supplierId: string) => {
     setViewingSupplierId(supplierId);
     setViewingCustomerId(null);
-    setChatWithCustomerId(null);
     setCurrentPage('suppliers'); // Set a base page context
   };
 
-  const handleStartChat = (customerId: string) => {
-    setChatWithCustomerId(customerId);
-    setCurrentPage('chat');
-    setViewingCustomerId(null);
-    setViewingSupplierId(null);
-  }
-
   const renderPage = () => {
     if (viewingCustomerId) {
-        return <CustomerProfilePage customerId={viewingCustomerId} onBack={() => setViewingCustomerId(null)} onStartChat={handleStartChat} />;
+        return <CustomerProfilePage customerId={viewingCustomerId} onBack={() => setViewingCustomerId(null)} />;
     }
     if (viewingSupplierId) {
         return <SupplierProfilePage supplierId={viewingSupplierId} onBack={() => setViewingSupplierId(null)} />;
@@ -79,12 +67,10 @@ const App: React.FC = () => {
         return <QuotesPage onViewCustomer={handleViewCustomer} />;
       case 'deliveryChallans':
         return <DeliveryChallansPage onViewCustomer={handleViewCustomer}/>;
-      case 'chat':
-        return <ChatPage initialCustomerId={chatWithCustomerId} onCustomerSelect={handleViewCustomer} />;
       case 'jobs':
         return <JobsPage />;
       case 'customers':
-        return <CustomersPage onViewCustomer={handleViewCustomer} onStartChat={handleStartChat} />;
+        return <CustomersPage onViewCustomer={handleViewCustomer} />;
       case 'suppliers':
         return <SuppliersPage onViewSupplier={handleViewSupplier} />;
       case 'purchaseOrders':

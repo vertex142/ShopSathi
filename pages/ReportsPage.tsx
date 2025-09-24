@@ -31,7 +31,7 @@ const FinancialOverview: React.FC = () => {
         setIsExporting(true);
         // A short delay to allow charts to render before printing
         await new Promise(resolve => setTimeout(resolve, 300));
-        printDocument();
+        await printDocument('financial-overview-report-content', 'financial-overview.pdf');
         setIsExporting(false);
     };
 

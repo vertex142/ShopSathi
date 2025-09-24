@@ -79,10 +79,12 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full max-h-[90vh] flex flex-col">
-                <h2 className="text-2xl font-bold mb-6 flex-shrink-0">{entry ? 'Edit Journal Entry' : 'Create Journal Entry'}</h2>
-                <form id="journal-entry-form" onSubmit={handleSubmit} className="flex-grow overflow-y-auto pr-2 space-y-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-full flex flex-col">
+                <header className="flex-shrink-0 p-6 border-b">
+                    <h2 className="text-2xl font-bold">{entry ? 'Edit Journal Entry' : 'Create Journal Entry'}</h2>
+                </header>
+                <main className="flex-grow p-6 space-y-6 overflow-y-auto">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
@@ -159,22 +161,21 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
                             </tfoot>
                         </table>
                     </div>
-                     <div className="flex-shrink-0 pt-4">
+                     <div className="pt-4">
                         <button type="button" onClick={addItem} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Add Line Item</button>
                     </div>
-                </form>
-                <div className="flex-shrink-0 flex justify-end space-x-4 pt-6 mt-4 border-t">
+                </main>
+                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
                     <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
                     <button 
-                        type="submit" 
-                        form="journal-entry-form"
+                        type="submit"
                         disabled={!isBalanced}
                         className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {entry ? 'Update Entry' : 'Save Entry'}
                     </button>
-                </div>
-            </div>
+                </footer>
+            </form>
         </div>
     );
 };

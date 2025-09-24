@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Customer } from '../types';
 import CustomerForm from '../components/CustomerForm';
-import { MessageSquare } from 'lucide-react';
 
 interface CustomersPageProps {
     onViewCustomer: (customerId: string) => void;
-    onStartChat: (customerId: string) => void;
 }
 
-const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer, onStartChat }) => {
+const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer }) => {
     const { state, dispatch } = useData();
     const [showForm, setShowForm] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -61,9 +59,6 @@ const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.email}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer.phone}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                                        <button onClick={() => onStartChat(customer.id)} className="text-green-600 hover:text-green-900 inline-flex items-center" title="Start Chat">
-                                            <MessageSquare className="h-4 w-4 mr-1" /> Chat
-                                        </button>
                                         <button onClick={() => handleEdit(customer)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
                                         <button onClick={() => handleDelete(customer.id)} className="text-red-600 hover:text-red-900">Delete</button>
                                     </td>

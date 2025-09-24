@@ -82,7 +82,7 @@
           width: calc(210mm - 30mm); /* A4 width minus L/R margins */
           display: flex !important;
           justify-content: space-between;
-          align-items: center;
+          align-items: flex-start;
           box-sizing: border-box;
         }
 
@@ -100,6 +100,7 @@
             border-top: 1px solid #ddd;
             font-size: 9pt;
             color: #555;
+            align-items: center;
         }
 
         /* The main document content needs space to avoid the fixed header/footer. This is handled by @page margin */

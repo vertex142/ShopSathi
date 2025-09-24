@@ -20,13 +20,11 @@ const ProfitAndLossReport: React.FC = () => {
     const handleExport = async () => {
         setIsExporting(true);
         await new Promise(resolve => setTimeout(resolve, 300));
-        printDocument();
+        await printDocument('pnl-report-content', 'pnl-report.pdf');
         setIsExporting(false);
     };
 
-    // FIX: Added an explicit return type to the useMemo hook. This ensures that TypeScript
-    // correctly infers the types within the `pnlData` object, particularly that the values in
-    // `expensesByCategory` are numbers, which resolves the error when calling `.toFixed()` on `amount`.
+    // FIX: Added an explicit return type to the useMemo hook. This ensures TypeScript correctly infers that `amount` is a number inside `expensesByCategory`, resolving the error when calling `.toFixed()`.
     const pnlData = useMemo((): {
         revenue: number;
         expensesByCategory: { [key: string]: number };
@@ -85,13 +83,39 @@ const ProfitAndLossReport: React.FC = () => {
     return (
         <>
         <div className="bg-white p-6 rounded-lg shadow-md space-y-6 printable-page">
+            {/* Screen-only Header */}
+            <header className="flex justify-between items-start pb-6 mb-6 border-b non-printable">
+                <div className="text-center">
+                    {state.settings.logo && (
+                        <>
+                            <img src={state.settings.logo} alt="Logo" className="h-20 w-auto max-w-[8rem] object-contain" />
+                            <p className="text-sm text-gray-500 mt-2 max-w-[12rem] break-words">{state.settings.tagline}</p>
+                        </>
+                    )}
+                </div>
+                <div className="text-right">
+                    <h2 className="text-3xl font-bold text-brand-blue">{state.settings.name}</h2>
+                    <p className="text-md text-gray-600 mt-2">{state.settings.address}</p>
+                    <p className="text-md text-gray-600">{state.settings.phone1}</p>
+                    {state.settings.phone2 && <p className="text-md text-gray-600">{state.settings.phone2}</p>}
+                    <p className="text-md text-gray-600">{state.settings.email}</p>
+                </div>
+            </header>
             <div className="printable-header">
-                {state.settings.logo && <img src={state.settings.logo} alt="Logo" className="h-12 object-contain" />}
-                <div className="text-right text-xs">
-                    <p className="font-bold text-base">{state.settings.name}</p>
-                    <p>{state.settings.address}</p>
-                    <p>Phone: {state.settings.phone1}</p>
-                    <p>Email: {state.settings.email}</p>
+                <div className="text-center">
+                    {state.settings.logo && (
+                        <>
+                            <img src={state.settings.logo} alt="Logo" className="h-14 object-contain" />
+                            <p className="text-[8pt] text-gray-600 mt-1 max-w-[15ch] leading-tight">{state.settings.tagline}</p>
+                        </>
+                    )}
+                </div>
+                <div className="text-right text-[9pt]">
+                    <h2 className="text-xl font-bold text-brand-blue">{state.settings.name}</h2>
+                    <p className="leading-snug">{state.settings.address}</p>
+                    <p className="leading-snug">{state.settings.phone1}</p>
+                    {state.settings.phone2 && <p className="leading-snug">{state.settings.phone2}</p>}
+                    <p className="leading-snug">{state.settings.email}</p>
                 </div>
             </div>
             <div className="flex justify-between items-center non-printable">

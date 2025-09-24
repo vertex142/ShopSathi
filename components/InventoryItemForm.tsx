@@ -38,10 +38,12 @@ const InventoryItemForm: React.FC<InventoryItemFormProps> = ({ item, onClose }) 
   };
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6">{item ? 'Edit Inventory Item' : 'Add New Inventory Item'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <header className="flex-shrink-0 p-6 border-b">
+          <h2 className="text-2xl font-bold">{item ? 'Edit Inventory Item' : 'Add New Inventory Item'}</h2>
+        </header>
+        <main className="flex-grow p-6 space-y-4 overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">Item Name</label>
@@ -72,12 +74,12 @@ const InventoryItemForm: React.FC<InventoryItemFormProps> = ({ item, onClose }) 
                     <input type="number" id="unitCost" name="unitCost" value={formData.unitCost} onChange={handleChange} step="0.01" required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
                 </div>
             </div>
-            <div className="flex justify-end space-x-4 pt-4">
-                <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{item ? 'Update Item' : 'Save Item'}</button>
-            </div>
-        </form>
-      </div>
+        </main>
+        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
+            <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+            <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{item ? 'Update Item' : 'Save Item'}</button>
+        </footer>
+      </form>
     </div>
   );
 };
