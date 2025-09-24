@@ -104,23 +104,28 @@ const SupplierProfilePage: React.FC<SupplierProfilePageProps> = React.memo(({ su
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">PO #</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order Date</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paid</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance Due</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {supplierPOs.map(po => (
-                            <tr key={po.id}>
-                                <td className="px-6 py-4 text-sm font-medium text-gray-900">{po.poNumber}</td>
-                                <td className="px-6 py-4 text-sm text-gray-500">{po.orderDate}</td>
-                                <td className="px-6 py-4 text-sm text-gray-500">${getPOTotals(po).grandTotal.toFixed(2)}</td>
-                                <td className="px-6 py-4 text-sm font-semibold text-red-600">${getPOTotals(po).balanceDue.toFixed(2)}</td>
-                                <td className="px-6 py-4 text-sm">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPOStatusColor(po.status)}`}>{po.status}</span>
-                                </td>
-                            </tr>
-                        ))}
-                        {supplierPOs.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-gray-500">No purchase orders for this supplier.</td></tr>}
+                        {supplierPOs.map(po => {
+                            const { grandTotal, totalPaid, balanceDue } = getPOTotals(po);
+                            return (
+                                <tr key={po.id}>
+                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{po.poNumber}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-500">{po.orderDate}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-500">${grandTotal.toFixed(2)}</td>
+                                    <td className="px-6 py-4 text-sm text-green-600">${totalPaid.toFixed(2)}</td>
+                                    <td className="px-6 py-4 text-sm font-semibold text-red-600">${balanceDue.toFixed(2)}</td>
+                                    <td className="px-6 py-4 text-sm">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPOStatusColor(po.status)}`}>{po.status}</span>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                        {supplierPOs.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-gray-500">No purchase orders for this supplier.</td></tr>}
                     </tbody>
                 </table>
             </div>

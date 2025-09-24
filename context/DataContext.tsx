@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
-import { AppState, Action, CompanySettings, AccountType, InvoiceStatus, JobStatus, QuoteStatus, DeliveryChallanItem, PurchaseOrderStatus, PurchaseOrder, JobOrder, Payment, JournalEntry, Expense, Invoice, Quote, DeliveryChallan, JournalEntryItem } from '../types';
+import { AppState, Action, CompanySettings, AccountType, InvoiceStatus, JobStatus, QuoteStatus, DeliveryChallanItem, PurchaseOrderStatus, PurchaseOrder, JobOrder, Payment, JournalEntry, Expense, Invoice, Quote, DeliveryChallan, JournalEntryItem, ChatMessage } from '../types';
 import { generateNotifications } from '../utils/notificationGenerator';
 import { generateNextDocumentNumber } from '../utils/documentNumber';
 
@@ -35,7 +35,7 @@ const initialAccounts = [
 const initialState: AppState = {
   customers: [], suppliers: [], invoices: [], quotes: [], jobOrders: [], expenses: [],
   inventoryItems: [], deliveryChallans: [], purchaseOrders: [], accounts: initialAccounts,
-  journalEntries: [], notifications: [], settings: defaultSettings,
+  journalEntries: [], notifications: [], settings: defaultSettings, chatConversations: [],
 };
 
 const dataReducer = (state: AppState, action: Action): AppState => {
@@ -504,6 +504,48 @@ const dataReducer = (state: AppState, action: Action): AppState => {
             accounts: accountsForDelete,
         };
     }
+    // --- CHAT ---
+    case 'SEND_CHAT_MESSAGE': {
+// FIX: The type assertion for `author` was too narrow. It has been updated to include 'system' to match the updated ChatMessage type.
+      const { customerId, text, author } = action.payload as { customerId: string, text: string, author: 'staff' | 'customer' | 'system' };
+      const conversations = [...state.chatConversations];
+      let conversation = conversations.find(c => c.customerId === customerId);
+      
+      const newMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        author,
+        text,
+        timestamp: Date.now(),
+        readByStaff: author === 'staff',
+      };
+
+      if (conversation) {
+        conversation.messages.push(newMessage);
+        conversation.lastMessageTimestamp = newMessage.timestamp;
+        conversation.unreadByStaff = author === 'customer';
+      } else {
+        conversation = {
+          id: customerId,
+          customerId,
+          messages: [newMessage],
+          lastMessageTimestamp: newMessage.timestamp,
+          unreadByStaff: author === 'customer',
+        };
+        conversations.push(conversation);
+      }
+      
+      return { ...state, chatConversations: conversations };
+    }
+    case 'MARK_CHAT_AS_READ': {
+        const conversationId = action.payload as string;
+        return {
+            ...state,
+            chatConversations: state.chatConversations.map(c => 
+                c.id === conversationId ? { ...c, unreadByStaff: false } : c
+            )
+        };
+    }
+
     // --- NOTIFICATIONS ---
     case 'ADD_NOTIFICATIONS':
         const newNotifications = action.payload.filter((newNotif: any) => 

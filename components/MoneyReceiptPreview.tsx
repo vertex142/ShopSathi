@@ -3,6 +3,7 @@ import type { Invoice, Payment } from '../types';
 import { useData } from '../context/DataContext';
 import { X, Printer } from 'lucide-react';
 import { numberToWords } from '../utils/numberToWords';
+import { printDocument } from '../utils/pdfExporter';
 
 interface MoneyReceiptPreviewProps {
   invoice: Invoice;
@@ -20,17 +21,13 @@ const MoneyReceiptPreview: React.FC<MoneyReceiptPreviewProps> = ({ invoice, paym
     const totalPaidBeforeThisPayment = (invoice.payments || []).filter(p => p.id !== payment.id).reduce((acc, p) => acc + p.amount, 0);
     const balanceDueAfterThisPayment = grandTotal - totalPaidBeforeThisPayment - payment.amount;
 
-    const handlePrint = () => {
-        window.print();
-    };
-
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4 printable-container non-printable">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4 printable-container">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col printable-document">
                 <header className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg non-printable">
                     <h2 className="text-xl font-semibold text-gray-800">Money Receipt</h2>
                     <div className="flex items-center space-x-2">
-                        <button onClick={handlePrint} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        <button onClick={printDocument} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                             <Printer className="h-4 w-4 mr-2" />
                             Print / Save PDF
                         </button>
@@ -40,23 +37,30 @@ const MoneyReceiptPreview: React.FC<MoneyReceiptPreviewProps> = ({ invoice, paym
                     </div>
                 </header>
 
-                <div className="flex-grow overflow-y-auto bg-gray-100 p-8">
-                    <div className="bg-white shadow-lg p-10 relative printable-content" id="printable-receipt">
-                         <div className="border-t-8 border-brand-blue pb-8">
-                            <header className="flex justify-between items-start pt-8 mb-10">
-                                <div className="flex items-center">
-                                {settings.logo && <img src={settings.logo} alt="Company Logo" className="h-16 w-auto mr-6" />}
-                                    <div>
-                                        <h1 className="text-3xl font-bold text-gray-900">{settings.name}</h1>
-                                        <p className="text-sm text-gray-500 max-w-xs">{settings.address}</p>
-                                    </div>
+                <div className="flex-grow overflow-y-auto bg-gray-100 p-8 printable-content">
+                    <div className="bg-white shadow-lg p-10 relative printable-page" id="printable-receipt">
+                         {/* Print-only Header (repeats on each page) */}
+                        <div className="printable-header">
+                            {settings.logo && <img src={settings.logo} alt="Logo" className="h-12 object-contain" />}
+                            <div className="text-right text-xs">
+                                <p className="font-bold text-base">{settings.name}</p>
+                                <p>{settings.address}</p>
+                                <p>Phone: {settings.phone1}</p>
+                                <p>Email: {settings.email}</p>
+                            </div>
+                        </div>
+
+                         <div className="pb-8">
+                            <div className="flex justify-between items-start pt-8 mb-10">
+                                <div>
+                                     {/* This space is intentionally left for the print header */}
                                 </div>
                                 <div className="text-right">
                                     <h2 className="text-4xl font-bold uppercase text-gray-400 tracking-widest">Receipt</h2>
                                     <p className="text-md text-gray-600 mt-1"># MR-{invoice.invoiceNumber}-{invoice.payments.length}</p>
                                     <p className="text-sm text-gray-600 mt-2"><strong>Date:</strong> {payment.date}</p>
                                 </div>
-                            </header>
+                            </div>
                             
                             <section className="mt-8 text-base space-y-4">
                                 <p className="leading-relaxed">
@@ -104,6 +108,12 @@ const MoneyReceiptPreview: React.FC<MoneyReceiptPreviewProps> = ({ invoice, paym
                                     </div>
                                 </div>
                             </footer>
+                        </div>
+                        {/* Print-only Footer (repeats on each page) */}
+                        <div className="printable-footer">
+                            <span>Thank you for your payment!</span>
+                            <div className="printable-footer-center"></div>
+                            <span>{settings.phone1}</span>
                         </div>
                     </div>
                 </div>

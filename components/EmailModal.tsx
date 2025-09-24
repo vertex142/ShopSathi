@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import type { Invoice } from '../types';
 import { useData } from '../context/DataContext';
-import { Download, Copy, Check } from 'lucide-react';
-import { exportElementAsPDF } from '../utils/pdfExporter';
-import InvoicePreview from './InvoicePreview';
+import { Copy, Check } from 'lucide-react';
+import InvoicesPage from '../pages/InvoicesPage';
+
 
 interface EmailModalProps {
   invoice: Invoice;
@@ -66,33 +66,15 @@ const EmailModal: React.FC<EmailModalProps> = ({ invoice, onClose }) => {
                     <div className="flex items-start space-x-4">
                         <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-brand-blue text-white font-bold text-lg">1</div>
                         <div>
-                            <h3 className="font-semibold text-gray-800">Download the Invoice PDF</h3>
-                            <p className="text-sm text-gray-500 mb-3">Save the invoice to your computer. You'll attach this file to your email.</p>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    // Temporarily show the element to render it, then hide it
-                                    const el = document.getElementById(`printable-invoice-${invoice.id}`);
-                                    const container = el?.closest('.printable-container');
-                                    if(el && container) {
-                                        container.classList.remove('non-printable');
-                                        exportElementAsPDF(`printable-invoice-${invoice.id}`, `Invoice_${invoice.invoiceNumber}`).finally(() => {
-                                             container.classList.add('non-printable');
-                                        });
-                                    }
-                                }}
-                                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center text-sm"
-                            >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download PDF
-                            </button>
+                            <h3 className="font-semibold text-gray-800">Save the Invoice as a PDF</h3>
+                            <p className="text-sm text-gray-500">Go to the Invoice Preview screen and use the <span className="font-semibold">"Print / Save PDF"</span> button. In the print dialog, choose "Save as PDF" as the destination.</p>
                         </div>
                     </div>
                     <div className="flex items-start space-x-4">
                          <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-brand-blue text-white font-bold text-lg">2</div>
                         <div>
                              <h3 className="font-semibold text-gray-800">Prepare Your Email</h3>
-                            <p className="text-sm text-gray-500 mb-3">Copy the content below and paste it into a new email in your favorite client (Gmail, Outlook, etc.). Then, attach the PDF you just downloaded.</p>
+                            <p className="text-sm text-gray-500 mb-3">Copy the content below and paste it into a new email. Then, attach the PDF you just saved.</p>
                             <div className="bg-gray-50 p-4 rounded-lg border">
                                 <div className="mb-2">
                                     <label className="text-xs font-semibold text-gray-500">SUBJECT</label>
@@ -117,12 +99,6 @@ const EmailModal: React.FC<EmailModalProps> = ({ invoice, onClose }) => {
                 <div className="flex justify-end pt-6 mt-auto border-t">
                     <button type="button" onClick={onClose} className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900">Done</button>
                 </div>
-            </div>
-            {/* Hidden preview component for PDF export. It's inside a printable-container that is also hidden by default */}
-            <div className="printable-container non-printable" style={{ position: 'absolute', left: '-9999px', top: '-9999px', zIndex: -1 }}>
-                 <div style={{ width: '8.5in' }}>
-                     <InvoicePreview invoice={invoice} onClose={() => {}} />
-                 </div>
             </div>
         </div>
     );

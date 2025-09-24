@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { JobOrder, JobCostBreakdown, Customer } from '../types';
+import type { JobOrder, JobCostBreakdown, Customer, OldJobCostBreakdown } from '../types';
 import { JobStatus } from '../types';
 import { useData } from '../context/DataContext';
 import { Trash2, Calculator, Plus, UploadCloud, Palette, FileText, LoaderCircle, XCircle } from 'lucide-react';
@@ -12,6 +12,10 @@ interface JobOrderFormProps {
   job: JobOrder | null;
   onClose: () => void;
 }
+
+const isNewCostBreakdown = (breakdown: any): breakdown is JobCostBreakdown => {
+    return breakdown && typeof breakdown.paper === 'object' && breakdown.paper !== null;
+};
 
 const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
   const { state, dispatch } = useData();
@@ -30,8 +34,8 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
     notes: job?.notes || '',
     materialsUsed: job?.materialsUsed || [],
     inventoryConsumed: job?.inventoryConsumed || false,
-    costBreakdown: job?.costBreakdown,
-    estimatedCost: job?.estimatedCost,
+    estimatedCostBreakdown: job?.estimatedCostBreakdown,
+    actualCostBreakdown: job?.actualCostBreakdown,
     designImage: job?.designImage,
     designImageMimeType: job?.designImageMimeType,
   });
@@ -110,11 +114,11 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
     setFormData({ ...formData, materialsUsed: newMaterials });
   };
 
-  const handleSaveCosts = (costBreakdown: JobCostBreakdown, total: number) => {
+  const handleSaveCosts = (estimated: JobCostBreakdown, actual: JobCostBreakdown) => {
     setFormData(prev => ({
         ...prev,
-        costBreakdown,
-        estimatedCost: total,
+        estimatedCostBreakdown: estimated,
+        actualCostBreakdown: actual,
     }));
   };
 
@@ -133,14 +137,40 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
     onClose();
   };
   
-  const { profit, profitMargin } = useMemo(() => {
-    if (formData.estimatedCost !== undefined && formData.price > 0) {
-        const profitValue = formData.price - formData.estimatedCost;
-        const profitMarginValue = (profitValue / formData.price) * 100;
-        return { profit: profitValue, profitMargin: profitMarginValue };
-    }
-    return { profit: undefined, profitMargin: undefined };
-  }, [formData.price, formData.estimatedCost]);
+  const { estimatedTotalCost, actualTotalCost, estimatedProfit, actualProfit, estimatedProfitMargin, actualProfitMargin } = useMemo(() => {
+    const calculateTotal = (breakdown: JobCostBreakdown | OldJobCostBreakdown | undefined): number => {
+        if (!breakdown) return 0;
+        if (isNewCostBreakdown(breakdown)) {
+            const standard = breakdown.paper.total + breakdown.ctp.total + breakdown.printing.total + breakdown.binding.total + breakdown.delivery.total + (breakdown.overhead?.total || 0);
+            const labor = (breakdown.labor || []).reduce((sum, item) => sum + item.total, 0);
+            const other = breakdown.otherExpenses.reduce((sum, item) => sum + item.total, 0);
+            return standard + labor + other;
+        } else { // Old format
+            const breakdownOld = breakdown as OldJobCostBreakdown;
+            const standard = breakdownOld.paper + breakdownOld.ctp + breakdownOld.printing + breakdownOld.binding + breakdownOld.delivery;
+            const other = breakdownOld.otherExpenses.reduce((sum, item) => sum + item.amount, 0);
+            return standard + other;
+        }
+    };
+
+    const estTotal = calculateTotal(formData.estimatedCostBreakdown);
+    const actTotal = calculateTotal(formData.actualCostBreakdown);
+
+    const estProfit = formData.price - estTotal;
+    const estMargin = formData.price > 0 ? (estProfit / formData.price) * 100 : 0;
+    
+    const actProfit = actTotal > 0 ? formData.price - actTotal : 0;
+    const actMargin = actTotal > 0 && formData.price > 0 ? (actProfit / formData.price) * 100 : 0;
+
+    return {
+        estimatedTotalCost: estTotal,
+        actualTotalCost: actTotal,
+        estimatedProfit: estProfit,
+        actualProfit: actProfit,
+        estimatedProfitMargin: estMargin,
+        actualProfitMargin: actMargin,
+    };
+  }, [formData.price, formData.estimatedCostBreakdown, formData.actualCostBreakdown]);
 
   return (
     <>
@@ -283,27 +313,32 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t mt-6">
                   <div className="space-y-4">
-                      <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
+                      <label htmlFor="price" className="block text-sm font-medium text-gray-700">Sale Price</label>
                       <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
 
                       <button type="button" onClick={() => setShowCostCalculator(true)} className="w-full flex items-center justify-center p-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                           <Calculator className="h-4 w-4 mr-2" />
-                          Calculate Job Costs
+                          Manage Estimated & Actual Costs
                       </button>
                   </div>
                   <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-gray-800">Profitability</h4>
-                      <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Estimated Cost:</span>
-                          <span className="text-sm font-medium text-red-600">${formData.estimatedCost?.toFixed(2) || '0.00'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Estimated Profit:</span>
-                          <span className="text-sm font-medium text-green-600">${profit?.toFixed(2) || 'N/A'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Profit Margin:</span>
-                          <span className="text-sm font-medium text-green-600">{profitMargin?.toFixed(1) || 'N/A'}%</span>
+                      <h4 className="font-semibold text-gray-800">Profitability Analysis</h4>
+                      <div className="grid grid-cols-2 gap-x-4">
+                          <div className="font-medium text-sm text-gray-500"></div>
+                          <div className="font-medium text-sm text-gray-500">Estimated</div>
+                          {actualTotalCost > 0 && <div className="font-medium text-sm text-gray-500">Actual</div>}
+                          
+                          <div className="text-sm text-gray-600">Cost:</div>
+                          <div className="text-sm font-medium text-red-600">${estimatedTotalCost.toFixed(2)}</div>
+                          {actualTotalCost > 0 && <div className="text-sm font-medium text-red-600">${actualTotalCost.toFixed(2)}</div>}
+                          
+                          <div className="text-sm text-gray-600">Profit:</div>
+                          <div className="text-sm font-medium text-green-600">${estimatedProfit.toFixed(2)}</div>
+                          {actualTotalCost > 0 && <div className="text-sm font-medium text-green-600">${actualProfit.toFixed(2)}</div>}
+                          
+                          <div className="text-sm text-gray-600">Margin:</div>
+                          <div className="text-sm font-medium text-green-600">{estimatedProfitMargin.toFixed(1)}%</div>
+                          {actualTotalCost > 0 && <div className="text-sm font-medium text-green-600">{actualProfitMargin.toFixed(1)}%</div>}
                       </div>
                   </div>
               </div>
@@ -330,7 +365,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
       </div>
       {showCostCalculator && (
         <JobCostCalculator 
-            initialCosts={formData.costBreakdown}
+            job={job || { ...formData, id: 'temp-id' }}
             onSave={handleSaveCosts}
             onClose={() => setShowCostCalculator(false)}
         />

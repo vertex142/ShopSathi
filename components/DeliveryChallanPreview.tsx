@@ -2,6 +2,7 @@ import React from 'react';
 import type { DeliveryChallan } from '../types';
 import { useData } from '../context/DataContext';
 import { X, Printer } from 'lucide-react';
+import { printDocument } from '../utils/pdfExporter';
 
 interface DeliveryChallanPreviewProps {
   challan: DeliveryChallan;
@@ -13,17 +14,13 @@ const DeliveryChallanPreview: React.FC<DeliveryChallanPreviewProps> = ({ challan
     const { settings, customers } = state;
     const customer = customers.find(c => c.id === challan.customerId);
 
-    const handlePrint = () => {
-        window.print();
-    };
-
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4 printable-container non-printable">
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4 printable-container">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col printable-document">
                 <header className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg non-printable">
                     <h2 className="text-xl font-semibold text-gray-800">Preview: {challan.challanNumber}</h2>
                     <div className="flex items-center space-x-2">
-                        <button onClick={handlePrint} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        <button onClick={printDocument} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
                             <Printer className="h-4 w-4 mr-2" />
                             Print / Save PDF
                         </button>
@@ -33,24 +30,30 @@ const DeliveryChallanPreview: React.FC<DeliveryChallanPreviewProps> = ({ challan
                     </div>
                 </header>
 
-                 <div className="flex-grow overflow-y-auto bg-gray-100 p-8">
-                     <div className="bg-white shadow-lg p-10 relative printable-content" id={`printable-challan-${challan.id}`}>
-                        <div className="border-t-8 border-brand-blue pb-8">
-                            <header className="flex justify-between items-start pt-8 mb-10">
-                                <div className="flex items-center">
-                                {settings.logo && <img src={settings.logo} alt="Company Logo" className="h-16 w-auto mr-6" />}
-                                    <div>
-                                        <h1 className="text-3xl font-bold text-gray-900">{settings.name}</h1>
-                                        <p className="text-sm text-gray-500 max-w-xs">{settings.address}</p>
-                                        <p className="text-sm text-gray-500">{settings.email} | {settings.phone1}</p>
-                                    </div>
+                 <div className="flex-grow overflow-y-auto bg-gray-100 p-8 printable-content">
+                     <div className="bg-white shadow-lg p-10 relative printable-page" id={`printable-challan-${challan.id}`}>
+                        {/* Print-only Header (repeats on each page) */}
+                        <div className="printable-header">
+                            {settings.logo && <img src={settings.logo} alt="Logo" className="h-12 object-contain" />}
+                            <div className="text-right text-xs">
+                                <p className="font-bold text-base">{settings.name}</p>
+                                <p>{settings.address}</p>
+                                <p>Phone: {settings.phone1}</p>
+                                <p>Email: {settings.email}</p>
+                            </div>
+                        </div>
+
+                        <div className="pb-8">
+                            <div className="flex justify-between items-start pt-8 mb-10">
+                                <div>
+                                     {/* This space is intentionally left for the print header */}
                                 </div>
                                 <div className="text-right">
                                     <h2 className="text-4xl font-bold uppercase text-gray-400 tracking-widest">Delivery Challan</h2>
                                     <p className="text-md text-gray-600 mt-1"># {challan.challanNumber}</p>
                                     <p className="text-sm text-gray-600"><strong>Date:</strong> {challan.issueDate}</p>
                                 </div>
-                            </header>
+                            </div>
 
                             <section className="grid grid-cols-2 gap-8 mb-10">
                                 <div>
@@ -65,13 +68,15 @@ const DeliveryChallanPreview: React.FC<DeliveryChallanPreviewProps> = ({ challan
                                 <table className="min-w-full">
                                     <thead className="bg-gray-200">
                                         <tr>
+                                            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">No.</th>
                                             <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item Description</th>
                                             <th className="py-3 px-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Quantity</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {challan.items.map((item) => (
+                                        {challan.items.map((item, index) => (
                                             <tr key={item.id} className="border-b even:bg-gray-50">
+                                                <td className="py-4 px-4 text-sm text-gray-700">{index + 1}</td>
                                                 <td className="py-4 px-4">
                                                     <p className="font-medium text-gray-900">{item.name}</p>
                                                     {item.description && <p className="mt-1 text-xs text-gray-500">{item.description}</p>}
@@ -100,6 +105,12 @@ const DeliveryChallanPreview: React.FC<DeliveryChallanPreviewProps> = ({ challan
                                     </div>
                                 </div>
                             </footer>
+                        </div>
+                        {/* Print-only Footer (repeats on each page) */}
+                        <div className="printable-footer">
+                            <span>Challan: #{challan.challanNumber}</span>
+                            <div className="printable-footer-center"></div>
+                            <span>This is not an invoice.</span>
                         </div>
                     </div>
                 </div>

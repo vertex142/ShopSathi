@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import GeneralLedgerReport from '../components/GeneralLedgerReport';
 import ProfitAndLossReport from '../components/ProfitAndLossReport';
 import { Download, LoaderCircle } from 'lucide-react';
-import { exportElementAsPDF } from '../utils/pdfExporter';
+import { printDocument } from '../utils/pdfExporter';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF4560'];
 
@@ -29,7 +29,9 @@ const FinancialOverview: React.FC = () => {
 
     const handleExport = async () => {
         setIsExporting(true);
-        await exportElementAsPDF('financial-overview-report-content', 'Financial_Overview_Report');
+        // A short delay to allow charts to render before printing
+        await new Promise(resolve => setTimeout(resolve, 300));
+        printDocument();
         setIsExporting(false);
     };
 
@@ -108,14 +110,24 @@ const FinancialOverview: React.FC = () => {
 
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 printable-page">
+             <div className="printable-header">
+                {state.settings.logo && <img src={state.settings.logo} alt="Logo" className="h-12 object-contain" />}
+                <div className="text-right text-xs">
+                    <p className="font-bold text-base">{state.settings.name}</p>
+                    <p>{state.settings.address}</p>
+                    <p>Phone: {state.settings.phone1}</p>
+                    <p>Email: {state.settings.email}</p>
+                </div>
+            </div>
+
             <div id="financial-overview-report-content" className="space-y-8">
-                 <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-md">
+                 <div className="flex justify-between items-center non-printable">
                      <h2 className="text-xl font-semibold text-gray-700">Financial Overview Report</h2>
                      <button
                         onClick={handleExport}
                         disabled={isExporting}
-                        className="export-button flex items-center bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
+                        className="flex items-center bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
                     >
                         {isExporting ? (
                             <>
@@ -125,7 +137,7 @@ const FinancialOverview: React.FC = () => {
                         ) : (
                             <>
                                 <Download className="h-4 w-4 mr-2" />
-                                Export PDF
+                                Print / Save PDF
                             </>
                         )}
                     </button>
@@ -183,6 +195,11 @@ const FinancialOverview: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <div className="printable-footer">
+                <span>Financial Overview Report</span>
+                <div className="printable-footer-center"></div>
+                <span>Generated on: {new Date().toLocaleDateString()}</span>
+            </div>
         </div>
     );
 };
@@ -192,7 +209,7 @@ const ReportsPage: React.FC = React.memo(() => {
 
     return (
         <div className="space-y-6">
-            <div className="border-b border-gray-200">
+            <div className="border-b border-gray-200 non-printable">
                 <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                     <button
                         onClick={() => setActiveTab('overview')}

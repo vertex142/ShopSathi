@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, FileText, Users, Package, Bot, Settings, AreaChart, Briefcase, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Package, Bot, Settings, AreaChart, Briefcase, ClipboardCheck, Printer } from 'lucide-react';
 
 interface ManualCardProps {
   IconComponent: React.ElementType;
@@ -57,6 +57,16 @@ const UserManualPage: React.FC = React.memo(() => {
             <li>Drag and drop jobs on the Kanban board to update their status.</li>
             <li>Assign inventory materials to jobs to track costs.</li>
           </ul>
+        </ManualCard>
+        
+        <ManualCard IconComponent={Printer} title="Printing & PDF Export">
+            <p>Generate professional, high-quality documents for printing or sharing. The app uses your browser's advanced rendering engine for perfect results every time.</p>
+            <ul className="list-disc list-inside pl-4 text-sm">
+                <li>Click the "Preview" button on any document.</li>
+                <li>Use the "Print / Save PDF" button in the preview window.</li>
+                <li>To save a PDF, simply choose "Save as PDF" in your system's print dialog.</li>
+                <li>The generated PDFs have selectable text and are vector-based.</li>
+            </ul>
         </ManualCard>
 
         <ManualCard IconComponent={Users} title="Customers">

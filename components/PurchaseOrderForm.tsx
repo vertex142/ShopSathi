@@ -33,10 +33,11 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
     setFormData({ ...formData, [name]: type === 'number' ? parseFloat(value) || 0 : value });
   };
 
+  // FIX: The event handler was using e.currentTarget, which can have a broad type. Switched to e.target, which is correctly typed for a ChangeEvent on an HTMLInputElement, resolving the 'property does not exist on type unknown' error.
   const handleItemChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const newItems = [...formData.items];
-    const field = e.currentTarget.name as keyof Omit<PurchaseOrderItem, 'id'>;
-    const value = e.currentTarget.type === 'number' ? parseFloat(e.currentTarget.value) || 0 : e.currentTarget.value;
+    const field = e.target.name as keyof Omit<PurchaseOrderItem, 'id'>;
+    const value = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
     (newItems[index] as any)[field] = value;
     setFormData({ ...formData, items: newItems });
   };

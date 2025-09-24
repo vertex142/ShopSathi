@@ -61,10 +61,11 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
     setFormData({ ...formData, [name]: type === 'number' ? parseFloat(value) || 0 : value });
   };
   
+  // FIX: The event handler was using e.currentTarget, which can have a broad type. Switched to e.target, which is correctly typed for a ChangeEvent on an HTMLInputElement, resolving the 'property does not exist on type unknown' error.
   const handleItemChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const newItems = [...formData.items];
-    const field = e.currentTarget.name as keyof Omit<InvoiceItem, 'id'>;
-    const value = e.currentTarget.type === 'number' ? parseFloat(e.currentTarget.value) || 0 : e.currentTarget.value;
+    const field = e.target.name as keyof Omit<InvoiceItem, 'id'>;
+    const value = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
     (newItems[index] as any)[field] = value;
     setFormData({ ...formData, items: newItems });
   };
@@ -288,6 +289,30 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                     </div>
                 </div>
             </div>
+
+            {formData.payments.length > 0 && (
+                <div className="mt-6 border-t pt-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Payments Received</h3>
+                    <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
+                        {formData.payments.map(payment => (
+                            <div key={payment.id} className="grid grid-cols-3 gap-4 p-2 bg-gray-50 rounded">
+                                <div>
+                                    <span className="text-xs text-gray-500">Date</span>
+                                    <p className="text-sm font-medium text-gray-800">{payment.date}</p>
+                                </div>
+                                <div>
+                                    <span className="text-xs text-gray-500">Method</span>
+                                    <p className="text-sm font-medium text-gray-800">{payment.method}</p>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-xs text-gray-500">Amount</span>
+                                    <p className="text-sm font-medium text-green-600">${payment.amount.toFixed(2)}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t mt-6">
                  <div>

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { InvoiceStatus, AccountType } from '../types';
 import { Download, LoaderCircle } from 'lucide-react';
-import { exportElementAsPDF } from '../utils/pdfExporter';
+import { printDocument } from '../utils/pdfExporter';
 
 
 interface Transaction {
@@ -26,9 +26,8 @@ const GeneralLedgerReport: React.FC = () => {
             return;
         }
         setIsExporting(true);
-        const accountName = state.accounts.find(a => a.id === selectedAccountId)?.name || 'Ledger';
-        const fileName = `General_Ledger_${accountName.replace(/\s/g, '_')}`;
-        await exportElementAsPDF('general-ledger-report-content', fileName);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        printDocument();
         setIsExporting(false);
     };
 
@@ -106,13 +105,22 @@ const GeneralLedgerReport: React.FC = () => {
 
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-md space-y-6" id="general-ledger-report-content">
-             <div className="flex justify-between items-center">
+        <div className="bg-white p-6 rounded-lg shadow-md space-y-6 printable-page">
+            <div className="printable-header">
+                {state.settings.logo && <img src={state.settings.logo} alt="Logo" className="h-12 object-contain" />}
+                <div className="text-right text-xs">
+                    <p className="font-bold text-base">{state.settings.name}</p>
+                    <p>{state.settings.address}</p>
+                    <p>Phone: {state.settings.phone1}</p>
+                    <p>Email: {state.settings.email}</p>
+                </div>
+            </div>
+             <div className="flex justify-between items-center non-printable">
                  <h2 className="text-xl font-semibold text-gray-700">General Ledger</h2>
                  <button
                     onClick={handleExport}
                     disabled={isExporting || !selectedAccountId}
-                    className="export-button flex items-center bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
+                    className="flex items-center bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
                     title={!selectedAccountId ? "Select an account to export" : "Export as PDF"}
                 >
                     {isExporting ? (
@@ -123,14 +131,14 @@ const GeneralLedgerReport: React.FC = () => {
                     ) : (
                         <>
                             <Download className="h-4 w-4 mr-2" />
-                            Export PDF
+                            Print / Save PDF
                         </>
                     )}
                 </button>
             </div>
             
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md non-printable">
                 <div className="md:col-span-1">
                     <label htmlFor="account-select" className="block text-sm font-medium text-gray-700">Account</label>
                     <select
@@ -155,7 +163,7 @@ const GeneralLedgerReport: React.FC = () => {
 
             {/* Report Table */}
             {selectedAccountId && (
-                <div className="overflow-x-auto mt-4">
+                <div id="general-ledger-report-content" className="overflow-x-auto mt-4">
                     <h3 className="text-lg font-bold text-gray-800 mb-2">{selectedAccount?.name} Ledger</h3>
                     <p className="text-sm text-gray-500 mb-4">
                         For period: {startDate || 'Start'} to {endDate || 'End'}
@@ -204,6 +212,11 @@ const GeneralLedgerReport: React.FC = () => {
                     </table>
                 </div>
             )}
+            <div className="printable-footer">
+                <span>General Ledger: {selectedAccount?.name || ''}</span>
+                <div className="printable-footer-center"></div>
+                <span>Generated on: {new Date().toLocaleDateString()}</span>
+            </div>
         </div>
     );
 };

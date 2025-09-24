@@ -36,8 +36,11 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
     setShowForm(true);
   };
 
-  const getPOTotal = (po: PurchaseOrder) => {
-    return po.items.reduce((acc, item) => acc + item.quantity * item.unitCost, 0);
+  const getPOTotals = (po: PurchaseOrder) => {
+    const grandTotal = po.items.reduce((acc, item) => acc + item.quantity * item.unitCost, 0);
+    const totalPaid = (po.payments || []).reduce((acc, p) => acc + p.amount, 0);
+    const balanceDue = grandTotal - totalPaid;
+    return { grandTotal, totalPaid, balanceDue };
   };
 
   const getStatusColor = (status: PurchaseOrderStatus) => {
@@ -137,8 +140,9 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PO #</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Delivery</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance Due</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -147,6 +151,7 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
               {filteredPOs.length > 0 ? (
                 filteredPOs.map((po) => {
                   const supplier = state.suppliers.find(s => s.id === po.supplierId);
+                  const { grandTotal, totalPaid, balanceDue } = getPOTotals(po);
                   return (
                     <tr key={po.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{po.poNumber}</td>
@@ -156,8 +161,9 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{po.orderDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{po.expectedDeliveryDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">${getPOTotal(po).toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">${grandTotal.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">${totalPaid.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">${balanceDue.toFixed(2)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <StatusEditor
                             item={po}
@@ -177,7 +183,7 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-500">
+                  <td colSpan={8} className="text-center py-10 text-gray-500">
                     No purchase orders found.
                   </td>
                 </tr>

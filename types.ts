@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type Page = 'dashboard' | 'invoices' | 'quotes' | 'jobs' | 'customers' | 'expenses' | 'settings' | 'reports' | 'inventory' | 'suppliers' | 'deliveryChallans' | 'purchaseOrders' | 'accounts' | 'journalEntries' | 'userManual';
+export type Page = 'dashboard' | 'invoices' | 'quotes' | 'jobs' | 'customers' | 'expenses' | 'settings' | 'reports' | 'inventory' | 'suppliers' | 'deliveryChallans' | 'purchaseOrders' | 'accounts' | 'journalEntries' | 'userManual' | 'chat';
 
 export interface NavItem {
   id: Page;
@@ -144,12 +144,21 @@ export interface CostLineItem {
   total: number;
 }
 
+export interface LaborLineItem {
+  id: string;
+  description: string;
+  hours: number;
+  rate: number;
+  total: number;
+}
+
 export interface OtherExpenseLineItem {
   id: string;
   description: string;
   quantity: number;
   rate: number;
   total: number;
+  transactionId?: string; // Link to the main Expense transaction
 }
 
 export interface JobCostBreakdown {
@@ -158,6 +167,8 @@ export interface JobCostBreakdown {
   printing: CostLineItem;
   binding: CostLineItem;
   delivery: CostLineItem;
+  labor: LaborLineItem[];
+  overhead: CostLineItem;
   otherExpenses: OtherExpenseLineItem[];
 }
 
@@ -191,8 +202,8 @@ export interface JobOrder {
   }[];
   inventoryConsumed: boolean;
   invoiceId?: string;
-  costBreakdown?: JobCostBreakdown | OldJobCostBreakdown;
-  estimatedCost?: number;
+  estimatedCostBreakdown?: JobCostBreakdown | OldJobCostBreakdown;
+  actualCostBreakdown?: JobCostBreakdown;
   designImage?: string; // base64 string
   designImageMimeType?: string;
 }
@@ -312,6 +323,23 @@ export interface TimelineEvent {
     relatedId: string;
 }
 
+export interface ChatMessage {
+    id: string;
+// FIX: The `author` type was too restrictive and did not account for 'system' messages used to initialize conversations. Added 'system' to the union type.
+    author: 'staff' | 'customer' | 'system';
+    text: string;
+    timestamp: number;
+    readByStaff: boolean;
+}
+
+export interface ChatConversation {
+    id: string; // Corresponds to customerId
+    customerId: string;
+    messages: ChatMessage[];
+    lastMessageTimestamp: number;
+    unreadByStaff: boolean;
+}
+
 export interface AppState {
   customers: Customer[];
   suppliers: Supplier[];
@@ -326,6 +354,7 @@ export interface AppState {
   accounts: Account[];
   journalEntries: JournalEntry[];
   notifications: Notification[];
+  chatConversations: ChatConversation[];
 }
 
 export type Action = { type: string, payload: any };

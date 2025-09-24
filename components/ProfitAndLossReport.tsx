@@ -3,7 +3,7 @@ import { useData } from '../context/DataContext';
 import { generateActionableInsight } from '../services/geminiService';
 import AIResponseModal from './AIResponseModal';
 import { Download, LoaderCircle, Sparkles } from 'lucide-react';
-import { exportElementAsPDF } from '../utils/pdfExporter';
+import { printDocument } from '../utils/pdfExporter';
 
 const ProfitAndLossReport: React.FC = () => {
     const { state } = useData();
@@ -19,13 +19,22 @@ const ProfitAndLossReport: React.FC = () => {
 
     const handleExport = async () => {
         setIsExporting(true);
-        await exportElementAsPDF('pnl-report-content', `Profit_And_Loss_${startDate}_to_${endDate}`);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        printDocument();
         setIsExporting(false);
     };
 
-    const pnlData = useMemo(() => {
+    // FIX: Added an explicit return type to the useMemo hook. This ensures that TypeScript
+    // correctly infers the types within the `pnlData` object, particularly that the values in
+    // `expensesByCategory` are numbers, which resolves the error when calling `.toFixed()` on `amount`.
+    const pnlData = useMemo((): {
+        revenue: number;
+        expensesByCategory: { [key: string]: number };
+        totalExpenses: number;
+        netProfit: number;
+    } => {
         const revenue = state.invoices
-            .flatMap(inv => inv.payments)
+            .flatMap(inv => inv.payments || [])
             .filter(p => p.date >= startDate && p.date <= endDate)
             .reduce((sum, p) => sum + p.amount, 0);
 
@@ -61,10 +70,10 @@ const ProfitAndLossReport: React.FC = () => {
             totalExpenses: pnlData.totalExpenses,
             netProfit: pnlData.netProfit,
         };
-        const prompt = `Analyze this cash-basis Profit and Loss statement for a small printing business. Provide a brief summary, identify the top 3 expense categories, and suggest one specific, actionable area for potential cost savings based on the data. Keep the tone professional and helpful. Here is the data: ${JSON.stringify(promptContext)}`;
+        const prompt = `Analyze this cash-basis Profit and Loss statement for a small printing business. Provide a brief summary, identify the top 3 expense categories, and suggest one specific, actionable area for potential cost savings based on the data. Keep the tone professional and helpful.`;
 
         try {
-            const result = await generateActionableInsight(prompt, {}); // Context is in the prompt itself
+            const result = await generateActionableInsight(prompt, promptContext);
             setModalContent(result);
         } catch (e) {
             alert("AI analysis failed. Please check your API key and try again.");
@@ -75,10 +84,19 @@ const ProfitAndLossReport: React.FC = () => {
     
     return (
         <>
-        <div className="bg-white p-6 rounded-lg shadow-md space-y-6" id="pnl-report-content">
-            <div className="flex justify-between items-center">
+        <div className="bg-white p-6 rounded-lg shadow-md space-y-6 printable-page">
+            <div className="printable-header">
+                {state.settings.logo && <img src={state.settings.logo} alt="Logo" className="h-12 object-contain" />}
+                <div className="text-right text-xs">
+                    <p className="font-bold text-base">{state.settings.name}</p>
+                    <p>{state.settings.address}</p>
+                    <p>Phone: {state.settings.phone1}</p>
+                    <p>Email: {state.settings.email}</p>
+                </div>
+            </div>
+            <div className="flex justify-between items-center non-printable">
                 <h2 className="text-xl font-semibold text-gray-700">Profit & Loss Statement (Cash Basis)</h2>
-                <div className="export-button flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
                     {process.env.API_KEY && (
                          <button
                             onClick={handleAnalyze}
@@ -111,27 +129,33 @@ const ProfitAndLossReport: React.FC = () => {
                         ) : (
                             <>
                                 <Download className="h-4 w-4 mr-2" />
-                                Export PDF
+                                Print / Save PDF
                             </>
                         )}
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-md">
-                 <div>
-                     <label htmlFor="pnl-start-date" className="block text-sm font-medium text-gray-700">Start Date</label>
-                     <input type="date" id="pnl-start-date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm" />
+            <div id="pnl-report-content" className="space-y-4">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-md non-printable">
+                     <div>
+                         <label htmlFor="pnl-start-date" className="block text-sm font-medium text-gray-700">Start Date</label>
+                         <input type="date" id="pnl-start-date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm" />
+                    </div>
+                    <div>
+                         <label htmlFor="pnl-end-date" className="block text-sm font-medium text-gray-700">End Date</label>
+                         <input type="date" id="pnl-end-date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm" />
+                    </div>
                 </div>
-                <div>
-                     <label htmlFor="pnl-end-date" className="block text-sm font-medium text-gray-700">End Date</label>
-                     <input type="date" id="pnl-end-date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm" />
-                </div>
-            </div>
 
-            <div className="space-y-4">
+                <div className="text-center pt-4">
+                    <h2 className="text-2xl font-bold">{state.settings.name}</h2>
+                    <p className="text-lg">Profit and Loss Statement</p>
+                    <p className="text-sm text-gray-600">For the period from {startDate} to {endDate}</p>
+                </div>
+
                 {/* Revenue */}
-                <div className="border-b pb-2">
+                <div className="border-b pb-2 pt-4">
                     <h3 className="text-lg font-semibold text-gray-800">Revenue</h3>
                     <div className="flex justify-between items-center mt-1 text-gray-700">
                         <span>Total Income</span>
@@ -163,6 +187,11 @@ const ProfitAndLossReport: React.FC = () => {
                     <h3 className="text-xl font-bold">Net Profit</h3>
                     <span className="text-xl font-bold">${pnlData.netProfit.toFixed(2)}</span>
                 </div>
+            </div>
+             <div className="printable-footer">
+                <span>Profit & Loss Report</span>
+                <div className="printable-footer-center"></div>
+                <span>Generated on: {new Date().toLocaleDateString()}</span>
             </div>
         </div>
         {modalContent && (
