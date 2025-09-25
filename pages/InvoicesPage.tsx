@@ -8,6 +8,7 @@ import MoneyReceiptPreview from '../components/MoneyReceiptPreview';
 import EmailModal from '../components/EmailModal';
 import StatusEditor from '../components/StatusEditor';
 import { Search, X, Bell } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface InvoicesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -233,9 +234,9 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                                             </span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${grandTotal.toFixed(2)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">${totalPaid.toFixed(2)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">${balanceDue.toFixed(2)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(grandTotal)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{formatCurrency(totalPaid)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         <StatusEditor
                                             item={invoice}

@@ -95,6 +95,8 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
                             <input type="text" id="memo" name="memo" placeholder="e.g., Record monthly rent" value={formData.memo} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
                         </div>
                     </div>
+                    
+                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md border">A journal entry must have at least two line items. The total of all Debits must equal the total of all Credits for the entry to be balanced.</p>
 
                     {/* Items Table */}
                     <div className="overflow-x-auto">

@@ -6,6 +6,7 @@ import AIAssistant from './components/AIAssistant';
 import Notifications from './components/Notifications';
 import GlobalSearch from './components/GlobalSearch';
 import FullScreenLoader from './components/FullScreenLoader';
+import { Menu } from 'lucide-react';
 
 // Lazy load all page components for code splitting
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
@@ -31,23 +32,27 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [viewingCustomerId, setViewingCustomerId] = useState<string | null>(null);
   const [viewingSupplierId, setViewingSupplierId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleSetCurrentPage = (page: Page) => {
     setCurrentPage(page);
     setViewingCustomerId(null);
     setViewingSupplierId(null);
+    setIsSidebarOpen(false); // Close sidebar on nav
   };
   
   const handleViewCustomer = (customerId: string) => {
     setViewingCustomerId(customerId);
     setViewingSupplierId(null);
     setCurrentPage('customers'); // Set a base page context
+    setIsSidebarOpen(false); // Close sidebar on nav
   };
   
   const handleViewSupplier = (supplierId: string) => {
     setViewingSupplierId(supplierId);
     setViewingCustomerId(null);
     setCurrentPage('suppliers'); // Set a base page context
+    setIsSidebarOpen(false); // Close sidebar on nav
   };
 
   const renderPage = () => {
@@ -114,21 +119,30 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-800">
-      <Sidebar currentPage={currentPage} setCurrentPage={handleSetCurrentPage} />
+    <div className="relative min-h-screen md:flex bg-gray-50 text-gray-800">
+      {isSidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+      
+      <Sidebar currentPage={currentPage} setCurrentPage={handleSetCurrentPage} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm p-4 z-10">
             <div className="grid grid-cols-3 items-center gap-4">
                 <div className="flex items-center space-x-3">
-                    {CurrentPageIcon && <CurrentPageIcon className="h-6 w-6 text-brand-blue" />}
-                    <h1 className="text-2xl font-semibold text-gray-800 truncate">{pageTitle}</h1>
+                    <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-1 text-gray-600 hover:text-brand-blue" aria-label="Open sidebar">
+                        <Menu className="h-6 w-6" />
+                    </button>
+                    {CurrentPageIcon && <CurrentPageIcon className="h-6 w-6 text-brand-blue hidden sm:block" />}
+                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 truncate">{pageTitle}</h1>
                 </div>
-                <div className="flex justify-center">
+                <div className="hidden md:flex justify-center">
                     <GlobalSearch setCurrentPage={handleSetCurrentPage} onViewCustomer={handleViewCustomer} />
                 </div>
                 <div className="flex justify-end">
                     <Notifications setCurrentPage={handleSetCurrentPage} />
                 </div>
+            </div>
+            <div className="mt-4 md:hidden">
+                <GlobalSearch setCurrentPage={handleSetCurrentPage} onViewCustomer={handleViewCustomer} />
             </div>
         </header>
         <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">

@@ -1,8 +1,10 @@
 
+
 import React, { useState } from 'react';
 import type { Customer, Payment } from '../types';
 import { PAYMENT_METHODS, AccountType } from '../types';
 import { useData } from '../context/DataContext';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface ReceivePaymentModalProps {
   customer: Customer;
@@ -46,7 +48,7 @@ const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ customer, tot
       <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
         <h2 id="payment-modal-title" className="text-xl font-bold mb-2">Receive Payment</h2>
         <p className="mb-4 text-sm text-gray-600">
-          From customer <span className="font-semibold">{customer.name}</span>. Total Due: <span className="font-bold">${totalDue.toFixed(2)}</span>
+          From customer <span className="font-semibold">{customer.name}</span>. Total Due: <span className="font-bold">{formatCurrency(totalDue)}</span>
         </p>
         <div className="space-y-4">
             <div>
@@ -70,6 +72,7 @@ const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({ customer, tot
                 <option value="">Select an account</option>
                 {assetAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
               </select>
+              <p className="text-xs text-gray-500 mt-1">Select the account where this payment is being deposited. This will increase its balance.</p>
             </div>
             <div>
               <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Optional)</label>

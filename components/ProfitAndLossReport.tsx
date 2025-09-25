@@ -4,6 +4,7 @@ import { generateActionableInsight } from '../services/geminiService';
 import AIResponseModal from './AIResponseModal';
 import { Download, LoaderCircle, Sparkles } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
+import { formatCurrency } from '../utils/formatCurrency';
 
 const ProfitAndLossReport: React.FC = () => {
     const { state } = useData();
@@ -183,7 +184,7 @@ const ProfitAndLossReport: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-800">Revenue</h3>
                     <div className="flex justify-between items-center mt-1 text-gray-700">
                         <span>Total Income</span>
-                        <span className="font-medium">${pnlData.revenue.toFixed(2)}</span>
+                        <span className="font-medium">{formatCurrency(pnlData.revenue)}</span>
                     </div>
                 </div>
 
@@ -194,7 +195,7 @@ const ProfitAndLossReport: React.FC = () => {
                         Object.entries(pnlData.expensesByCategory).map(([category, amount]) => (
                              <div key={category} className="flex justify-between items-center mt-1 text-gray-700 pl-4">
                                 <span>{category}</span>
-                                <span>${amount.toFixed(2)}</span>
+                                <span>{formatCurrency(amount)}</span>
                             </div>
                         ))
                      ) : (
@@ -202,14 +203,14 @@ const ProfitAndLossReport: React.FC = () => {
                      )}
                     <div className="flex justify-between items-center mt-2 pt-2 border-t font-semibold text-gray-800">
                         <span>Total Expenses</span>
-                        <span>${pnlData.totalExpenses.toFixed(2)}</span>
+                        <span>{formatCurrency(pnlData.totalExpenses)}</span>
                     </div>
                 </div>
 
                 {/* Net Profit */}
                 <div className={`flex justify-between items-center p-4 rounded-md ${pnlData.netProfit >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     <h3 className="text-xl font-bold">Net Profit</h3>
-                    <span className="text-xl font-bold">${pnlData.netProfit.toFixed(2)}</span>
+                    <span className="text-xl font-bold">{formatCurrency(pnlData.netProfit)}</span>
                 </div>
             </div>
              <div className="printable-footer">

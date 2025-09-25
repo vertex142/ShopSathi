@@ -6,6 +6,7 @@ import StatusEditor from '../components/StatusEditor';
 import JobKanbanBoard from '../components/JobKanbanBoard';
 import JobDetailsModal from '../components/JobDetailsModal';
 import { List, Trello } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 type ViewMode = 'list' | 'kanban';
 
@@ -88,7 +89,7 @@ const JobsPage: React.FC = React.memo(() => {
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{job.jobName}</td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer?.name || 'N/A'}</td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{job.dueDate}</td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${job.price.toFixed(2)}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(job.price)}</td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                                       <StatusEditor
                                           item={job}

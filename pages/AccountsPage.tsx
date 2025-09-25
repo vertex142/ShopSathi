@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { Account, AccountType } from '../types';
 import AccountForm from '../components/AccountForm';
+import { formatCurrency } from '../utils/formatCurrency';
 
 const AccountsPage: React.FC = React.memo(() => {
     const { state, dispatch } = useData();
@@ -73,7 +74,7 @@ const AccountsPage: React.FC = React.memo(() => {
                                                     {account.name}
                                                     {account.isSystemAccount && <span className="ml-2 text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full cursor-help" title="System accounts are essential for core accounting functions and cannot be deleted or have their type changed.">System</span>}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right font-mono">${totalBalance.toFixed(2)}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right font-mono">{formatCurrency(totalBalance)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <button 
                                                         onClick={() => handleEdit(account)} 

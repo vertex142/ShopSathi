@@ -6,11 +6,18 @@ import Logo from './Logo';
 interface SidebarProps {
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, isOpen, onClose }) => {
+  const handleLinkClick = (page: Page) => {
+    setCurrentPage(page);
+    onClose();
+  };
+
   return (
-    <div className="w-64 bg-brand-blue text-white flex flex-col">
+    <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-brand-blue text-white flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="p-6 flex items-center space-x-3 border-b border-brand-blue-light">
          <Logo className="h-10 w-10" />
          <h1 className="text-xl font-bold tracking-wider">ShopSathi</h1>
@@ -23,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
               {group.items.map((item) => (
                 <li key={item.id}>
                   <button
-                    onClick={() => setCurrentPage(item.id)}
+                    onClick={() => handleLinkClick(item.id)}
                     className={`flex items-center w-full px-4 py-2 my-1 text-sm font-medium transition-colors duration-200 rounded-md text-left ${
                       currentPage === item.id
                         ? 'bg-white text-brand-blue'

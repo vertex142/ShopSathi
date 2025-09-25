@@ -101,6 +101,7 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
                 <div>
                     <label htmlFor="challanNumber" className="block text-sm font-medium text-gray-700">Challan Number</label>
                     <input type="text" id="challanNumber" name="challanNumber" value={formData.challanNumber} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                    <p className="text-xs text-gray-500 mt-1">A unique number for this delivery document. It's generated automatically but can be edited.</p>
                 </div>
                 <div>
                     <label htmlFor="issueDate" className="block text-sm font-medium text-gray-700">Issue Date</label>
@@ -110,6 +111,7 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
 
             <div className="mt-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Items</h3>
+                <p className="text-xs text-gray-500 mb-2">List the items being delivered. Selecting an item from your inventory helps with tracking, but does not affect stock levels directly (that is handled by the linked job or invoice).</p>
                 <div className="space-y-4">
                     {formData.items.map((item, index) => (
                         <div key={item.id} className="grid grid-cols-12 gap-x-3 gap-y-2 items-start p-3 border rounded-md">
@@ -119,7 +121,7 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
                                     onChange={(e) => handleItemSelect(index, e.target.value)} 
                                     className="p-2 w-full bg-white text-gray-900 border border-gray-300 rounded-md"
                                 >
-                                    <option value="">Select an inventory item</option>
+                                    <option value="">Select an inventory item (optional)</option>
                                     {state.inventoryItems.map(invItem => (
                                         <option key={invItem.id} value={invItem.id}>{invItem.name}</option>
                                     ))}
@@ -158,6 +160,7 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
              <div>
                 <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
                 <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
+                <p className="text-xs text-gray-500 mt-1">Any special instructions or notes related to the delivery.</p>
              </div>
         </main>
         <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg">

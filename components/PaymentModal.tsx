@@ -1,8 +1,10 @@
 
+
 import React, { useState } from 'react';
 import type { Invoice, Payment } from '../types';
 import { PAYMENT_METHODS, AccountType } from '../types';
 import { useData } from '../context/DataContext';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface PaymentModalProps {
   invoice: Invoice;
@@ -54,7 +56,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ invoice, onClose, onConfirm
       <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
         <h2 id="payment-modal-title" className="text-xl font-bold mb-2">Add Payment</h2>
         <p className="mb-4 text-sm text-gray-600">
-          For invoice <span className="font-semibold">{invoice.invoiceNumber}</span>. Balance Due: <span className="font-bold">${balanceDue.toFixed(2)}</span>
+          For invoice <span className="font-semibold">{invoice.invoiceNumber}</span>. Balance Due: <span className="font-bold">{formatCurrency(balanceDue)}</span>
         </p>
         <div className="space-y-4">
             <div>
@@ -78,6 +80,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ invoice, onClose, onConfirm
                 <option value="">Select an account</option>
                 {assetAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
               </select>
+              <p className="text-xs text-gray-500 mt-1">Select the account where this payment is being deposited. This will increase its balance.</p>
             </div>
             <div>
               <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Optional)</label>

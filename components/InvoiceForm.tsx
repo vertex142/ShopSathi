@@ -6,6 +6,7 @@ import { enhanceDescription } from '../services/geminiService';
 import { Sparkles, Trash2, LoaderCircle, Bell, Plus } from 'lucide-react';
 import { generateNextDocumentNumber } from '../utils/documentNumber';
 import CustomerForm from './CustomerForm';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface InvoiceFormProps {
   invoice: Invoice | null;
@@ -247,7 +248,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                             <div className="col-span-12 md:col-span-6 grid grid-cols-12 gap-3 items-center">
                                 <input type="number" name="quantity" placeholder="Qty" value={item.quantity} onChange={(e) => handleItemChange(index, e)} className="col-span-4 md:col-span-3 p-2 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"/>
                                 <input type="number" name="rate" placeholder="Rate" value={item.rate} onChange={(e) => handleItemChange(index, e)} className="col-span-4 md:col-span-3 p-2 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"/>
-                                <span className="col-span-3 md:col-span-4 text-center font-medium">${((item.quantity || 0) * (item.rate || 0)).toFixed(2)}</span>
+                                <span className="col-span-3 md:col-span-4 text-center font-medium">{formatCurrency((item.quantity || 0) * (item.rate || 0))}</span>
                                 <button type="button" onClick={() => removeItem(index)} className="col-span-1 md:col-span-2 flex justify-center text-red-500 hover:text-red-700">
                                     <Trash2 className="h-5 w-5" />
                                 </button>
@@ -263,16 +264,16 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                     <div className="w-full max-w-sm space-y-2">
                         <div className="flex justify-between">
                             <span className="text-gray-600">Subtotal:</span>
-                            <span className="font-medium">${subtotal.toFixed(2)}</span>
+                            <span className="font-medium">{formatCurrency(subtotal)}</span>
                         </div>
                          <div className="flex justify-between" title="This is the total outstanding balance from this customer's previous invoices, calculated automatically.">
                             <span className="text-gray-600 border-b border-dotted cursor-help">Previous Due:</span>
-                            <span className="font-medium">${formData.previousDue.toFixed(2)}</span>
+                            <span className="font-medium">{formatCurrency(formData.previousDue)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <label htmlFor="discount" className="text-gray-600">Discount:</label>
                             <div className="flex items-center">
-                                <span className="mr-1 text-gray-600">$</span>
+                                <span className="mr-1 text-gray-600">৳</span>
                                 <input 
                                     type="number" 
                                     id="discount"
@@ -281,12 +282,14 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                                     onChange={handleChange}
                                     className="w-24 p-1 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md text-right shadow-sm"
                                     placeholder="0.00"
+                                    aria-describedby="discount-description"
                                 />
                             </div>
                         </div>
+                        <p id="discount-description" className="text-xs text-gray-500 text-right -mt-1">A flat amount subtracted from the total.</p>
                         <div className="flex justify-between border-t pt-2 mt-2">
                             <span className="font-bold text-xl">Grand Total:</span>
-                            <span className="font-bold text-xl">${grandTotal.toFixed(2)}</span>
+                            <span className="font-bold text-xl">{formatCurrency(grandTotal)}</span>
                         </div>
                     </div>
                 </div>
@@ -308,7 +311,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                                 </div>
                                 <div className="text-right">
                                     <span className="text-xs text-gray-500">Amount</span>
-                                    <p className="text-sm font-medium text-green-600">${payment.amount.toFixed(2)}</p>
+                                    <p className="text-sm font-medium text-green-600">{formatCurrency(payment.amount)}</p>
                                 </div>
                             </div>
                         ))}
@@ -320,6 +323,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                  <div>
                     <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
                     <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows={4} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
+                    <p className="text-xs text-gray-500 mt-1">This will be visible to the customer on the final invoice.</p>
                  </div>
                  <div className="space-y-4">
                     <div>

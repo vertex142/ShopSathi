@@ -5,6 +5,7 @@ import PurchaseOrderForm from '../components/PurchaseOrderForm';
 import PurchaseOrderPreview from '../components/PurchaseOrderPreview';
 import StatusEditor from '../components/StatusEditor';
 import { Search, X } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface PurchaseOrdersPageProps {
     onViewSupplier: (supplierId: string) => void;
@@ -161,9 +162,9 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{po.orderDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">${grandTotal.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">${totalPaid.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">${balanceDue.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">{formatCurrency(grandTotal)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{formatCurrency(totalPaid)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <StatusEditor
                             item={po}

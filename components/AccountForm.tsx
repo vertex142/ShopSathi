@@ -54,6 +54,7 @@ const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700">Account Name</label>
                         <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                        <p className="text-xs text-gray-500 mt-1">The name of the account as it will appear on your reports (e.g., "Office Supplies", "Printing Revenue").</p>
                     </div>
                      <div>
                         <label htmlFor="type" className="block text-sm font-medium text-gray-700">Account Type</label>
@@ -71,7 +72,7 @@ const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
                                 <option key={type} value={type} className="capitalize">{type.toLowerCase()}</option>
                             ))}
                         </select>
-                        {account?.isSystemAccount && <p className="text-xs text-gray-500 mt-1">System accounts are essential for core app functions.</p>}
+                        {account?.isSystemAccount && <p className="text-xs text-gray-500 mt-1" title="A tooltip has been added to the system account badge on the main accounts page to explain this.">System accounts are essential for core app functions.</p>}
                     </div>
                      <div>
                         <label htmlFor="openingBalance" className="block text-sm font-medium text-gray-700">Opening Balance ($)</label>

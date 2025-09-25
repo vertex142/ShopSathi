@@ -91,9 +91,9 @@ const SupplierProfilePage: React.FC<SupplierProfilePageProps> = React.memo(({ su
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard title="Total Ordered" value={`$${supplierStats.totalOrdered.toFixed(2)}`} IconComponent={CircleDollarSign} color="bg-blue-500" />
-            <StatCard title="Total Paid" value={`$${supplierStats.totalPaid.toFixed(2)}`} IconComponent={Receipt} color="bg-green-500" />
-            <StatCard title="Current Due" value={`$${supplierStats.totalDue.toFixed(2)}`} IconComponent={TrendingDown} color="bg-red-500" />
+            <StatCard title="Total Ordered" value={`$${supplierStats.totalOrdered.toFixed(2)}`} IconComponent={CircleDollarSign} color="blue" />
+            <StatCard title="Total Paid" value={`$${supplierStats.totalPaid.toFixed(2)}`} IconComponent={Receipt} color="green" />
+            <StatCard title="Current Due" value={`$${supplierStats.totalDue.toFixed(2)}`} IconComponent={TrendingDown} color="red" />
         </div>
         
         <div className="bg-white shadow-md rounded-lg overflow-hidden">

@@ -5,6 +5,7 @@ import { useData } from '../context/DataContext';
 import { Trash2, Plus } from 'lucide-react';
 import { generateNextDocumentNumber } from '../utils/documentNumber';
 import SupplierForm from './SupplierForm';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface PurchaseOrderFormProps {
   purchaseOrder: PurchaseOrder | null;
@@ -130,6 +131,7 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
 
           <div className="mt-6">
             <h3 className="text-lg font-medium text-gray-900 mb-2">Items</h3>
+            <p className="text-xs text-gray-500 mb-2">When you mark this PO as 'Completed' or 'Partially Received', the stock quantity for linked inventory items will be automatically increased.</p>
             <div className="space-y-4">
               {formData.items.map((item, index) => (
                 <div key={item.id} className="grid grid-cols-12 gap-x-3 gap-y-2 items-start p-3 border rounded-md">
@@ -150,7 +152,7 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
                   <div className="col-span-12 md:col-span-6 grid grid-cols-12 gap-3 items-center">
                     <input type="number" name="quantity" placeholder="Qty" value={item.quantity} onChange={(e) => handleItemChange(index, e)} className="col-span-4 md:col-span-3 p-2 bg-white text-gray-900 border border-gray-300 rounded-md" />
                     <input type="number" name="unitCost" placeholder="Unit Cost" value={item.unitCost} onChange={(e) => handleItemChange(index, e)} className="col-span-4 md:col-span-3 p-2 bg-white text-gray-900 border border-gray-300 rounded-md" step="0.01" />
-                    <span className="col-span-3 md:col-span-4 text-center font-medium">${((item.quantity || 0) * (item.unitCost || 0)).toFixed(2)}</span>
+                    <span className="col-span-3 md:col-span-4 text-center font-medium">{formatCurrency((item.quantity || 0) * (item.unitCost || 0))}</span>
                     <button type="button" onClick={() => removeItem(index)} className="col-span-1 md:col-span-2 flex justify-center text-red-500 hover:text-red-700">
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -166,7 +168,7 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
               <div className="w-full max-w-sm space-y-2">
                 <div className="flex justify-between border-t pt-2 mt-2">
                   <span className="font-bold text-xl">Grand Total:</span>
-                  <span className="font-bold text-xl">${grandTotal.toFixed(2)}</span>
+                  <span className="font-bold text-xl">{formatCurrency(grandTotal)}</span>
                 </div>
               </div>
             </div>
@@ -176,6 +178,7 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
             <div>
               <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
               <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
+              <p className="text-xs text-gray-500 mt-1">Special instructions for the supplier or for your internal records.</p>
             </div>
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>

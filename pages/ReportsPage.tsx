@@ -6,6 +6,7 @@ import GeneralLedgerReport from '../components/GeneralLedgerReport';
 import ProfitAndLossReport from '../components/ProfitAndLossReport';
 import { Download, LoaderCircle } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
+import { formatCurrency } from '../utils/formatCurrency';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF4560'];
 
@@ -149,7 +150,7 @@ const FinancialOverview: React.FC = () => {
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="name" />
                             <YAxis />
-                            <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                            <Tooltip formatter={(value: number) => formatCurrency(value)} />
                             <Legend />
                             <Bar dataKey="income" fill="#4ade80" name="Income" />
                             <Bar dataKey="expenses" fill="#f87171" name="Expenses" />
@@ -164,7 +165,7 @@ const FinancialOverview: React.FC = () => {
                                 <Pie data={incomeByCustomer} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" labelLine={false} label={CustomPieLabel}>
                                     {incomeByCustomer.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                 </Pie>
-                                <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
                                 <PieLegend />
                             </PieChart>
                         </ResponsiveContainer>
@@ -176,7 +177,7 @@ const FinancialOverview: React.FC = () => {
                                 <Pie data={expensesByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#82ca9d" label>
                                     {expensesByCategory.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                 </Pie>
-                                <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
+                                <Tooltip formatter={(value: number) => formatCurrency(value)} />
                                 <PieLegend />
                             </PieChart>
                         </ResponsiveContainer>

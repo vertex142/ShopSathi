@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { AccountType } from '../types';
 import { Download, LoaderCircle } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
+import { formatCurrency } from '../utils/formatCurrency';
 
 
 interface Transaction {
@@ -143,55 +144,57 @@ const GeneralLedgerReport: React.FC = () => {
 
             {/* Report Table */}
             {selectedAccountId && (
-                <div id="general-ledger-report-content" className="overflow-x-auto mt-4">
+                <div id="general-ledger-report-content" className="mt-4">
                     <h3 className="text-lg font-bold text-gray-800 mb-2">{selectedAccount?.name} Ledger</h3>
                     <p className="text-sm text-gray-500 mb-4">
                         For period: {startDate || 'Start'} to {endDate || 'End'}
                     </p>
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Debit</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            <tr className="bg-gray-50 font-semibold">
-                                <td colSpan={4} className="px-6 py-4">Opening Balance</td>
-                                <td className="px-6 py-4 text-right">${runningBalance.toFixed(2)}</td>
-                            </tr>
-                           {transactions.map((tx, index) => {
-                                const change = tx.debit - tx.credit;
-                                if (selectedAccount?.type === AccountType.Asset || selectedAccount?.type === AccountType.Expense) {
-                                    runningBalance += change;
-                                } else { // Liability, Equity, Revenue
-                                    runningBalance -= change; // Credits increase these accounts, debits decrease
-                                }
-                               return (
-                                <tr key={index}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.date}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{tx.details}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{tx.debit > 0 ? `$${tx.debit.toFixed(2)}` : '-'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{tx.credit > 0 ? `$${tx.credit.toFixed(2)}` : '-'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-800">${runningBalance.toFixed(2)}</td>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Debit</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
                                 </tr>
-                           )})}
-                           {transactions.length === 0 && (
-                             <tr>
-                                <td colSpan={5} className="text-center py-10 text-gray-500">No transactions for this period.</td>
-                             </tr>
-                           )}
-                        </tbody>
-                        <tfoot className="bg-gray-100">
-                             <tr>
-                                <td colSpan={4} className="px-6 py-3 text-right text-sm font-bold text-gray-700 uppercase">Ending Balance</td>
-                                <td className="px-6 py-3 text-right text-sm font-bold text-gray-800">${runningBalance.toFixed(2)}</td>
-                             </tr>
-                        </tfoot>
-                    </table>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                <tr className="bg-gray-50 font-semibold">
+                                    <td colSpan={4} className="px-6 py-4">Opening Balance</td>
+                                    <td className="px-6 py-4 text-right">{formatCurrency(runningBalance)}</td>
+                                </tr>
+                               {transactions.map((tx, index) => {
+                                    const change = tx.debit - tx.credit;
+                                    if (selectedAccount?.type === AccountType.Asset || selectedAccount?.type === AccountType.Expense) {
+                                        runningBalance += change;
+                                    } else { // Liability, Equity, Revenue
+                                        runningBalance -= change; // Credits increase these accounts, debits decrease
+                                    }
+                                   return (
+                                    <tr key={index}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.date}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{tx.details}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{tx.debit > 0 ? formatCurrency(tx.debit) : '-'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{tx.credit > 0 ? formatCurrency(tx.credit) : '-'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-800">{formatCurrency(runningBalance)}</td>
+                                    </tr>
+                               )})}
+                               {transactions.length === 0 && (
+                                 <tr>
+                                    <td colSpan={5} className="text-center py-10 text-gray-500">No transactions for this period.</td>
+                                 </tr>
+                               )}
+                            </tbody>
+                            <tfoot className="bg-gray-100">
+                                 <tr>
+                                    <td colSpan={4} className="px-6 py-3 text-right text-sm font-bold text-gray-700 uppercase">Ending Balance</td>
+                                    <td className="px-6 py-3 text-right text-sm font-bold text-gray-800">{formatCurrency(runningBalance)}</td>
+                                 </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             )}
             <div className="printable-footer">

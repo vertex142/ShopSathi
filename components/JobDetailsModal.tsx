@@ -2,6 +2,7 @@ import React from 'react';
 import { JobOrder, JobCostBreakdown, OldJobCostBreakdown } from '../types';
 import { useData } from '../context/DataContext';
 import { X, Edit } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface JobDetailsModalProps {
   job: JobOrder;
@@ -72,13 +73,13 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose, onEdit 
                     <h4 className="font-semibold text-gray-700">{title}</h4>
                     <table className="min-w-full mt-2 text-sm">
                         <tbody className="divide-y">
-                            {allItems.map((item, i) => <tr key={`std-${i}`}><td className="py-1">{item.label}</td><td className="py-1 text-right">${item.total.toFixed(2)}</td></tr>)}
-                            {laborItems.map((item, i) => <tr key={`lab-${i}`}><td className="py-1">{item.description} (Labor)</td><td className="py-1 text-right">${item.total.toFixed(2)}</td></tr>)}
-                            {otherExpenseItems.map((item, i) => <tr key={`oth-${i}`}><td className="py-1">{item.label}</td><td className="py-1 text-right">${item.total.toFixed(2)}</td></tr>)}
+                            {allItems.map((item, i) => <tr key={`std-${i}`}><td className="py-1">{item.label}</td><td className="py-1 text-right">{formatCurrency(item.total)}</td></tr>)}
+                            {laborItems.map((item, i) => <tr key={`lab-${i}`}><td className="py-1">{item.description} (Labor)</td><td className="py-1 text-right">{formatCurrency(item.total)}</td></tr>)}
+                            {otherExpenseItems.map((item, i) => <tr key={`oth-${i}`}><td className="py-1">{item.label}</td><td className="py-1 text-right">{formatCurrency(item.total)}</td></tr>)}
                             {breakdown.overhead && overheadAmount > 0 && 
                                 <>
-                                    <tr className="font-medium border-t-2"><td className="py-1">Subtotal</td><td className="py-1 text-right">${subtotal.toFixed(2)}</td></tr>
-                                    <tr><td className="py-1">Overhead ({breakdown.overhead.quantity}%)</td><td className="py-1 text-right">${overheadAmount.toFixed(2)}</td></tr>
+                                    <tr className="font-medium border-t-2"><td className="py-1">Subtotal</td><td className="py-1 text-right">{formatCurrency(subtotal)}</td></tr>
+                                    <tr><td className="py-1">Overhead ({breakdown.overhead.quantity}%)</td><td className="py-1 text-right">{formatCurrency(overheadAmount)}</td></tr>
                                 </>
                             }
                         </tbody>
@@ -91,13 +92,13 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose, onEdit 
                  <div>
                     <h4 className="font-semibold text-gray-700">{title} (Old Format)</h4>
                     <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mt-2">
-                        {old.paper > 0 && <li>Paper: ${old.paper.toFixed(2)}</li>}
-                        {old.ctp > 0 && <li>CTP/Plate: ${old.ctp.toFixed(2)}</li>}
-                        {old.printing > 0 && <li>Printing: ${old.printing.toFixed(2)}</li>}
-                        {old.binding > 0 && <li>Binding: ${old.binding.toFixed(2)}</li>}
-                        {old.delivery > 0 && <li>Delivery: ${old.delivery.toFixed(2)}</li>}
+                        {old.paper > 0 && <li>Paper: {formatCurrency(old.paper)}</li>}
+                        {old.ctp > 0 && <li>CTP/Plate: {formatCurrency(old.ctp)}</li>}
+                        {old.printing > 0 && <li>Printing: {formatCurrency(old.printing)}</li>}
+                        {old.binding > 0 && <li>Binding: {formatCurrency(old.binding)}</li>}
+                        {old.delivery > 0 && <li>Delivery: {formatCurrency(old.delivery)}</li>}
                         {old.otherExpenses.map(exp => (
-                            <li key={exp.id}>{exp.description || 'Other'}: ${exp.amount.toFixed(2)}</li>
+                            <li key={exp.id}>{exp.description || 'Other'}: {formatCurrency(exp.amount)}</li>
                         ))}
                     </ul>
                 </div>
@@ -123,7 +124,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ job, onClose, onEdit 
                         <DetailItem label="Status" value={job.status} />
                         <DetailItem label="Order Date" value={job.orderDate} />
                         <DetailItem label="Due Date" value={job.dueDate} />
-                        <DetailItem label="Sale Price" value={`$${job.price.toFixed(2)}`} />
+                        <DetailItem label="Sale Price" value={formatCurrency(job.price)} />
                     </div>
                     
                     <div className="border-t pt-4">
@@ -188,7 +189,7 @@ const ProfitabilityMetric: React.FC<{label: string, value: number, isPositive: b
     <div>
         <h4 className="text-xs font-semibold text-gray-500">{label}</h4>
         <p className={`text-lg font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            ${value.toFixed(2)}
+            {formatCurrency(value)}
             {suffix && <span className="text-xs font-normal">{suffix}</span>}
         </p>
     </div>

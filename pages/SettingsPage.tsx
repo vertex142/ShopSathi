@@ -150,6 +150,7 @@ const SettingsPage: React.FC = React.memo(() => {
             <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">Company Name</label>
                 <input type="text" name="name" id="name" value={settings.name} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                <p className="text-xs text-gray-500 mt-1">This name appears on all your documents, like invoices and quotes.</p>
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700">Company Logo</label>
@@ -160,10 +161,12 @@ const SettingsPage: React.FC = React.memo(() => {
                     }
                     <input type="file" id="logo" onChange={handleLogoChange} accept="image/*" className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">Upload your company logo. It will be displayed on all printable documents.</p>
             </div>
             <div>
                 <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
                 <input type="text" name="address" id="address" value={settings.address} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                 <p className="text-xs text-gray-500 mt-1">Your company's physical address, shown on documents.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -178,15 +181,18 @@ const SettingsPage: React.FC = React.memo(() => {
             <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                 <input type="email" name="email" id="email" value={settings.email} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                 <p className="text-xs text-gray-500 mt-1">The primary contact email for your business.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label htmlFor="tagline" className="block text-sm font-medium text-gray-700">Tagline</label>
                     <input type="text" name="tagline" id="tagline" value={settings.tagline} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                    <p className="text-xs text-gray-500 mt-1">A short slogan for your business, shown under your logo.</p>
                 </div>
                 <div>
                     <label htmlFor="services" className="block text-sm font-medium text-gray-700">Services</label>
                     <input type="text" name="services" id="services" value={settings.services} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                    <p className="text-xs text-gray-500 mt-1">A brief list of services you offer (e.g., "Offset & Digital Printing").</p>
                 </div>
             </div>
         </SettingsCard>
@@ -195,15 +201,18 @@ const SettingsPage: React.FC = React.memo(() => {
             <div>
                 <label htmlFor="footerText" className="block text-sm font-medium text-gray-700">Invoice Footer Text</label>
                 <textarea name="footerText" id="footerText" value={settings.footerText} onChange={handleChange} rows={3} className="mt-1 block w-full p-2 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md shadow-sm" placeholder="e.g., Thank you for your business! Payment is due within 30 days."></textarea>
+                <p className="text-xs text-gray-500 mt-1">This text will appear at the bottom of every invoice.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label htmlFor="preparedByLabel" className="block text-sm font-medium text-gray-700">"Prepared By" Label</label>
                     <input type="text" name="preparedByLabel" id="preparedByLabel" value={settings.preparedByLabel} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                    <p className="text-xs text-gray-500 mt-1">Customize the label for the 'Prepared By' signature line.</p>
                 </div>
                 <div>
                     <label htmlFor="authorizedSignatureLabel" className="block text-sm font-medium text-gray-700">"Authorized Signature" Label</label>
                     <input type="text" name="authorizedSignatureLabel" id="authorizedSignatureLabel" value={settings.authorizedSignatureLabel} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                    <p className="text-xs text-gray-500 mt-1">Customize the label for the 'Authorized' signature line.</p>
                 </div>
             </div>
              <div>
@@ -227,6 +236,7 @@ const SettingsPage: React.FC = React.memo(() => {
                         <input id="signatureUpload" name="signatureUpload" type="file" className="sr-only" onChange={handleSignatureChange} accept="image/*" />
                     </label>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">Upload an image of a signature to be automatically added to documents.</p>
             </div>
         </SettingsCard>
         

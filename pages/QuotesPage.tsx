@@ -5,6 +5,7 @@ import QuoteForm from '../components/QuoteForm';
 import StatusEditor from '../components/StatusEditor';
 import QuotePreview from '../components/QuotePreview';
 import { Search, X } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface QuotesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -212,7 +213,7 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.issueDate}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.expiryDate}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${grandTotal.toFixed(2)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(grandTotal)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         <StatusEditor
                                             item={quote}

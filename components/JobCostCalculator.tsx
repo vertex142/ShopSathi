@@ -3,6 +3,7 @@ import { JobOrder, JobCostBreakdown, OldJobCostBreakdown, CostLineItem, OtherExp
 import { useData } from '../context/DataContext';
 import { Trash2, X, Printer, LoaderCircle, Plus, Copy } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface JobCostCalculatorProps {
   job: JobOrder;
@@ -229,10 +230,10 @@ const CostSheet: React.FC<CostSheetProps> = ({ costs, setCosts }) => {
                            <div className="col-span-12 sm:col-span-8">
                                 <select value={expense.transactionId || ''} onChange={(e) => handleOtherExpenseSelection(index, e.target.value)} className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md">
                                     <option value="">Select an expense transaction</option>
-                                    {state.expenses.map(exp => <option key={exp.id} value={exp.id}>{exp.date} - {exp.description} (${exp.amount.toFixed(2)})</option>)}
+                                    {state.expenses.map(exp => <option key={exp.id} value={exp.id}>{exp.date} - {exp.description} ({formatCurrency(exp.amount)})</option>)}
                                 </select>
                             </div>
-                           <div className="col-span-8 sm:col-span-3 text-right font-medium pr-2">${expense.total.toFixed(2)}</div>
+                           <div className="col-span-8 sm:col-span-3 text-right font-medium pr-2">{formatCurrency(expense.total)}</div>
                             <div className="col-span-4 sm:col-span-1 flex justify-end">
                                 <button onClick={() => removeOtherExpense(index)} className="text-red-500 hover:text-red-700 p-1 non-printable"><Trash2 className="h-5 w-5" /></button>
                             </div>
@@ -249,7 +250,7 @@ const CostSheet: React.FC<CostSheetProps> = ({ costs, setCosts }) => {
                         <input type="number" placeholder="%" value={costs.overhead?.quantity || ''} onChange={(e) => handleOverheadChange(parseFloat(e.target.value) || 0)} className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md" step="any" min="0" />
                     </div>
                     <div className="col-span-4 sm:col-span-2"></div>
-                    <div className="col-span-4 sm:col-span-3 text-right font-medium text-lg pr-2">${costs.overhead?.total.toFixed(2) || '0.00'}</div>
+                    <div className="col-span-4 sm:col-span-3 text-right font-medium text-lg pr-2">{formatCurrency(costs.overhead?.total || 0)}</div>
                 </div>
             </div>
         </div>
@@ -267,7 +268,7 @@ const Footer: React.FC<{onSave: () => void, onPrint: () => void, isPrinting: boo
     return (
         <footer className="flex-shrink-0 mt-auto p-6 border-t space-y-4 sm:space-y-0 sm:flex sm:justify-between sm:items-center bg-gray-50 non-printable">
             <div className="text-xl font-bold">
-                Total Cost: <span className="text-brand-blue">${totalCost.toFixed(2)}</span>
+                Total Cost: <span className="text-brand-blue">{formatCurrency(totalCost)}</span>
             </div>
             <div className="flex items-center space-x-2">
                 <button onClick={onPrint} disabled={isPrinting} className="flex items-center bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50">
@@ -285,7 +286,7 @@ const CostInputRow: React.FC<{label: string, item: CostLineItem, onChange: (fiel
         <label className="col-span-12 sm:col-span-5 block text-sm font-medium text-gray-700">{label}</label>
         <div className="col-span-4 sm:col-span-2"><input type="number" placeholder="Qty" value={item.quantity || ''} onChange={(e) => onChange('quantity', parseFloat(e.target.value) || 0)} className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md" step="any" min="0"/></div>
         <div className="col-span-4 sm:col-span-2"><input type="number" placeholder="Rate" value={item.rate || ''} onChange={(e) => onChange('rate', parseFloat(e.target.value) || 0)} className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md" step="any" min="0"/></div>
-        <div className="col-span-4 sm:col-span-3 text-right font-medium text-lg pr-2">${item.total.toFixed(2)}</div>
+        <div className="col-span-4 sm:col-span-3 text-right font-medium text-lg pr-2">{formatCurrency(item.total)}</div>
     </div>
 );
 
@@ -294,7 +295,7 @@ const LaborInputRow: React.FC<{item: LaborLineItem, onChange: (field: keyof Omit
         <div className="col-span-12 sm:col-span-5"><input type="text" placeholder="Labor Description" value={item.description} onChange={(e) => onChange('description', e.target.value)} className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md"/></div>
         <div className="col-span-4 sm:col-span-2"><input type="number" placeholder="Hours" value={item.hours || ''} onChange={(e) => onChange('hours', parseFloat(e.target.value) || 0)} className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md" step="any" min="0"/></div>
         <div className="col-span-4 sm:col-span-2"><input type="number" placeholder="Rate/Hr" value={item.rate || ''} onChange={(e) => onChange('rate', parseFloat(e.target.value) || 0)} className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md" step="any" min="0"/></div>
-        <div className="col-span-3 sm:col-span-2 text-right font-medium text-lg pr-2">${item.total.toFixed(2)}</div>
+        <div className="col-span-3 sm:col-span-2 text-right font-medium text-lg pr-2">{formatCurrency(item.total)}</div>
         <div className="col-span-1 text-right"><button onClick={onRemove} className="text-red-500 hover:text-red-700 p-1 non-printable"><Trash2 className="h-5 w-5" /></button></div>
     </div>
 );

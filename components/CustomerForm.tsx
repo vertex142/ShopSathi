@@ -50,18 +50,22 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
                         <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                        <p className="text-xs text-gray-500 mt-1">The customer's full name or company name.</p>
                     </div>
                      <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                         <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                        <p className="text-xs text-gray-500 mt-1">The primary email address for sending invoices and communications.</p>
                     </div>
                      <div>
                         <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
                         <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                        <p className="text-xs text-gray-500 mt-1">The primary contact phone number.</p>
                     </div>
                      <div>
                         <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
                         <textarea id="address" name="address" value={formData.address} onChange={handleChange} rows={3} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
+                        <p className="text-xs text-gray-500 mt-1">The customer's billing address, which will appear on invoices.</p>
                     </div>
                      <div>
                         <label htmlFor="openingBalance" className="block text-sm font-medium text-gray-700">Opening Balance ($)</label>
@@ -75,6 +79,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
                             required 
                             className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
                         />
+                        <p className="text-xs text-gray-500 mt-1">If this customer owed you money from before you started using this app, enter the amount here. Leave as 0 for new customers.</p>
                     </div>
                 </main>
                 <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">

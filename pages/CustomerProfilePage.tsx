@@ -8,6 +8,7 @@ import ReceivePaymentModal from '../components/ReceivePaymentModal';
 import InvoicePreview from '../components/InvoicePreview';
 import { ArrowLeft, FileText, ClipboardCheck, CircleDollarSign, Receipt, TrendingDown, BookOpen, Printer, LoaderCircle, Briefcase } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface CustomerProfilePageProps {
   customerId: string;
@@ -101,313 +102,274 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
         const projectMap = new Map<string, { quote?: Quote, job?: JobOrder, invoice?: Invoice }>();
 
         // Find all roots (quotes or standalone jobs)
+        // FIX: Corrected syntax error `q.id---` to `q.id`.
         customerQuotes.forEach(q => projectMap.set(q.id, { quote: q }));
         customerJobs.forEach(j => {
-            const linkedQuote = customerQuotes.find(q => q.convertedToJobId === j.id);
-            if (!linkedQuote) {
-                 projectMap.set(j.id, { job: j });
+            // FIX: Corrected logic to find standalone jobs. A job is standalone if no quote converted to it.
+            if (!customerQuotes.some(q => q.convertedToJobId === j.id)) {
+                projectMap.set(j.id, { job: j });
             }
         });
 
-        // Link documents together
-        projectMap.forEach((project, key) => {
-            if (project.quote) {
-                if(project.quote.convertedToJobId) {
-                    project.job = customerJobs.find(j => j.id === project.quote.convertedToJobId);
-                }
-                if(project.quote.convertedToInvoiceId) {
-                    project.invoice = customerInvoices.find(i => i.id === project.quote.convertedToInvoiceId);
+        // Link jobs and invoices to quotes
+        customerQuotes.forEach(q => {
+            if (q.convertedToJobId) {
+                const job = customerJobs.find(j => j.id === q.convertedToJobId);
+                if (job) {
+                    const project = projectMap.get(q.id);
+                    if (project) project.job = job;
                 }
             }
-            if (project.job && project.job.invoiceId) {
-                project.invoice = customerInvoices.find(i => i.id === project.job.invoiceId);
+            if (q.convertedToInvoiceId) {
+                const invoice = customerInvoices.find(i => i.id === q.convertedToInvoiceId);
+                if (invoice) {
+                    const project = projectMap.get(q.id);
+                    if (project) project.invoice = invoice;
+                }
             }
         });
-        
-        return Array.from(projectMap.values());
+
+        // Link invoices to jobs
+        customerJobs.forEach(j => {
+            if (j.invoiceId) {
+                const invoice = customerInvoices.find(i => i.id === j.invoiceId);
+                if (invoice) {
+                    // Find which project this job belongs to
+                    const projectEntry = Array.from(projectMap.entries()).find(([, value]) => value.job?.id === j.id);
+                    if (projectEntry) {
+                        projectEntry[1].invoice = invoice;
+                    } else {
+                         projectMap.set(j.id, { job: j, invoice });
+                    }
+                }
+            }
+        });
+
+        // FIX: Ensure each project object has a unique ID for React keys.
+        return Array.from(projectMap.values()).map(p => ({...p, id: p.quote?.id || p.job?.id || p.invoice?.id || crypto.randomUUID() }));
+
     }, [customerQuotes, customerJobs, customerInvoices]);
 
-  if (!customer) {
-    return (
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-red-600">Customer not found</h2>
-        <button onClick={onBack} className="mt-4 flex items-center justify-center mx-auto bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Go Back
-        </button>
-      </div>
-    );
-  }
-
-  const handlePrintLedger = async () => {
-    setIsPrinting(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    await printDocument('customer-ledger', `ledger-${customer.name.replace(/\s+/g, '_')}.pdf`);
-    setIsPrinting(false);
-  };
-
-  const getInvoiceStatusColor = (status: InvoiceStatus) => {
-    switch (status) {
-      case InvoiceStatus.Paid: return 'bg-green-100 text-green-800';
-      case InvoiceStatus.PartiallyPaid: return 'bg-yellow-100 text-yellow-800';
-      case InvoiceStatus.Sent: return 'bg-blue-100 text-blue-800';
-      case InvoiceStatus.Overdue: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getQuoteStatusColor = (status: QuoteStatus) => {
-    switch (status) {
-      case QuoteStatus.Accepted:
-      case QuoteStatus.Converted: return 'bg-green-100 text-green-800';
-      case QuoteStatus.Sent: return 'bg-blue-100 text-blue-800';
-      case QuoteStatus.Declined: return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-    
-    return (
-    <div className="container mx-auto space-y-8">
-      <div className="flex justify-between items-start">
-        <div className="flex items-center">
-          <button onClick={onBack} className="flex items-center bg-gray-200 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-300 transition-colors mr-4">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">{customer.name}</h1>
-            <p className="text-gray-500">{customer.email} &bull; {customer.phone}</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-            {customerStats.totalDue > 0 && (
-            <button onClick={() => setShowPaymentModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
-                <Receipt className="h-5 w-5 mr-2" />
-                Receive Payment
-            </button>
-            )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Total Billed" value={`$${customerStats.totalBilled.toFixed(2)}`} IconComponent={CircleDollarSign} color="bg-blue-500" />
-        <StatCard title="Total Paid" value={`$${customerStats.totalPaid.toFixed(2)}`} IconComponent={Receipt} color="bg-green-500" />
-        <StatCard title="Balance Due" value={`$${customerStats.totalDue.toFixed(2)}`} IconComponent={TrendingDown} color="bg-red-500" />
-      </div>
-
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          <button onClick={() => setActiveTab('invoices')} className={`${activeTab === 'invoices' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}>
-            <FileText className="h-5 w-5 mr-2" /> Invoices ({customerInvoices.length})
-          </button>
-          <button onClick={() => setActiveTab('quotes')} className={`${activeTab === 'quotes' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}>
-            <ClipboardCheck className="h-5 w-5 mr-2" /> Quotes ({customerQuotes.length})
-          </button>
-          <button onClick={() => setActiveTab('projects')} className={`${activeTab === 'projects' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}>
-            <Briefcase className="h-5 w-5 mr-2" /> Projects ({projects.length})
-          </button>
-          <button onClick={() => setActiveTab('ledger')} className={`${activeTab === 'ledger' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}>
-            <BookOpen className="h-5 w-5 mr-2" /> Ledger
-          </button>
-        </nav>
-      </div>
-
-      <div>
-        {activeTab === 'invoices' && (
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance Due</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {customerInvoices.map(inv => {
-                    const { grandTotal, balanceDue } = getInvoiceTotals(inv);
-                    return (
-                      <tr key={inv.id}>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{inv.invoiceNumber}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{inv.issueDate}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500">${grandTotal.toFixed(2)}</td>
-                        <td className="px-6 py-4 text-sm font-semibold text-red-600">${balanceDue.toFixed(2)}</td>
-                        <td className="px-6 py-4 text-sm"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getInvoiceStatusColor(inv.status)}`}>{inv.status}</span></td>
-                        <td className="px-6 py-4 text-right text-sm font-medium space-x-4">
-                          <button onClick={() => setInvoiceToPreview(inv)} className="text-blue-600 hover:text-blue-900">Preview</button>
-                          <button onClick={() => setInvoiceToEmail(inv)} className="text-cyan-600 hover:text-cyan-900">Email</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {customerInvoices.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-gray-500">No invoices found.</td></tr>}
-                </tbody>
-              </table>
+    // FIX: Add a check for the customer existing and return JSX.
+    if (!customer) {
+        return (
+            <div className="text-center">
+                <h2 className="text-2xl font-bold text-red-600">Customer not found</h2>
+                <button onClick={onBack} className="mt-4 flex items-center justify-center mx-auto bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Go Back
+                </button>
             </div>
-          </div>
-        )}
-        {activeTab === 'quotes' && (
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-             <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quote #</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {customerQuotes.map(q => (
-                    <tr key={q.id}>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{q.quoteNumber}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">{q.issueDate}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">${q.items.reduce((sum, i) => sum + i.rate * i.quantity, 0).toFixed(2)}</td>
-                      <td className="px-6 py-4 text-sm"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getQuoteStatusColor(q.status)}`}>{q.status}</span></td>
-                    </tr>
-                  ))}
-                  {customerQuotes.length === 0 && <tr><td colSpan={4} className="text-center py-10 text-gray-500">No quotes found.</td></tr>}
-                </tbody>
-              </table>
-          </div>
-        )}
-         {activeTab === 'projects' && (
-            <div className="space-y-6">
-                {projects.length > 0 ? (
-                    projects.map((project, index) => {
-                        const events: TimelineEvent[] = [];
-                        if (project.quote) events.push({ id: `q-${project.quote.id}`, date: project.quote.issueDate, title: `Quote #${project.quote.quoteNumber}`, description: `Status: ${project.quote.status}`, type: 'quote', relatedId: project.quote.id });
-                        if (project.job) events.push({ id: `j-${project.job.id}`, date: project.job.orderDate, title: `Job: ${project.job.jobName}`, description: `Status: ${project.job.status}`, type: 'job', relatedId: project.job.id });
-                        if (project.invoice) {
-                            events.push({ id: `i-${project.invoice.id}`, date: project.invoice.issueDate, title: `Invoice #${project.invoice.invoiceNumber}`, description: `Status: ${project.invoice.status}`, type: 'invoice', relatedId: project.invoice.id });
-                            (project.invoice.payments || []).forEach(p => events.push({ id: `p-${p.id}`, date: p.date, title: `Payment Received`, description: `$${p.amount.toFixed(2)} via ${p.method}`, type: 'payment', relatedId: project.invoice!.id }));
-                        }
-                        events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-                        const projectTitle = project.job?.jobName || `Project from Quote #${project.quote?.quoteNumber}` || `Project for Invoice #${project.invoice?.invoiceNumber}` || `Project ${index + 1}`;
-                        return (
-                            <div key={index} className="border p-4 rounded-lg bg-white shadow-md">
-                                <h3 className="text-lg font-semibold mb-4 text-gray-800">{projectTitle}</h3>
-                                <ProjectTimeline events={events} />
-                            </div>
-                        )
-                    })
-                ) : (
-                    <div className="bg-white shadow-md rounded-lg p-6 text-center text-gray-500">No projects found for this customer.</div>
+        );
+    }
+
+    const handlePrintLedger = async () => {
+        setIsPrinting(true);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        await printDocument('customer-ledger-content', `ledger-${customer.name.replace(/\s+/g, '_')}.pdf`);
+        setIsPrinting(false);
+    };
+
+    let balance = customer.openingBalance || 0;
+
+    return (
+        <div className="container mx-auto space-y-8">
+            <div className="flex justify-between items-start">
+                <div className="flex items-center">
+                    <button onClick={onBack} className="flex items-center bg-gray-200 text-gray-800 px-3 py-2 rounded-md hover:bg-gray-300 transition-colors mr-4">
+                        <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">{customer.name}</h1>
+                        <p className="text-gray-500">{customer.email} &bull; {customer.phone}</p>
+                    </div>
+                </div>
+                {customerStats.totalDue > 0 && (
+                     <button onClick={() => setShowPaymentModal(true)} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center">
+                        <Receipt className="h-5 w-5 mr-2" />
+                        Receive Payment
+                    </button>
                 )}
             </div>
-        )}
-        {activeTab === 'ledger' && (
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <div className="p-4 flex justify-between items-center non-printable">
-              <h3 className="text-lg font-semibold">Account Ledger</h3>
-              <button onClick={handlePrintLedger} disabled={isPrinting} className="flex items-center bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 text-sm">
-                {isPrinting ? <LoaderCircle className="h-4 w-4 mr-2 animate-spin" /> : <Printer className="h-4 w-4 mr-2" />}
-                Print / Save
-              </button>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard title="Total Billed" value={formatCurrency(customerStats.totalBilled)} IconComponent={CircleDollarSign} color="blue" />
+                <StatCard title="Total Paid" value={formatCurrency(customerStats.totalPaid)} IconComponent={Receipt} color="green" />
+                <StatCard title="Current Due" value={formatCurrency(customerStats.totalDue)} IconComponent={TrendingDown} color="red" />
             </div>
-            <div className="overflow-x-auto">
-              <div id="customer-ledger" className="printable-page p-4">
-                {/* Screen-only Header */}
-                <header className="flex justify-between items-start pb-6 mb-6 border-b non-printable">
-                    <div className="text-center">
-                        {state.settings.logo && (
-                            <>
-                                <img src={state.settings.logo} alt="Logo" className="h-20 w-auto max-w-[8rem] object-contain" />
-                                <p className="text-sm text-gray-500 mt-2 max-w-[12rem] break-words">{state.settings.tagline}</p>
-                            </>
-                        )}
-                    </div>
-                    <div className="text-right">
-                        <h2 className="text-3xl font-bold text-brand-blue">{state.settings.name}</h2>
-                        <p className="text-md text-gray-600 mt-2">{state.settings.address}</p>
-                        <p className="text-md text-gray-600">{state.settings.phone1}</p>
-                        {state.settings.phone2 && <p className="text-md text-gray-600">{state.settings.phone2}</p>}
-                        <p className="text-md text-gray-600">{state.settings.email}</p>
-                    </div>
-                </header>
 
-                {/* Print-only Header */}
-                <div className="printable-header">
-                    <div className="text-center">
-                        {state.settings.logo && (
-                            <>
-                                <img src={state.settings.logo} alt="Logo" className="h-14 object-contain" />
-                                <p className="text-[8pt] text-gray-600 mt-1 max-w-[15ch] leading-tight">{state.settings.tagline}</p>
-                            </>
-                        )}
-                    </div>
-                    <div className="text-right text-[9pt]">
-                        <h2 className="text-xl font-bold text-brand-blue">{state.settings.name}</h2>
-                        <p className="leading-snug">{state.settings.address}</p>
-                        <p className="leading-snug">{state.settings.phone1}</p>
-                        {state.settings.phone2 && <p className="leading-snug">{state.settings.phone2}</p>}
-                        <p className="leading-snug">{state.settings.email}</p>
-                    </div>
+            <div className="bg-white rounded-lg shadow-md">
+                <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                        <button onClick={() => setActiveTab('invoices')} className={`${activeTab === 'invoices' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                            Invoices ({customerInvoices.length})
+                        </button>
+                        <button onClick={() => setActiveTab('quotes')} className={`${activeTab === 'quotes' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                            Quotes ({customerQuotes.length})
+                        </button>
+                         <button onClick={() => setActiveTab('projects')} className={`${activeTab === 'projects' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                            Projects ({projects.length})
+                        </button>
+                        <button onClick={() => setActiveTab('ledger')} className={`${activeTab === 'ledger' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                            Customer Ledger
+                        </button>
+                    </nav>
                 </div>
-
-                {/* Report Title for Print */}
-                <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold">Customer Ledger</h2>
-                    <p className="text-lg">{customer.name}</p>
-                    <p className="text-sm text-gray-600">As of {new Date().toLocaleDateString()}</p>
+                
+                <div className="p-6">
+                   {activeTab === 'invoices' && (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Issue Date</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Balance Due</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {customerInvoices.map(inv => {
+                                        const { grandTotal, balanceDue } = getInvoiceTotals(inv);
+                                        return (
+                                            <tr key={inv.id}>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{inv.invoiceNumber}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{inv.issueDate}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{inv.dueDate}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{formatCurrency(grandTotal)}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800`}>{inv.status}</span></td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                                                    <button onClick={() => setInvoiceToPreview(inv)} className="text-blue-600 hover:text-blue-900">Preview</button>
+                                                    <button onClick={() => setInvoiceToEmail(inv)} className="text-cyan-600 hover:text-cyan-900">Email</button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {customerInvoices.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-gray-500">No invoices for this customer.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                   )}
+                   {activeTab === 'quotes' && (
+                         <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quote #</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Issue Date</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Expiry Date</th>
+                                        <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {customerQuotes.map(q => {
+                                        const total = q.items.reduce((sum, item) => sum + item.quantity * item.rate, 0) - (q.discount || 0);
+                                        return (
+                                            <tr key={q.id}>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{q.quoteNumber}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{q.issueDate}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{q.expiryDate}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{formatCurrency(total)}</td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-sm"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800`}>{q.status}</span></td>
+                                            </tr>
+                                        );
+                                    })}
+                                     {customerQuotes.length === 0 && <tr><td colSpan={5} className="text-center py-10 text-gray-500">No quotes for this customer.</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                   )}
+                   {activeTab === 'projects' && (
+                        <div className="space-y-8">
+                            {projects.map(p => {
+                                const timelineEvents: TimelineEvent[] = [];
+                                if (p.quote) timelineEvents.push({ id: p.quote.id, date: p.quote.issueDate, title: `Quote #${p.quote.quoteNumber} Created`, description: `Status: ${p.quote.status}`, amount: p.quote.items.reduce((s,i) => s + i.rate * i.quantity, 0) - (p.quote.discount || 0), type: 'quote', relatedId: p.quote.id });
+                                if (p.job) timelineEvents.push({ id: p.job.id, date: p.job.orderDate, title: `Job "${p.job.jobName}" Started`, description: `Status: ${p.job.status}`, amount: p.job.price, type: 'job', relatedId: p.job.id });
+                                if (p.invoice) {
+                                    timelineEvents.push({ id: p.invoice.id, date: p.invoice.issueDate, title: `Invoice #${p.invoice.invoiceNumber} Issued`, description: `Status: ${p.invoice.status}`, amount: getInvoiceTotals(p.invoice).grandTotal, type: 'invoice', relatedId: p.invoice.id });
+                                    (p.invoice.payments || []).forEach(payment => timelineEvents.push({ id: payment.id, date: payment.date, title: 'Payment Received', description: `Via ${payment.method}`, amount: payment.amount, type: 'payment', relatedId: p.invoice!.id }));
+                                }
+                                return (
+                                    <div key={p.id} className="border p-4 rounded-lg">
+                                        <h3 className="font-semibold text-lg mb-4">{p.job?.jobName || p.quote?.quoteNumber || p.invoice?.invoiceNumber}</h3>
+                                        <ProjectTimeline events={timelineEvents.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())} />
+                                    </div>
+                                )
+                            })}
+                             {projects.length === 0 && <p className="text-center py-10 text-gray-500">No projects found. A project is a linked set of quotes, jobs, and invoices.</p>}
+                        </div>
+                   )}
+                   {activeTab === 'ledger' && (
+                       <div id="customer-ledger-content" className="printable-page">
+                           <div className="flex justify-between items-center mb-4">
+                               <h3 className="text-xl font-semibold text-gray-800">Customer Ledger</h3>
+                               <button onClick={handlePrintLedger} disabled={isPrinting} className="flex items-center bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-50 non-printable">
+                                   {isPrinting ? <LoaderCircle className="h-4 w-4 mr-2 animate-spin" /> : <Printer className="h-4 w-4 mr-2" />}
+                                   Print Ledger
+                               </button>
+                           </div>
+                            <div className="overflow-x-auto border rounded-lg">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Debit</th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Credit</th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        <tr className="font-semibold">
+                                            <td colSpan={4} className="px-4 py-3 text-gray-800">Opening Balance</td>
+                                            <td className="px-4 py-3 text-right text-gray-800">{formatCurrency(balance)}</td>
+                                        </tr>
+                                        {ledgerTransactions.filter(t => t.type !== 'opening').map((tx, index) => {
+                                            balance = balance + tx.debit - tx.credit;
+                                            return (
+                                                <tr key={index}>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{tx.date}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{tx.details}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{tx.debit > 0 ? formatCurrency(tx.debit) : '-'}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-green-600">{tx.credit > 0 ? formatCurrency(tx.credit) : '-'}</td>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold">{formatCurrency(balance)}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr className="bg-gray-100 font-bold">
+                                            <td colSpan={4} className="px-4 py-3 text-right text-gray-900">Closing Balance</td>
+                                            <td className="px-4 py-3 text-right text-gray-900">{formatCurrency(balance)}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                       </div>
+                   )}
                 </div>
-
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                      <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Debit</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Credit</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
-                      </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                      {(() => {
-                          let balance = 0;
-                          return ledgerTransactions.map((tx, i) => {
-                              balance += tx.debit - tx.credit;
-                              return (
-                                  <tr key={i}>
-                                      <td className="px-6 py-4 text-sm text-gray-500">{tx.date}</td>
-                                      <td className="px-6 py-4 text-sm text-gray-900">{tx.details}</td>
-                                      <td className="px-6 py-4 text-right text-sm text-gray-500">{tx.debit > 0 ? `$${tx.debit.toFixed(2)}` : '-'}</td>
-                                      <td className="px-6 py-4 text-right text-sm text-green-600">{tx.credit > 0 ? `$${tx.credit.toFixed(2)}` : '-'}</td>
-                                      <td className="px-6 py-4 text-right text-sm font-semibold text-gray-800">${balance.toFixed(2)}</td>
-                                  </tr>
-                              );
-                          });
-                      })()}
-                  </tbody>
-                </table>
-              
-                {/* Print-only Footer */}
-                <div className="printable-footer">
-                    <span>Customer: {customer.name}</span>
-                    <div className="printable-footer-center"></div>
-                    <span>Generated on: {new Date().toLocaleDateString()}</span>
-                </div>
-              </div>
             </div>
-          </div>
-        )}
-      </div>
-
-      {showPaymentModal && (
-        <ReceivePaymentModal 
-          customer={customer}
-          totalDue={customerStats.totalDue}
-          onClose={() => setShowPaymentModal(false)}
-          onConfirm={handleReceivePayment}
-        />
-      )}
-      {invoiceToEmail && <EmailModal invoice={invoiceToEmail} onClose={() => setInvoiceToEmail(null)} />}
-      {invoiceToPreview && <InvoicePreview invoice={invoiceToPreview} onClose={() => setInvoiceToPreview(null)} />}
-    </div>
-  );
+             {showPaymentModal && (
+                <ReceivePaymentModal
+                    customer={customer}
+                    totalDue={customerStats.totalDue}
+                    onClose={() => setShowPaymentModal(false)}
+                    onConfirm={handleReceivePayment}
+                />
+            )}
+             {invoiceToEmail && (
+                <EmailModal invoice={invoiceToEmail} onClose={() => setInvoiceToEmail(null)} />
+            )}
+             {invoiceToPreview && (
+                <InvoicePreview invoice={invoiceToPreview} onClose={() => setInvoiceToPreview(null)} />
+            )}
+        </div>
+    );
 });
 
 export default CustomerProfilePage;

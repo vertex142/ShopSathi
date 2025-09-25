@@ -1,8 +1,10 @@
 
+
 import React, { useState } from 'react';
 import type { Supplier, Payment } from '../types';
 import { PAYMENT_METHODS, AccountType } from '../types';
 import { useData } from '../context/DataContext';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface MakePaymentModalProps {
   supplier: Supplier;
@@ -46,7 +48,7 @@ const MakePaymentModal: React.FC<MakePaymentModalProps> = ({ supplier, totalDue,
       <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
         <h2 id="payment-modal-title" className="text-xl font-bold mb-2">Make Payment</h2>
         <p className="mb-4 text-sm text-gray-600">
-          To supplier <span className="font-semibold">{supplier.name}</span>. Total Due: <span className="font-bold">${totalDue.toFixed(2)}</span>
+          To supplier <span className="font-semibold">{supplier.name}</span>. Total Due: <span className="font-bold">{formatCurrency(totalDue)}</span>
         </p>
         <div className="space-y-4">
             <div>
@@ -70,6 +72,7 @@ const MakePaymentModal: React.FC<MakePaymentModalProps> = ({ supplier, totalDue,
                 <option value="">Select an account</option>
                 {assetAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
               </select>
+              <p className="text-xs text-gray-500 mt-1">This will decrease the balance of the selected account (e.g., Cash or Bank).</p>
             </div>
             <div>
               <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes (Optional)</label>

@@ -7,6 +7,7 @@ import JobCostCalculator from './JobCostCalculator';
 import CustomerForm from './CustomerForm';
 import { analyzeImageWithPrompt } from '../services/geminiService';
 import AIResponseModal from './AIResponseModal';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface JobOrderFormProps {
   job: JobOrder | null;
@@ -182,6 +183,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                   <div>
                       <label htmlFor="jobName" className="block text-sm font-medium text-gray-700">Job Name</label>
                       <input type="text" id="jobName" name="jobName" value={formData.jobName} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                      <p className="text-xs text-gray-500 mt-1">A descriptive name for this job (e.g., 'Business Cards for XYZ Corp').</p>
                   </div>
                   <div>
                       <label htmlFor="customerId" className="block text-sm font-medium text-gray-700">Customer</label>
@@ -209,6 +211,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                 <div>
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700">Job Description</label>
                   <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={5} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
+                  <p className="text-xs text-gray-500 mt-1">Provide detailed requirements for the job.</p>
                 </div>
                 {process.env.API_KEY && (
                     <div className="space-y-2">
@@ -258,6 +261,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                       <input type="text" id="finishing" name="finishing" value={formData.finishing} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
                   </div>
               </div>
+              <p className="text-xs text-gray-500 -mt-4">Specify the production details for this job.</p>
 
               <div className="mt-6 border-t pt-4">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Materials Used (from Inventory)</h3>
@@ -294,7 +298,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                                   </div>
                                   <div className="col-span-2">
                                       <span className="text-sm text-gray-600">
-                                        Cost: ${((selectedItem?.unitCost || 0) * material.quantity).toFixed(2)}
+                                        Cost: {formatCurrency((selectedItem?.unitCost || 0) * material.quantity)}
                                       </span>
                                   </div>
                                   <div className="col-span-1 text-right">
@@ -316,6 +320,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                   <div className="space-y-4">
                       <label htmlFor="price" className="block text-sm font-medium text-gray-700">Sale Price</label>
                       <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                      <p className="text-xs text-gray-500 -mt-3">The total price you are charging the customer for this job.</p>
 
                       <button type="button" onClick={() => setShowCostCalculator(true)} className="w-full flex items-center justify-center p-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                           <Calculator className="h-4 w-4 mr-2" />
@@ -330,12 +335,12 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                           {actualTotalCost > 0 && <div className="font-medium text-sm text-gray-500">Actual</div>}
                           
                           <div className="text-sm text-gray-600">Cost:</div>
-                          <div className="text-sm font-medium text-red-600">${estimatedTotalCost.toFixed(2)}</div>
-                          {actualTotalCost > 0 && <div className="text-sm font-medium text-red-600">${actualTotalCost.toFixed(2)}</div>}
+                          <div className="text-sm font-medium text-red-600">{formatCurrency(estimatedTotalCost)}</div>
+                          {actualTotalCost > 0 && <div className="text-sm font-medium text-red-600">{formatCurrency(actualTotalCost)}</div>}
                           
                           <div className="text-sm text-gray-600">Profit:</div>
-                          <div className="text-sm font-medium text-green-600">${estimatedProfit.toFixed(2)}</div>
-                          {actualTotalCost > 0 && <div className="text-sm font-medium text-green-600">${actualProfit.toFixed(2)}</div>}
+                          <div className="text-sm font-medium text-green-600">{formatCurrency(estimatedProfit)}</div>
+                          {actualTotalCost > 0 && <div className="text-sm font-medium text-green-600">{formatCurrency(actualProfit)}</div>}
                           
                           <div className="text-sm text-gray-600">Margin:</div>
                           <div className="text-sm font-medium text-green-600">{estimatedProfitMargin.toFixed(1)}%</div>
@@ -354,6 +359,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                   <div>
                       <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Internal Notes</label>
                       <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows={3} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
+                      <p className="text-xs text-gray-500 mt-1">These notes are for your team only and will not be shown to the customer.</p>
                   </div>
               </div>
 

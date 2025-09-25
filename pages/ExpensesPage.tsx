@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Expense, AccountType } from '../types';
 import { LoaderCircle } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface ExpenseFormProps {
     expense: Expense | null;
@@ -58,6 +59,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
                     <div>
                         <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
                         <input type="date" id="date" name="date" value={formData.date} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                        <p className="text-xs text-gray-500 mt-1">The date the expense was incurred.</p>
                     </div>
                      <div>
                         <label htmlFor="debitAccountId" className="block text-sm font-medium text-gray-700">Expense Account (Debit)</label>
@@ -65,6 +67,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
                             <option value="">Select expense category</option>
                             {expenseAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
                         </select>
+                        <p className="text-xs text-gray-500 mt-1">Select the expense category. This increases the balance of the chosen expense account.</p>
                     </div>
                     <div>
                         <label htmlFor="creditAccountId" className="block text-sm font-medium text-gray-700">Paid From (Credit)</label>
@@ -72,14 +75,17 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
                             <option value="">Select payment source</option>
                             {paymentAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
                         </select>
+                        <p className="text-xs text-gray-500 mt-1">Select the account you used to pay for this expense (e.g., Cash, Bank). This decreases the balance of that account.</p>
                     </div>
                      <div>
                         <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
                         <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={3} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
+                        <p className="text-xs text-gray-500 mt-1">A brief description of what this expense was for.</p>
                     </div>
                      <div>
                         <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
                         <input type="number" id="amount" name="amount" value={formData.amount} onChange={handleChange} required min="0.01" step="0.01" className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
+                        <p className="text-xs text-gray-500 mt-1">The total amount of the expense.</p>
                     </div>
                 </main>
                 <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
@@ -157,7 +163,7 @@ const ExpensesPage: React.FC = React.memo(() => {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{debitAccount?.name || 'N/A'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{expense.description}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{creditAccount?.name || 'N/A'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">-${expense.amount.toFixed(2)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">-{formatCurrency(expense.amount)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button onClick={() => handleEdit(expense)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
                                         <button onClick={() => handleDelete(expense.id)} className="text-red-600 hover:text-red-900">Delete</button>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { JobOrder, Customer } from '../types';
 import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface JobKanbanCardProps {
     job: JobOrder;
@@ -44,7 +45,7 @@ const JobKanbanCard: React.FC<JobKanbanCardProps> = ({ job, customer, onDragStar
             <p className="text-xs text-gray-500 mt-1">{customer?.name || 'Unknown Customer'}</p>
             <div className="mt-3 flex justify-between items-center">
                 <span className="text-xs text-gray-600">Due: {job.dueDate || 'N/A'}</span>
-                <span className="text-sm font-bold text-brand-blue">${job.price.toFixed(2)}</span>
+                <span className="text-sm font-bold text-brand-blue">{formatCurrency(job.price)}</span>
             </div>
         </div>
     );
