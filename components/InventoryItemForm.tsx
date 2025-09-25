@@ -97,7 +97,7 @@ const InventoryItemForm: React.FC<InventoryItemFormProps> = ({ item, onClose }) 
                 </div>
             </div>
         </main>
-        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
+        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg sticky bottom-0">
             <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
             <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{item ? 'Update Item' : 'Save Item'}</button>
         </footer>

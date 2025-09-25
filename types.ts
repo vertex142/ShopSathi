@@ -264,6 +264,11 @@ export interface CompanySettings {
   authorizedSignatureImage?: string; // base64 string
   taxRates: TaxRate[];
   inventoryCategories: { id: string; name: string }[];
+  whatsappTemplates: {
+    invoice: string;
+    quote: string;
+    paymentReminder: string;
+  };
 }
 
 export interface InventoryItem {

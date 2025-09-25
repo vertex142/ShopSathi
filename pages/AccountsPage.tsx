@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { Account, AccountType } from '../types';
 import AccountForm from '../components/AccountForm';
 import { formatCurrency } from '../utils/formatCurrency';
+import { Edit, Trash2 } from 'lucide-react';
 
 const AccountsPage: React.FC = React.memo(() => {
     const { state, dispatch } = useData();
@@ -76,20 +77,23 @@ const AccountsPage: React.FC = React.memo(() => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right font-mono">{formatCurrency(totalBalance)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <button 
-                                                        onClick={() => handleEdit(account)} 
-                                                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(account.id)} 
-                                                        className="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed"
-                                                        disabled={account.isSystemAccount}
-                                                        title={account.isSystemAccount ? 'System accounts cannot be deleted' : 'Delete account'}
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                    <div className="flex justify-end items-center space-x-1">
+                                                        <button 
+                                                            onClick={() => handleEdit(account)} 
+                                                            className="text-indigo-600 hover:text-indigo-900 p-1"
+                                                            title="Edit Account"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDelete(account.id)} 
+                                                            className="text-red-600 hover:text-red-900 p-1 disabled:text-gray-400 disabled:cursor-not-allowed"
+                                                            disabled={account.isSystemAccount}
+                                                            title={account.isSystemAccount ? 'System accounts cannot be deleted' : 'Delete account'}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         )})}

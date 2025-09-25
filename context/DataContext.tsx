@@ -23,6 +23,11 @@ const defaultSettings: CompanySettings = {
     authorizedSignatureImage: '',
     taxRates: [],
     inventoryCategories: [],
+    whatsappTemplates: {
+        invoice: 'Hello {customerName},\n\nPlease find your invoice ({invoiceNumber}) attached. The total amount due is {amountDue} by {dueDate}.\n\nThank you,\n{companyName}',
+        quote: 'Hello {customerName},\n\nPlease find quote {quoteNumber} attached for your review.\n\nWe look forward to hearing from you.\n\nThank you,\n{companyName}',
+        paymentReminder: 'Hello {customerName},\n\nThis is a friendly reminder that your invoice {invoiceNumber} for {amountDue} is due on {dueDate}.\n\nPlease let us know if you have any questions.\n\nThank you,\n{companyName}',
+    },
 };
 
 const initialAccounts = [
@@ -49,8 +54,19 @@ const dataReducer = (state: AppState, action: Action): AppState => {
       return { ...state, customers: [...state.customers, action.payload] };
     case 'UPDATE_CUSTOMER':
       return { ...state, customers: state.customers.map(c => c.id === action.payload.id ? action.payload : c) };
-    case 'DELETE_CUSTOMER':
-      return { ...state, customers: state.customers.filter(c => c.id !== action.payload) };
+    case 'DELETE_CUSTOMER': {
+      const customerId = action.payload;
+      const hasRelatedDocs = state.invoices.some(i => i.customerId === customerId) ||
+                              state.quotes.some(q => q.customerId === customerId) ||
+                              state.jobOrders.some(j => j.customerId === customerId) ||
+                              state.deliveryChallans.some(d => d.customerId === customerId);
+
+      if (hasRelatedDocs) {
+        alert('Cannot delete customer. They are linked to existing documents (invoices, quotes, jobs, etc.). Please delete those documents first.');
+        return state;
+      }
+      return { ...state, customers: state.customers.filter(c => c.id !== customerId) };
+    }
 
     // --- INVOICES ---
     case 'ADD_INVOICE':
@@ -398,8 +414,15 @@ const dataReducer = (state: AppState, action: Action): AppState => {
       return { ...state, suppliers: [...state.suppliers, { ...action.payload, id: crypto.randomUUID() }] };
     case 'UPDATE_SUPPLIER':
       return { ...state, suppliers: state.suppliers.map(s => s.id === action.payload.id ? action.payload : s) };
-    case 'DELETE_SUPPLIER':
-      return { ...state, suppliers: state.suppliers.filter(s => s.id !== action.payload) };
+    case 'DELETE_SUPPLIER': {
+      const supplierId = action.payload;
+      const hasRelatedPOs = state.purchaseOrders.some(po => po.supplierId === supplierId);
+      if (hasRelatedPOs) {
+        alert('Cannot delete supplier. They are linked to existing purchase orders. Please delete those orders first.');
+        return state;
+      }
+      return { ...state, suppliers: state.suppliers.filter(s => s.id !== supplierId) };
+    }
 
     // --- INVENTORY ---
     case 'ADD_INVENTORY_ITEM':
@@ -423,8 +446,12 @@ const dataReducer = (state: AppState, action: Action): AppState => {
     case 'UPDATE_PURCHASE_ORDER': {
         const oldPO = state.purchaseOrders.find(p => p.id === action.payload.id);
         const newPO: PurchaseOrder = action.payload;
+        
         let inventoryItemsForPOUpdate = [...state.inventoryItems];
+        let journalEntriesForPOUpdate = [...state.journalEntries];
+        let accountsForPOUpdate = [...state.accounts];
 
+        // --- Handle Inventory Stock Update ---
         const isNowComplete = newPO.status === PurchaseOrderStatus.Completed || newPO.status === PurchaseOrderStatus.PartiallyReceived;
         const wasComplete = oldPO?.status === PurchaseOrderStatus.Completed || oldPO?.status === PurchaseOrderStatus.PartiallyReceived;
 
@@ -454,15 +481,93 @@ const dataReducer = (state: AppState, action: Action): AppState => {
             });
             newPO.stockReceived = false;
         }
+        
+        // --- Handle Accounts Payable Journal Entry ---
+        const wasOrdered = oldPO?.status !== PurchaseOrderStatus.Pending && oldPO?.status !== PurchaseOrderStatus.Cancelled;
+        const isNowOrdered = newPO.status !== PurchaseOrderStatus.Pending && newPO.status !== PurchaseOrderStatus.Cancelled;
+        const grandTotal = newPO.items.reduce((acc, item) => acc + item.quantity * item.unitCost, 0) + (newPO.taxAmount || 0);
+
+        if (isNowOrdered && !wasOrdered) {
+            const supplier = state.suppliers.find(s => s.id === newPO.supplierId);
+            const newJournalEntry: JournalEntry = {
+                id: crypto.randomUUID(),
+                date: newPO.orderDate,
+                memo: `Liability for Purchase Order #${newPO.poNumber} to ${supplier?.name}`,
+                items: [
+                    { id: crypto.randomUUID(), accountId: 'asset-inventory', debit: grandTotal, credit: 0 },
+                    { id: crypto.randomUUID(), accountId: 'liability-ap', debit: 0, credit: grandTotal },
+                ]
+            };
+            accountsForPOUpdate = accountsForPOUpdate.map(acc => {
+                if (acc.id === 'asset-inventory') return { ...acc, balance: acc.balance + grandTotal };
+                if (acc.id === 'liability-ap') return { ...acc, balance: acc.balance + grandTotal };
+                return acc;
+            });
+            journalEntriesForPOUpdate.push(newJournalEntry);
+        } else if (!isNowOrdered && wasOrdered && oldPO) {
+             const supplier = state.suppliers.find(s => s.id === oldPO.supplierId);
+             const reversalJournalEntry: JournalEntry = {
+                id: crypto.randomUUID(),
+                date: new Date().toISOString().split('T')[0],
+                memo: `Reversal for PO #${oldPO.poNumber} to ${supplier?.name}`,
+                items: [
+                    { id: crypto.randomUUID(), accountId: 'liability-ap', debit: grandTotal, credit: 0 },
+                    { id: crypto.randomUUID(), accountId: 'asset-inventory', debit: 0, credit: grandTotal },
+                ]
+            };
+            accountsForPOUpdate = accountsForPOUpdate.map(acc => {
+                if (acc.id === 'asset-inventory') return { ...acc, balance: acc.balance - grandTotal };
+                if (acc.id === 'liability-ap') return { ...acc, balance: acc.balance - grandTotal };
+                return acc;
+            });
+            journalEntriesForPOUpdate.push(reversalJournalEntry);
+        }
 
         return { 
             ...state, 
             inventoryItems: inventoryItemsForPOUpdate,
+            accounts: accountsForPOUpdate,
+            journalEntries: journalEntriesForPOUpdate,
             purchaseOrders: state.purchaseOrders.map(p => p.id === newPO.id ? newPO : p) 
         };
     }
-    case 'DELETE_PURCHASE_ORDER':
-        return { ...state, purchaseOrders: state.purchaseOrders.filter(p => p.id !== action.payload) };
+    case 'DELETE_PURCHASE_ORDER': {
+        const poToDelete = state.purchaseOrders.find(p => p.id === action.payload);
+        if (!poToDelete) return state;
+
+        let accountsForDelete = [...state.accounts];
+        let journalEntriesForDelete = [...state.journalEntries];
+        
+        const wasOrdered = poToDelete.status !== PurchaseOrderStatus.Pending && poToDelete.status !== PurchaseOrderStatus.Cancelled;
+        
+        if(wasOrdered) {
+            const supplier = state.suppliers.find(s => s.id === poToDelete.supplierId);
+            const grandTotal = poToDelete.items.reduce((acc, item) => acc + item.quantity * item.unitCost, 0) + (poToDelete.taxAmount || 0);
+
+            const reversalJournalEntry: JournalEntry = {
+                id: crypto.randomUUID(),
+                date: new Date().toISOString().split('T')[0],
+                memo: `Reversal for deleted PO #${poToDelete.poNumber} to ${supplier?.name}`,
+                items: [
+                    { id: crypto.randomUUID(), accountId: 'liability-ap', debit: grandTotal, credit: 0 },
+                    { id: crypto.randomUUID(), accountId: 'asset-inventory', debit: 0, credit: grandTotal },
+                ]
+            };
+            accountsForDelete = accountsForDelete.map(acc => {
+                if (acc.id === 'asset-inventory') return { ...acc, balance: acc.balance - grandTotal };
+                if (acc.id === 'liability-ap') return { ...acc, balance: acc.balance - grandTotal };
+                return acc;
+            });
+            journalEntriesForDelete.push(reversalJournalEntry);
+        }
+
+        return {
+            ...state,
+            purchaseOrders: state.purchaseOrders.filter(p => p.id !== action.payload),
+            accounts: accountsForDelete,
+            journalEntries: journalEntriesForDelete,
+        };
+    }
         
     // --- ACCOUNTS ---
     case 'ADD_ACCOUNT': {
@@ -647,7 +752,7 @@ const dataReducer = (state: AppState, action: Action): AppState => {
             customerId: invoice.customerId,
             issueDate: new Date().toISOString().split('T')[0],
             items: invoice.items.map(item => ({
-                id: item.id,
+                id: crypto.randomUUID(), // Generate new IDs for challan items to avoid key conflicts.
                 name: item.name,
                 description: item.description,
                 quantity: item.quantity,

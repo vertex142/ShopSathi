@@ -5,7 +5,7 @@ import JobOrderForm from '../components/JobOrderForm';
 import StatusEditor from '../components/StatusEditor';
 import JobKanbanBoard from '../components/JobKanbanBoard';
 import JobDetailsModal from '../components/JobDetailsModal';
-import { List, Trello, Calendar } from 'lucide-react';
+import { List, Trello, Calendar, FileSearch, Edit, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import JobCalendarView from '../components/JobCalendarView';
 
@@ -103,10 +103,12 @@ const JobsPage: React.FC = React.memo(() => {
                                           getStatusColor={getStatusColor}
                                       />
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                                      <button onClick={() => setJobForDetails(job)} className="text-blue-600 hover:text-blue-900">Details</button>
-                                      <button onClick={() => handleEdit(job)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
-                                      <button onClick={() => handleDelete(job.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                       <div className="flex justify-end items-center space-x-1">
+                                            <button onClick={() => setJobForDetails(job)} className="text-blue-600 hover:text-blue-900 p-1" title="View Details"><FileSearch className="h-4 w-4"/></button>
+                                            <button onClick={() => handleEdit(job)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Job"><Edit className="h-4 w-4"/></button>
+                                            <button onClick={() => handleDelete(job.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Job"><Trash2 className="h-4 w-4"/></button>
+                                        </div>
                                   </td>
                               </tr>
                           )

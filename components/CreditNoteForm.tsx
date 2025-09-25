@@ -98,7 +98,7 @@ const CreditNoteForm: React.FC<CreditNoteFormProps> = ({ originalInvoice, onClos
             </div>
 
         </main>
-        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg">
+        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg sticky bottom-0">
             <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
             <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">Create and Finalize Credit Note</button>
         </footer>

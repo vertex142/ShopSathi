@@ -87,7 +87,7 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
           </div>
         </div>
         
-        {process.env.GEMINI_API_KEY && <AIActions />}
+        {process.env.API_KEY && <AIActions />}
 
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Last 6 Months Overview</h2>

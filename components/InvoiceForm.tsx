@@ -234,7 +234,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                                         onChange={(e) => handleItemChange(index, e)} 
                                         className="p-2 w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"
                                     />
-                                    {process.env.GEMINI_API_KEY && (
+                                    {process.env.API_KEY && (
                                         <button type="button" onClick={() => handleEnhance(index)} disabled={enhancingItemId === item.id} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-yellow-500 hover:text-yellow-700 disabled:opacity-50" title="Use AI to rewrite your description for a more professional tone.">
                                             {enhancingItemId === item.id ? (
                                                 <LoaderCircle className="animate-spin h-5 w-5" />
@@ -396,7 +396,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                 <p className="text-xs text-gray-500 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple terms.</p>
             </div>
         </main>
-        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg">
+        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg sticky bottom-0">
             <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" disabled={isSaving}>Cancel</button>
             <button 
                 type="submit" 

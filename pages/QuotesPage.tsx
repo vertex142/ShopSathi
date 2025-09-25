@@ -4,8 +4,10 @@ import { Quote, QuoteStatus } from '../types';
 import QuoteForm from '../components/QuoteForm';
 import StatusEditor from '../components/StatusEditor';
 import QuotePreview from '../components/QuotePreview';
-import { Search, X } from 'lucide-react';
+import { Search, X, Eye, Briefcase, FileText, Edit, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
+import WhatsAppIcon from '../components/WhatsAppIcon';
+import { parseTemplate, generateWhatsAppLink } from '../utils/whatsappHelper';
 
 interface QuotesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -81,6 +83,28 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
     setFilterStatus('');
     setFilterStartDate('');
     setFilterEndDate('');
+  };
+
+  const handleSendWhatsApp = (quote: Quote) => {
+    const customer = state.customers.find(c => c.id === quote.customerId);
+    if (!customer || !customer.phone) {
+        alert('This customer does not have a phone number on file.');
+        return;
+    }
+
+    const template = state.settings.whatsappTemplates?.quote || 'Hello {customerName},\n\nPlease find quote {quoteNumber} attached for your review.\n\nWe look forward to hearing from you.\n\nThank you,\n{companyName}';
+    const total = getQuoteTotal(quote);
+    
+    const message = parseTemplate(template, {
+        customerName: customer.name,
+        quoteNumber: quote.quoteNumber,
+        amountDue: total,
+        dueDate: quote.expiryDate, // Using expiry date for quotes
+        companyName: state.settings.name,
+    });
+
+    const link = generateWhatsAppLink(customer.phone, message);
+    window.open(link, '_blank');
   };
 
   const filteredQuotes = useMemo(() => {
@@ -224,16 +248,19 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
                                             disabledStatuses={[QuoteStatus.Converted]}
                                         />
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                                        <button onClick={() => setQuoteToPreview(quote)} className="text-blue-600 hover:text-blue-900">Preview</button>
-                                        {quote.status === QuoteStatus.Accepted && !quote.convertedToJobId && (
-                                          <button onClick={() => handleConvertToJob(quote.id)} className="text-purple-600 hover:text-purple-900" title="Convert this accepted quote into a new job order">To Job</button>
-                                        )}
-                                        {quote.status === QuoteStatus.Accepted && !quote.convertedToInvoiceId && (
-                                          <button onClick={() => handleConvertToInvoice(quote.id)} className="text-green-600 hover:text-green-900" title="Convert this accepted quote into a new draft invoice">To Invoice</button>
-                                        )}
-                                        <button onClick={() => handleEdit(quote)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
-                                        <button onClick={() => handleDelete(quote.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div className="flex justify-end items-center space-x-1">
+                                            <button onClick={() => setQuoteToPreview(quote)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview Quote"><Eye className="h-4 w-4"/></button>
+                                            <button onClick={() => handleSendWhatsApp(quote)} className="text-green-600 hover:text-green-900 p-1" title="Send via WhatsApp"><WhatsAppIcon className="h-5 w-5" /></button>
+                                            {quote.status === QuoteStatus.Accepted && !quote.convertedToJobId && (
+                                              <button onClick={() => handleConvertToJob(quote.id)} className="text-purple-600 hover:text-purple-900 p-1" title="Convert to Job"><Briefcase className="h-4 w-4"/></button>
+                                            )}
+                                            {quote.status === QuoteStatus.Accepted && !quote.convertedToInvoiceId && (
+                                              <button onClick={() => handleConvertToInvoice(quote.id)} className="text-green-600 hover:text-green-900 p-1" title="Convert to Invoice"><FileText className="h-4 w-4"/></button>
+                                            )}
+                                            <button onClick={() => handleEdit(quote)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Quote"><Edit className="h-4 w-4"/></button>
+                                            <button onClick={() => handleDelete(quote.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Quote"><Trash2 className="h-4 w-4"/></button>
+                                        </div>
                                     </td>
                                 </tr>
                             )

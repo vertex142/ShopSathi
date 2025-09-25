@@ -167,7 +167,7 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
                         <button type="button" onClick={addItem} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Add Line Item</button>
                     </div>
                 </main>
-                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
+                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg sticky bottom-0">
                     <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
                     <button 
                         type="submit"

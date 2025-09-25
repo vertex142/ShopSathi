@@ -3,7 +3,7 @@ import { useData } from '../context/DataContext';
 import { DeliveryChallan } from '../types';
 import DeliveryChallanForm from '../components/DeliveryChallanForm';
 import DeliveryChallanPreview from '../components/DeliveryChallanPreview';
-import { Search, X } from 'lucide-react';
+import { Search, X, Eye, Edit, Trash2 } from 'lucide-react';
 
 interface DeliveryChallansPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -127,9 +127,11 @@ const DeliveryChallansPage: React.FC<DeliveryChallansPageProps> = React.memo(({ 
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{challan.issueDate}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{invoice?.invoiceNumber || 'N/A'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button onClick={() => setChallanToPreview(challan)} className="text-blue-600 hover:text-blue-900 mr-4">Preview</button>
-                                        <button onClick={() => handleEdit(challan)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                                        <button onClick={() => handleDelete(challan.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                        <div className="flex justify-end items-center space-x-1">
+                                            <button onClick={() => setChallanToPreview(challan)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview Challan"><Eye className="h-4 w-4"/></button>
+                                            <button onClick={() => handleEdit(challan)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Challan"><Edit className="h-4 w-4"/></button>
+                                            <button onClick={() => handleDelete(challan.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Challan"><Trash2 className="h-4 w-4"/></button>
+                                        </div>
                                     </td>
                                 </tr>
                             )

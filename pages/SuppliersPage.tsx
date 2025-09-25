@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Supplier, InventoryItem } from '../types';
 import SupplierForm from '../components/SupplierForm';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface SuppliersPageProps {
     onViewSupplier: (supplierId: string) => void;
@@ -72,8 +73,10 @@ const SuppliersPage: React.FC<SuppliersPageProps> = React.memo(({ onViewSupplier
                                         }
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button onClick={() => handleEdit(supplier)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                                        <button onClick={() => handleDelete(supplier.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                        <div className="flex justify-end items-center space-x-1">
+                                            <button onClick={() => handleEdit(supplier)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Supplier"><Edit className="h-4 w-4"/></button>
+                                            <button onClick={() => handleDelete(supplier.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Supplier"><Trash2 className="h-4 w-4"/></button>
+                                        </div>
                                     </td>
                                 </tr>
                                 );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Supplier } from '../types';
+import { Edit } from 'lucide-react';
 
 interface SupplierFormProps {
     supplier: Supplier | null;
@@ -18,6 +19,8 @@ const SupplierForm: React.FC<SupplierFormProps> = ({ supplier, onClose, onSave }
         openingBalance: supplier?.openingBalance || 0,
         linkedInventoryItemIds: supplier?.linkedInventoryItemIds || [],
     });
+    const [isOpeningBalanceEditable, setIsOpeningBalanceEditable] = useState(false);
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -76,16 +79,29 @@ const SupplierForm: React.FC<SupplierFormProps> = ({ supplier, onClose, onSave }
                     </div>
                     <div>
                         <label htmlFor="openingBalance" className="block text-sm font-medium text-gray-700">Opening Balance ($)</label>
-                        <input 
-                            type="number" 
-                            id="openingBalance" 
-                            name="openingBalance" 
-                            value={formData.openingBalance} 
-                            onChange={handleChange} 
-                            step="0.01"
-                            required 
-                            className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
-                        />
+                         <div className="mt-1 flex items-center space-x-2">
+                            <input 
+                                type="number" 
+                                id="openingBalance" 
+                                name="openingBalance" 
+                                value={formData.openingBalance} 
+                                onChange={handleChange} 
+                                step="0.01"
+                                required 
+                                readOnly={!!supplier && !isOpeningBalanceEditable}
+                                className="block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm read-only:bg-gray-100 read-only:cursor-not-allowed"
+                            />
+                            {supplier && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsOpeningBalanceEditable(!isOpeningBalanceEditable)} 
+                                    className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                                    title={isOpeningBalanceEditable ? "Lock field" : "Edit opening balance"}
+                                >
+                                    <Edit className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
                          <p className="text-xs text-gray-500 mt-1">If you owed this supplier money from before you started using the app, enter the amount here.</p>
                     </div>
                     <div>
@@ -113,7 +129,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({ supplier, onClose, onSave }
                         <p className="text-xs text-gray-500 mt-1">Link inventory items to this supplier for easier tracking. Hold Ctrl (or Cmd on Mac) to select multiple items.</p>
                     </div>
                 </main>
-                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
+                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg sticky bottom-0">
                     <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
                     <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{supplier ? 'Update' : 'Save'}</button>
                 </footer>

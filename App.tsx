@@ -141,14 +141,14 @@ const App: React.FC = () => {
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 truncate">{pageTitle}</h1>
                 </div>
                 <div className="hidden md:flex justify-center">
-                    <GlobalSearch setCurrentPage={handleSetCurrentPage} onViewCustomer={handleViewCustomer} />
+                    <GlobalSearch setCurrentPage={setCurrentPage} onViewCustomer={handleViewCustomer} />
                 </div>
                 <div className="flex justify-end">
-                    <Notifications setCurrentPage={handleSetCurrentPage} />
+                    <Notifications setCurrentPage={setCurrentPage} />
                 </div>
             </div>
             <div className="mt-4 md:hidden">
-                <GlobalSearch setCurrentPage={handleSetCurrentPage} onViewCustomer={handleViewCustomer} />
+                <GlobalSearch setCurrentPage={setCurrentPage} onViewCustomer={handleViewCustomer} />
             </div>
         </header>
         <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
@@ -157,7 +157,7 @@ const App: React.FC = () => {
             </Suspense>
         </div>
       </main>
-      {process.env.GEMINI_API_KEY && <AIAssistant />}
+      {process.env.API_KEY && <AIAssistant />}
     </div>
   );
 };

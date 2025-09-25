@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
 import { useData } from '../context/DataContext';
@@ -20,8 +18,8 @@ const AIAssistant: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (!process.env.GEMINI_API_KEY) return;
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        if (!process.env.API_KEY) return;
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const systemInstruction = `You are a helpful business assistant for a printing company. 
         You have access to the company's current data in JSON format, which includes customers, invoices, job orders, and expenses. 
         Use this data to answer the user's questions accurately and concisely. 
@@ -84,7 +82,7 @@ const AIAssistant: React.FC = () => {
         }
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.API_KEY) {
         return null;
     }
 

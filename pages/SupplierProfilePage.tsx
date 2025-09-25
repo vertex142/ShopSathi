@@ -3,8 +3,9 @@ import { useData } from '../context/DataContext';
 import { PurchaseOrder, Payment, PurchaseOrderStatus } from '../types';
 import StatCard from '../components/StatCard';
 import MakePaymentModal from '../components/MakePaymentModal';
-import { ArrowLeft, CircleDollarSign, Receipt, TrendingDown } from 'lucide-react';
+import { ArrowLeft, CircleDollarSign, Receipt, TrendingDown, Eye } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
+import PurchaseOrderPreview from '../components/PurchaseOrderPreview';
 
 interface SupplierProfilePageProps {
   supplierId: string;
@@ -14,6 +15,7 @@ interface SupplierProfilePageProps {
 const SupplierProfilePage: React.FC<SupplierProfilePageProps> = React.memo(({ supplierId, onBack }) => {
   const { state, dispatch } = useData();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [poToPreview, setPoToPreview] = useState<PurchaseOrder | null>(null);
 
   const supplier = useMemo(() => state.suppliers.find(c => c.id === supplierId), [state.suppliers, supplierId]);
   const supplierPOs = useMemo(() => state.purchaseOrders.filter(po => po.supplierId === supplierId), [state.purchaseOrders, supplierId]);
@@ -108,6 +110,7 @@ const SupplierProfilePage: React.FC<SupplierProfilePageProps> = React.memo(({ su
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paid</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance Due</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -123,10 +126,15 @@ const SupplierProfilePage: React.FC<SupplierProfilePageProps> = React.memo(({ su
                                     <td className="px-6 py-4 text-sm">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPOStatusColor(po.status)}`}>{po.status}</span>
                                     </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button onClick={() => setPoToPreview(po)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview Purchase Order">
+                                            <Eye className="h-4 w-4"/>
+                                        </button>
+                                    </td>
                                 </tr>
                             );
                         })}
-                        {supplierPOs.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-gray-500">No purchase orders for this supplier.</td></tr>}
+                        {supplierPOs.length === 0 && <tr><td colSpan={7} className="text-center py-10 text-gray-500">No purchase orders for this supplier.</td></tr>}
                     </tbody>
                 </table>
             </div>
@@ -138,6 +146,13 @@ const SupplierProfilePage: React.FC<SupplierProfilePageProps> = React.memo(({ su
                 totalDue={supplierStats.totalDue}
                 onClose={() => setShowPaymentModal(false)}
                 onConfirm={handleMakePayment}
+            />
+        )}
+
+        {poToPreview && (
+            <PurchaseOrderPreview 
+                purchaseOrder={poToPreview}
+                onClose={() => setPoToPreview(null)}
             />
         )}
     </div>

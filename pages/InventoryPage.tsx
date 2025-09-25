@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { InventoryItem } from '../types';
 import InventoryItemForm from '../components/InventoryItemForm';
+import { Edit, Trash2 } from 'lucide-react';
 
 const InventoryPage: React.FC = React.memo(() => {
   const { state, dispatch } = useData();
@@ -73,8 +74,14 @@ const InventoryPage: React.FC = React.memo(() => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button onClick={() => handleEdit(item)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                                    <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                    <div className="flex justify-end items-center space-x-1">
+                                        <button onClick={() => handleEdit(item)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Item">
+                                            <Edit className="h-4 w-4" />
+                                        </button>
+                                        <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Item">
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         )

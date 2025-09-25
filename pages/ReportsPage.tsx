@@ -12,6 +12,7 @@ import { formatCurrency } from '../utils/formatCurrency';
 import FullScreenLoader from '../components/FullScreenLoader';
 
 const BalanceSheetReport = lazy(() => import('../components/BalanceSheetReport'));
+const SalesReport = lazy(() => import('../components/SalesReport'));
 
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF4560'];
@@ -204,17 +205,23 @@ const FinancialOverview: React.FC = () => {
 };
 
 const ReportsPage: React.FC = React.memo(() => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'pnl' | 'agedReceivables' | 'agedPayables' | 'balanceSheet'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'sales' | 'ledger' | 'pnl' | 'agedReceivables' | 'agedPayables' | 'balanceSheet'>('overview');
 
     return (
         <div className="space-y-6">
             <div className="border-b border-gray-200 non-printable">
-                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
                     <button
                         onClick={() => setActiveTab('overview')}
                         className={`${activeTab === 'overview' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                     >
                         Financial Overview
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('sales')}
+                        className={`${activeTab === 'sales' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                        Sales Report
                     </button>
                     <button
                         onClick={() => setActiveTab('ledger')}
@@ -251,6 +258,11 @@ const ReportsPage: React.FC = React.memo(() => {
 
             <div>
                 {activeTab === 'overview' && <FinancialOverview />}
+                {activeTab === 'sales' && (
+                    <Suspense fallback={<FullScreenLoader />}>
+                        <SalesReport />
+                    </Suspense>
+                )}
                 {activeTab === 'ledger' && <GeneralLedgerReport />}
                 {activeTab === 'pnl' && <ProfitAndLossReport />}
                 {activeTab === 'agedReceivables' && <AgedReceivablesReport />}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Customer } from '../types';
+import { Edit } from 'lucide-react';
 
 interface CustomerFormProps {
     customer: Customer | null;
@@ -17,6 +18,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
         address: customer?.address || '',
         openingBalance: customer?.openingBalance || 0,
     });
+    const [isOpeningBalanceEditable, setIsOpeningBalanceEditable] = useState(false);
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
@@ -59,8 +62,8 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
                     </div>
                      <div>
                         <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
-                        <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                        <p className="text-xs text-gray-500 mt-1">The primary contact phone number.</p>
+                        <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm" placeholder="e.g. 14155552671" />
+                        <p className="text-xs text-gray-500 mt-1">For WhatsApp, include country code without '+', spaces, or dashes.</p>
                     </div>
                      <div>
                         <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
@@ -69,20 +72,33 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
                     </div>
                      <div>
                         <label htmlFor="openingBalance" className="block text-sm font-medium text-gray-700">Opening Balance ($)</label>
-                        <input 
-                            type="number" 
-                            id="openingBalance" 
-                            name="openingBalance" 
-                            value={formData.openingBalance} 
-                            onChange={handleChange} 
-                            step="0.01"
-                            required 
-                            className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
-                        />
+                        <div className="mt-1 flex items-center space-x-2">
+                            <input 
+                                type="number" 
+                                id="openingBalance" 
+                                name="openingBalance" 
+                                value={formData.openingBalance} 
+                                onChange={handleChange} 
+                                step="0.01"
+                                required 
+                                readOnly={!!customer && !isOpeningBalanceEditable}
+                                className="block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm read-only:bg-gray-100 read-only:cursor-not-allowed"
+                            />
+                            {customer && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsOpeningBalanceEditable(!isOpeningBalanceEditable)} 
+                                    className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                                    title={isOpeningBalanceEditable ? "Lock field" : "Edit opening balance"}
+                                >
+                                    <Edit className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
                         <p className="text-xs text-gray-500 mt-1">If this customer owed you money from before you started using this app, enter the amount here. Leave as 0 for new customers.</p>
                     </div>
                 </main>
-                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg">
+                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg sticky bottom-0">
                     <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
                     <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{customer ? 'Update' : 'Save'}</button>
                 </footer>

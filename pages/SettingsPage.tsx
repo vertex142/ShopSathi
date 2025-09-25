@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '../context/DataContext';
 import { CompanySettings, TaxRate } from '../types';
-import { Upload, RefreshCw, FileSignature, BookText, DatabaseZap, Trash2, UploadCloud, XCircle, Download, Image, Percent, Package } from 'lucide-react';
+import { initClient, signIn, signOut, backupData } from '../services/googleDriveService';
+import useLocalStorage from '../hooks/useLocalStorage';
+import { Upload, RefreshCw, FileSignature, BookText, DatabaseZap, Trash2, UploadCloud, XCircle, Download, Image, Percent, Package, MessageSquare, Link, Unlink, Cloud, LoaderCircle, CheckCircle } from 'lucide-react';
+
+// FIX: Add a global declaration for window.gapi to inform TypeScript that it exists, resolving 'property does not exist' errors.
+declare global {
+    interface Window {
+        gapi: any;
+    }
+}
 
 type TermCategory = 'invoiceTerms' | 'quoteTerms' | 'purchaseOrderTerms';
 
@@ -27,6 +36,54 @@ const SettingsPage: React.FC = React.memo(() => {
 
   const [newTaxRate, setNewTaxRate] = useState({ name: '', rate: '' });
   const [newCategoryName, setNewCategoryName] = useState('');
+
+  // Google Drive State
+  const [gapiReady, setGapiReady] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [backupStatus, setBackupStatus] = useState('');
+  const [autoBackupEnabled, setAutoBackupEnabled] = useLocalStorage('autoBackupEnabled', false);
+  const [lastBackupTimestamp, setLastBackupTimestamp] = useLocalStorage('lastBackupTimestamp', 0);
+  
+  const driveBackupConfigured = !!(process.env.API_KEY && process.env.GOOGLE_CLIENT_ID);
+
+  // Initialize Google API Client
+  useEffect(() => {
+    if (!driveBackupConfigured) {
+      setBackupStatus('Feature not configured. See API_GUIDE.md.');
+      return;
+    }
+
+    const script = document.querySelector('script[src="https://apis.google.com/js/api.js"]');
+    const handleClientLoad = () => {
+      if (window.gapi) {
+        initClient(setIsSignedIn).then(() => {
+          setGapiReady(true);
+        }).catch(error => {
+          console.error("Error initializing Google API client:", error);
+          setBackupStatus('Error initializing Google services.');
+        });
+      }
+    };
+    if (script) {
+        // FIX: Cast the selected element to HTMLScriptElement to access the 'onload' property, which is specific to script tags.
+        (script as HTMLScriptElement).onload = () => handleClientLoad();
+    }
+    if (window.gapi) { // If script is already loaded
+        handleClientLoad();
+    }
+  }, [driveBackupConfigured]);
+
+  // Trigger automatic backup
+  useEffect(() => {
+    if (isSignedIn && autoBackupEnabled && driveBackupConfigured) {
+      const oneDay = 24 * 60 * 60 * 1000;
+      if (Date.now() - lastBackupTimestamp > oneDay) {
+        console.log("Performing automatic daily backup...");
+        handleBackup();
+      }
+    }
+  }, [isSignedIn, autoBackupEnabled, lastBackupTimestamp, driveBackupConfigured]);
   
   useEffect(() => {
     setSettings(state.settings);
@@ -82,6 +139,17 @@ const SettingsPage: React.FC = React.memo(() => {
         [activeTab]: (prev[activeTab] || []).filter(term => term.id !== id)
     }));
   };
+
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setSettings(prev => ({
+        ...prev,
+        whatsappTemplates: {
+            ...(prev.whatsappTemplates || { invoice: '', quote: '', paymentReminder: '' }),
+            [name]: value,
+        }
+    }));
+};
 
   const handleAddTaxRate = () => {
     if (newTaxRate.name.trim() && newTaxRate.rate.trim()) {
@@ -182,6 +250,23 @@ const SettingsPage: React.FC = React.memo(() => {
     }
   }
 
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    setBackupStatus('Backing up...');
+    try {
+        const dataToBackup = JSON.stringify(state, null, 2);
+        const timestamp = await backupData(dataToBackup);
+        setLastBackupTimestamp(timestamp);
+        setBackupStatus(`Last backup: ${new Date(timestamp).toLocaleString()}`);
+    } catch (error) {
+        console.error('Backup failed:', error);
+        setBackupStatus('Backup failed. See console for details.');
+        alert('Backup failed. Make sure you are signed in and have granted permissions.');
+    } finally {
+        setIsBackingUp(false);
+    }
+  };
+
   const currentTerms = settings[activeTab] || [];
 
   return (
@@ -212,6 +297,66 @@ const SettingsPage: React.FC = React.memo(() => {
                     <strong>Recommended format:</strong> SVG. For best print results, use a landscape orientation (e.g., A4 width, 5-7cm height).
                 </p>
             </div>
+        </SettingsCard>
+
+        <SettingsCard title="Data Backup & Sync" icon={<Cloud className="h-6 w-6 text-brand-blue" />}>
+            <p className="text-sm text-gray-600 -mt-4">
+              Securely back up your application data to your personal Google Drive. The app will only have permission to access files it creates.
+            </p>
+            {!driveBackupConfigured ? (
+                 <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800">
+                    <p className="font-bold">Feature Not Configured</p>
+                    <p className="text-sm">To enable Google Drive backups, you must set `API_KEY` and `GOOGLE_CLIENT_ID` environment variables. Please refer to `API_GUIDE.md` for instructions.</p>
+                </div>
+            ) : (
+                <>
+                    {!gapiReady && <p className="text-sm text-gray-500 flex items-center"><LoaderCircle className="animate-spin h-4 w-4 mr-2" />Loading Google services...</p>}
+                    {gapiReady && (
+                        <>
+                            {isSignedIn ? (
+                                <div className="space-y-4">
+                                     <div className="flex items-center justify-between bg-green-50 p-3 rounded-md">
+                                        <p className="text-sm font-medium text-green-800 flex items-center"><CheckCircle className="h-5 w-5 mr-2" />Connected to Google</p>
+                                        <button type="button" onClick={signOut} className="flex items-center text-sm text-gray-600 hover:text-red-600 font-semibold"><Unlink className="h-4 w-4 mr-1" />Sign Out</button>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                        <button type="button" onClick={handleBackup} disabled={isBackingUp} className="w-full sm:w-auto flex items-center justify-center bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light disabled:opacity-50">
+                                            {isBackingUp ? <><LoaderCircle className="animate-spin h-5 w-5 mr-2" />Backing up...</> : 'Backup Now to Google Drive'}
+                                        </button>
+                                        <p className="text-xs text-gray-500 mt-2 sm:mt-0">{backupStatus || (lastBackupTimestamp ? `Last backup: ${new Date(lastBackupTimestamp).toLocaleString()}`: 'No backup yet.')}</p>
+                                    </div>
+                                     <div className="relative flex items-start pt-4 border-t">
+                                        <div className="flex items-center h-5">
+                                            <input
+                                                id="auto-backup"
+                                                name="auto-backup"
+                                                type="checkbox"
+                                                checked={autoBackupEnabled}
+                                                onChange={(e) => setAutoBackupEnabled(e.target.checked)}
+                                                className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                                            />
+                                        </div>
+                                        <div className="ml-3 text-sm">
+                                            <label htmlFor="auto-backup" className="font-medium text-gray-700">
+                                                Enable Daily Automatic Backups
+                                            </label>
+                                            <p className="text-gray-500 text-xs">The app will automatically back up your data once every 24 hours when you visit this settings page.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                 <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-md">
+                                    <p className="text-center text-sm text-gray-600 mb-4">Connect your Google Account to enable cloud backups.</p>
+                                    <button type="button" onClick={signIn} className="flex items-center bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 shadow-sm">
+                                        <Link className="h-4 w-4 mr-2" />
+                                        Sign in with Google
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </>
+            )}
         </SettingsCard>
         
         <SettingsCard title="Document Customization" icon={<FileSignature className="h-6 w-6 text-brand-blue" />}>
@@ -257,6 +402,49 @@ const SettingsPage: React.FC = React.memo(() => {
             </div>
         </SettingsCard>
 
+        <SettingsCard title="WhatsApp Templates" icon={<MessageSquare className="h-6 w-6 text-brand-blue" />}>
+            <p className="text-sm text-gray-600 -mt-4">Customize the default messages for sending documents via WhatsApp. You will be prompted to send the message from your device.</p>
+            <div>
+                <label htmlFor="invoice" className="block text-sm font-medium text-gray-700">Invoice Message</label>
+                <textarea
+                    name="invoice"
+                    id="invoice"
+                    value={settings.whatsappTemplates?.invoice || ''}
+                    onChange={handleTemplateChange}
+                    rows={4}
+                    className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+                />
+            </div>
+            <div>
+                <label htmlFor="quote" className="block text-sm font-medium text-gray-700">Quote Message</label>
+                <textarea
+                    name="quote"
+                    id="quote"
+                    value={settings.whatsappTemplates?.quote || ''}
+                    onChange={handleTemplateChange}
+                    rows={4}
+                    className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+                />
+            </div>
+            <div>
+                <label htmlFor="paymentReminder" className="block text-sm font-medium text-gray-700">Payment Reminder Message</label>
+                <textarea
+                    name="paymentReminder"
+                    id="paymentReminder"
+                    value={settings.whatsappTemplates?.paymentReminder || ''}
+                    onChange={handleTemplateChange}
+                    rows={4}
+                    className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+                />
+            </div>
+            <div>
+                <h4 className="text-sm font-medium text-gray-700">Available Placeholders:</h4>
+                <p className="text-xs text-gray-500">
+                    <code>{'{customerName}'}</code>, <code>{'{invoiceNumber}'}</code>, <code>{'{quoteNumber}'}</code>, <code>{'{amountDue}'}</code>, <code>{'{dueDate}'}</code>, <code>{'{companyName}'}</code>
+                </p>
+            </div>
+        </SettingsCard>
+        
         <SettingsCard title="Taxes" icon={<Percent className="h-6 w-6 text-brand-blue" />}>
             <p className="text-sm text-gray-600 -mt-4">Create and manage tax rates that can be applied to invoices, quotes, and purchase orders.</p>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
@@ -388,7 +576,7 @@ const SettingsPage: React.FC = React.memo(() => {
             </div>
         </div>
         
-        <div className="flex justify-end items-center pt-6 sticky bottom-0 bg-gray-100 py-4 z-10">
+        <div className="flex-shrink-0 flex justify-end items-center space-x-4 p-4 border-t bg-gray-100 sticky bottom-0 z-10">
             {feedback && <p className="text-green-600 text-sm mr-4">{feedback}</p>}
             <button type="submit" className="bg-brand-blue text-white px-8 py-3 rounded-md hover:bg-brand-blue-light transition-colors text-base font-semibold shadow-lg">Save All Settings</button>
         </div>

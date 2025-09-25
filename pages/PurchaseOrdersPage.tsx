@@ -4,7 +4,7 @@ import { PurchaseOrder, PurchaseOrderStatus } from '../types';
 import PurchaseOrderForm from '../components/PurchaseOrderForm';
 import PurchaseOrderPreview from '../components/PurchaseOrderPreview';
 import StatusEditor from '../components/StatusEditor';
-import { Search, X } from 'lucide-react';
+import { Search, X, Eye, Edit, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 
 interface PurchaseOrdersPageProps {
@@ -174,10 +174,12 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
                             getStatusColor={getStatusColor}
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                        <button onClick={() => setPoToPreview(po)} className="text-blue-600 hover:text-blue-900">Preview</button>
-                        <button onClick={() => handleEdit(po)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
-                        <button onClick={() => handleDelete(po.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end items-center space-x-1">
+                          <button onClick={() => setPoToPreview(po)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview PO"><Eye className="h-4 w-4"/></button>
+                          <button onClick={() => handleEdit(po)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit PO"><Edit className="h-4 w-4"/></button>
+                          <button onClick={() => handleDelete(po.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete PO"><Trash2 className="h-4 w-4"/></button>
+                        </div>
                       </td>
                     </tr>
                   )

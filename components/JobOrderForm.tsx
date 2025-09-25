@@ -179,10 +179,12 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <h2 className="text-2xl font-bold mb-6">{job ? 'Edit Job Order' : 'Create Job Order'}</h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+          <header className="flex-shrink-0 p-6 border-b">
+            <h2 className="text-2xl font-bold">{job ? 'Edit Job Order' : 'Create Job Order'}</h2>
+          </header>
+          <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                       <label htmlFor="jobName" className="block text-sm font-medium text-gray-700">Job Name</label>
@@ -217,7 +219,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                   <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={5} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
                   <p className="text-xs text-gray-500 mt-1">Provide detailed requirements for the job.</p>
                 </div>
-                {process.env.GEMINI_API_KEY && (
+                {process.env.API_KEY && (
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">Customer Design</label>
                         {formData.designImage ? (
@@ -371,12 +373,11 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                       <p className="text-xs text-gray-500 mt-1">These notes are for your team only and will not be shown to the customer.</p>
                   </div>
               </div>
-
-              <div className="flex justify-end space-x-4 pt-6 mt-4 border-t">
-                  <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                  <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{job ? 'Update Job' : 'Save Job'}</button>
-              </div>
           </form>
+           <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg sticky bottom-0">
+              <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
+              <button type="submit" form="job-order-form" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{job ? 'Update Job' : 'Save Job'}</button>
+          </footer>
         </div>
       </div>
       {showCostCalculator && (

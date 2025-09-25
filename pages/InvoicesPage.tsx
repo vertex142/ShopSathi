@@ -7,9 +7,12 @@ import InvoicePreview from '../components/InvoicePreview';
 import MoneyReceiptPreview from '../components/MoneyReceiptPreview';
 import EmailModal from '../components/EmailModal';
 import StatusEditor from '../components/StatusEditor';
-import { Search, X, Bell, FileMinus } from 'lucide-react';
+import { Search, X, Bell, FileMinus, Eye, Mail, CircleDollarSign, Edit, Trash2, Truck } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import CreditNoteForm from '../components/CreditNoteForm';
+import WhatsAppIcon from '../components/WhatsAppIcon';
+import { parseTemplate, generateWhatsAppLink } from '../utils/whatsappHelper';
+import useDebounce from '../hooks/useDebounce';
 
 interface InvoicesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -31,6 +34,8 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
   const [filterStatus, setFilterStatus] = useState('');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
 
   const handleEdit = (invoice: Invoice) => {
@@ -97,17 +102,40 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
     setFilterEndDate('');
   };
 
+  const handleSendWhatsApp = (invoice: Invoice) => {
+    const customer = state.customers.find(c => c.id === invoice.customerId);
+    if (!customer || !customer.phone) {
+        alert('This customer does not have a phone number on file.');
+        return;
+    }
+
+    const template = state.settings.whatsappTemplates?.invoice || 'Hello {customerName},\n\nPlease find your invoice ({invoiceNumber}) attached. The total amount due is {amountDue} by {dueDate}.\n\nThank you,\n{companyName}';
+    const { balanceDue } = getInvoiceTotals(invoice);
+    
+    const message = parseTemplate(template, {
+        customerName: customer.name,
+        invoiceNumber: invoice.invoiceNumber,
+        amountDue: balanceDue,
+        dueDate: invoice.dueDate,
+        companyName: state.settings.name,
+    });
+
+    const link = generateWhatsAppLink(customer.phone, message);
+    window.open(link, '_blank');
+};
+
+
   const filteredInvoices = useMemo(() => {
     return state.invoices.filter(invoice => {
         return (
-            (searchTerm === '' || invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())) &&
+            (debouncedSearchTerm === '' || invoice.invoiceNumber.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) &&
             (filterCustomer === '' || invoice.customerId === filterCustomer) &&
             (filterStatus === '' || invoice.status === filterStatus) &&
             (filterStartDate === '' || invoice.issueDate >= filterStartDate) &&
             (filterEndDate === '' || invoice.issueDate <= filterEndDate)
         );
     });
-  }, [state.invoices, searchTerm, filterCustomer, filterStatus, filterStartDate, filterEndDate]);
+  }, [state.invoices, debouncedSearchTerm, filterCustomer, filterStatus, filterStartDate, filterEndDate]);
 
 
   return (
@@ -222,6 +250,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                             const customer = state.customers.find(c => c.id === invoice.customerId);
                             const { grandTotal, totalPaid, balanceDue } = getInvoiceTotals(invoice);
                             const canCreateCreditNote = invoice.status !== InvoiceStatus.Draft && invoice.status !== InvoiceStatus.Credited;
+                            const canConvertToChallan = !invoice.challanId;
                             return (
                                 <tr key={invoice.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{invoice.invoiceNumber}</td>
@@ -253,19 +282,21 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex justify-end items-center space-x-2">
-                                            <button onClick={() => setInvoiceToPreview(invoice)} className="text-blue-600 hover:text-blue-900">Preview</button>
-                                            <button onClick={() => setInvoiceToEmail(invoice)} className="text-cyan-600 hover:text-cyan-900" title="Get a pre-written email template to send this invoice.">Email</button>
+                                        <div className="flex justify-end items-center space-x-1">
+                                            <button onClick={() => setInvoiceToPreview(invoice)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview Invoice"><Eye className="h-4 w-4" /></button>
+                                            <button onClick={() => setInvoiceToEmail(invoice)} className="text-cyan-600 hover:text-cyan-900 p-1" title="Email Invoice"><Mail className="h-4 w-4" /></button>
+                                            <button onClick={() => handleSendWhatsApp(invoice)} className="text-green-600 hover:text-green-900 p-1" title="Send via WhatsApp"><WhatsAppIcon className="h-5 w-5" /></button>
+                                            {canConvertToChallan && (
+                                                <button onClick={() => handleConvertToChallan(invoice.id)} className="text-gray-600 hover:text-gray-900 p-1" title="Create Delivery Challan"><Truck className="h-4 w-4" /></button>
+                                            )}
                                             {invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Credited && (
-                                              <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900" title="Record a new payment for this invoice.">Payment</button>
+                                              <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900 p-1" title="Add Payment"><CircleDollarSign className="h-4 w-4" /></button>
                                             )}
                                             {canCreateCreditNote && (
-                                              <button onClick={() => setInvoiceForCreditNote(invoice)} className="text-orange-600 hover:text-orange-900 flex items-center" title="Create a credit note for this invoice.">
-                                                <FileMinus className="h-4 w-4 mr-1" /> Credit
-                                              </button>
+                                              <button onClick={() => setInvoiceForCreditNote(invoice)} className="text-orange-600 hover:text-orange-900 p-1" title="Create Credit Note"><FileMinus className="h-4 w-4" /></button>
                                             )}
-                                            <button onClick={() => handleEdit(invoice)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
-                                            <button onClick={() => handleDelete(invoice.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                                            <button onClick={() => handleEdit(invoice)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Invoice"><Edit className="h-4 w-4" /></button>
+                                            <button onClick={() => handleDelete(invoice.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Invoice"><Trash2 className="h-4 w-4" /></button>
                                         </div>
                                     </td>
                                 </tr>

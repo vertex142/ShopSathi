@@ -6,9 +6,10 @@ import EmailModal from '../components/EmailModal';
 import ProjectTimeline from '../components/ProjectTimeline';
 import ReceivePaymentModal from '../components/ReceivePaymentModal';
 import InvoicePreview from '../components/InvoicePreview';
-import { ArrowLeft, FileText, ClipboardCheck, CircleDollarSign, Receipt, TrendingDown, BookOpen, Printer, LoaderCircle, Briefcase } from 'lucide-react';
+import { ArrowLeft, FileText, ClipboardCheck, CircleDollarSign, Receipt, TrendingDown, BookOpen, Printer, LoaderCircle, Briefcase, Eye, Mail, MessageSquare } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
 import { formatCurrency } from '../utils/formatCurrency';
+import CustomerChat from '../components/CustomerChat';
 
 interface CustomerProfilePageProps {
   customerId: string;
@@ -17,7 +18,7 @@ interface CustomerProfilePageProps {
 
 const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ customerId, onBack }) => {
   const { state, dispatch } = useData();
-  const [activeTab, setActiveTab] = useState<'invoices' | 'quotes' | 'ledger' | 'projects'>('invoices');
+  const [activeTab, setActiveTab] = useState<'invoices' | 'quotes' | 'ledger' | 'projects' | 'chat'>('invoices');
   const [invoiceToEmail, setInvoiceToEmail] = useState<Invoice | null>(null);
   const [invoiceToPreview, setInvoiceToPreview] = useState<Invoice | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -102,10 +103,9 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
         const projectMap = new Map<string, { quote?: Quote, job?: JobOrder, invoice?: Invoice }>();
 
         // Find all roots (quotes or standalone jobs)
-        // FIX: Corrected syntax error `q.id---` to `q.id`.
         customerQuotes.forEach(q => projectMap.set(q.id, { quote: q }));
         customerJobs.forEach(j => {
-            // FIX: Corrected logic to find standalone jobs. A job is standalone if no quote converted to it.
+            // A job is standalone if no quote converted to it.
             if (!customerQuotes.some(q => q.convertedToJobId === j.id)) {
                 projectMap.set(j.id, { job: j });
             }
@@ -145,12 +145,11 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
             }
         });
 
-        // FIX: Ensure each project object has a unique ID for React keys.
+        // Ensure each project object has a unique ID for React keys.
         return Array.from(projectMap.values()).map(p => ({...p, id: p.quote?.id || p.job?.id || p.invoice?.id || crypto.randomUUID() }));
 
     }, [customerQuotes, customerJobs, customerInvoices]);
 
-    // FIX: Add a check for the customer existing and return JSX.
     if (!customer) {
         return (
             <div className="text-center p-8">
@@ -210,6 +209,9 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
                          <button onClick={() => setActiveTab('projects')} className={`${activeTab === 'projects' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                             Projects ({projects.length})
                         </button>
+                         <button onClick={() => setActiveTab('chat')} className={`${activeTab === 'chat' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                            Chat
+                        </button>
                         <button onClick={() => setActiveTab('ledger')} className={`${activeTab === 'ledger' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                             Customer Ledger
                         </button>
@@ -242,9 +244,11 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{formatCurrency(grandTotal)}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
                                                 <td className="px-4 py-3 whitespace-nowrap text-sm"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800`}>{inv.status}</span></td>
-                                                <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                                                    <button onClick={() => setInvoiceToPreview(inv)} className="text-blue-600 hover:text-blue-900">Preview</button>
-                                                    <button onClick={() => setInvoiceToEmail(inv)} className="text-cyan-600 hover:text-cyan-900">Email</button>
+                                                <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                                    <div className="flex justify-end items-center space-x-1">
+                                                        <button onClick={() => setInvoiceToPreview(inv)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview Invoice"><Eye className="h-4 w-4"/></button>
+                                                        <button onClick={() => setInvoiceToEmail(inv)} className="text-cyan-600 hover:text-cyan-900 p-1" title="Email Invoice"><Mail className="h-4 w-4"/></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -303,6 +307,9 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
                             })}
                              {projects.length === 0 && <p className="text-center py-10 text-gray-500">No projects found. A project is a linked set of quotes, jobs, and invoices.</p>}
                         </div>
+                   )}
+                   {activeTab === 'chat' && (
+                       <CustomerChat customerId={customerId} />
                    )}
                    {activeTab === 'ledger' && (
                        <div id="customer-ledger-content" className="printable-page">
