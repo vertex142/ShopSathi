@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { JournalEntry } from '../types';
 import JournalEntryForm from '../components/JournalEntryForm';
 import { Edit, Trash2 } from 'lucide-react';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 const JournalEntriesPage: React.FC = React.memo(() => {
     const { state, dispatch } = useData();
@@ -46,23 +47,21 @@ const JournalEntriesPage: React.FC = React.memo(() => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {state.journalEntries.map((entry) => (
+                            {state.journalEntries.map((entry) => {
+                                const actions: ActionMenuItem[] = [
+                                    { label: 'Edit', icon: Edit, onClick: () => handleEdit(entry), className: 'text-indigo-600', disabled: true }, // Editing is complex, disabled for now
+                                    { label: 'Delete', icon: Trash2, onClick: () => handleDelete(entry.id), className: 'text-red-600' },
+                                ];
+                                return (
                                 <tr key={entry.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{entry.date}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{entry.id.substring(0, 8)}...</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{entry.memo}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex justify-end items-center space-x-1">
-                                            <button onClick={() => handleEdit(entry)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Entry">
-                                                <Edit className="h-4 w-4" />
-                                            </button>
-                                            <button onClick={() => handleDelete(entry.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Entry">
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
+                                        <ActionMenu actions={actions} />
                                     </td>
                                 </tr>
-                            ))}
+                            )})}
                         </tbody>
                     </table>
                 </div>

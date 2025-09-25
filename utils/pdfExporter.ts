@@ -1,9 +1,8 @@
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 /**
- * Exports a DOM element to a PDF file using html2canvas and jsPDF.
- * This provides a direct download experience instead of the browser's print dialog.
+ * Exports a DOM element to a high-quality, vector-based PDF file using jsPDF's modern HTML renderer.
+ * This provides selectable text, higher resolution for images, and correct automatic paging.
  * @param elementId The ID of the DOM element to export.
  * @param fileName The name of the file to be saved (e.g., 'invoice.pdf').
  */
@@ -17,62 +16,36 @@ export const printDocument = async (elementId: string, fileName: string = 'docum
 
   // Add a class to the body to trigger special export styles
   document.body.classList.add('pdf-export-active');
+  // A small delay allows the browser to apply the styles before jsPDF reads the DOM.
+  await new Promise(resolve => setTimeout(resolve, 50));
 
   try {
-    const canvas = await html2canvas(input, {
-      scale: 2, // Higher resolution for better quality
-      useCORS: true,
-      logging: false,
-    });
-
-    if (canvas.height === 0) {
-      console.error("Cannot generate PDF from an element with zero height.");
-      alert('Error: The content to be exported has no height.');
-      document.body.classList.remove('pdf-export-active');
-      return;
-    }
-    
-    const imgData = canvas.toDataURL('image/png');
-    
-    // A4 page size in mm: 210 x 297
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: 'a4'
+      format: 'a4',
+      putOnlyUsedFonts: true,
+      compress: true,
     });
-    
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    
-    const ratio = canvasWidth / canvasHeight;
-    const scaledImgWidth = pdfWidth;
-    const scaledImgHeight = scaledImgWidth / ratio;
-    
-    let heightLeft = scaledImgHeight;
-    let position = 0;
-    
-    // Add the first page
-    pdf.addImage(imgData, 'PNG', 0, position, scaledImgWidth, scaledImgHeight);
-    heightLeft -= pdfHeight;
-    
-    // Add subsequent pages if the content is taller than one page
-    while (heightLeft > 0) {
-      position -= pdfHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, scaledImgWidth, scaledImgHeight);
-      heightLeft -= pdfHeight;
-    }
-    
-    pdf.save(fileName);
 
+    await pdf.html(input, {
+      callback: function (doc) {
+        doc.save(fileName);
+      },
+      margin: 15,
+      autoPaging: 'text', // Handles page breaks gracefully
+      width: 210, // A4 page width
+      windowWidth: input.scrollWidth, // Render at the element's natural width
+      html2canvas: {
+        scale: 2, // Improve resolution of any raster images
+        useCORS: true,
+      },
+    });
   } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert('An error occurred while generating the PDF. Please try again.');
+    console.error("Error generating PDF:", error);
+    alert('An error occurred while generating the PDF. Please try again.');
   } finally {
-      // Clean up by removing the class
-      document.body.classList.remove('pdf-export-active');
+    // Clean up by removing the class after rendering is complete
+    document.body.classList.remove('pdf-export-active');
   }
 };

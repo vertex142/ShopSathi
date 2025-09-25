@@ -5,6 +5,7 @@ import { Paperclip, Edit, Trash2, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import ExpenseForm from '../components/ExpenseForm';
 import EmptyState from '../components/EmptyState';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 const ExpensesPage: React.FC = React.memo(() => {
     const { state, dispatch } = useData();
@@ -75,6 +76,15 @@ const ExpensesPage: React.FC = React.memo(() => {
                                 {state.expenses.map((expense) => {
                                     const debitAccount = state.accounts.find(a => a.id === expense.debitAccountId);
                                     const creditAccount = state.accounts.find(a => a.id === expense.creditAccountId);
+                                    const actions: ActionMenuItem[] = [];
+
+                                    if (expense.attachment) {
+                                        actions.push({ label: 'View Attachment', icon: Paperclip, onClick: () => handleViewAttachment(expense) });
+                                    }
+                                    actions.push(
+                                        { label: 'Edit', icon: Edit, onClick: () => handleEdit(expense), className: 'text-indigo-600 dark:text-indigo-400' },
+                                        { label: 'Delete', icon: Trash2, onClick: () => handleDelete(expense.id), className: 'text-red-600 dark:text-red-400' }
+                                    );
                                     return (
                                     <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{expense.date}</td>
@@ -83,17 +93,9 @@ const ExpensesPage: React.FC = React.memo(() => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{creditAccount?.name || 'N/A'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400 font-semibold">
                                             -{formatCurrency(expense.amount)}
-                                            {expense.attachment && (
-                                                <button onClick={() => handleViewAttachment(expense)} className="ml-2 text-gray-400 hover:text-brand-blue" title="View attached receipt">
-                                                    <Paperclip className="h-4 w-4 inline-block" />
-                                                </button>
-                                            )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end items-center space-x-1">
-                                                <button onClick={() => handleEdit(expense)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Expense"><Edit className="h-4 w-4"/></button>
-                                                <button onClick={() => handleDelete(expense.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Expense"><Trash2 className="h-4 w-4"/></button>
-                                            </div>
+                                            <ActionMenu actions={actions} />
                                         </td>
                                     </tr>
                                 )})}

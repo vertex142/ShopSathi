@@ -18,7 +18,8 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
     const subtotal = invoice.items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
     const previousDue = invoice.previousDue || 0;
     const discount = invoice.discount || 0;
-    const grandTotal = subtotal + previousDue - discount;
+    const taxAmount = invoice.taxAmount || 0;
+    const grandTotal = subtotal + previousDue - discount + taxAmount;
     const totalPaid = (invoice.payments || []).reduce((acc, p) => acc + p.amount, 0);
     const balanceDue = grandTotal - totalPaid;
     const hasPayments = invoice.payments && invoice.payments.length > 0;
@@ -27,22 +28,22 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 p-4 printable-container">
-            <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col printable-document">
-                <header className="flex justify-between items-center p-4 border-b bg-gray-50 rounded-t-lg non-printable">
-                    <h2 className="text-xl font-semibold text-gray-800">Invoice Preview: {invoice.invoiceNumber}</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col printable-document">
+                <header className="flex justify-between items-center p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-lg non-printable">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Invoice Preview: {invoice.invoiceNumber}</h2>
                     <div className="flex items-center space-x-2">
-                        <button onClick={() => printDocument(printableId, `invoice-${invoice.invoiceNumber}.pdf`)} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        <button onClick={() => printDocument(printableId, `invoice-${invoice.invoiceNumber}.pdf`)} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
                             <Printer className="h-4 w-4 mr-2" />
                             Print / Save PDF
                         </button>
-                        <button onClick={onClose} className="text-gray-500 hover:text-gray-800 p-2 rounded-full">
+                        <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white p-2 rounded-full bg-gray-200 dark:bg-gray-700">
                             <X className="h-6 w-6" />
                         </button>
                     </div>
                 </header>
 
-                <div className="flex-grow overflow-y-auto bg-gray-100 p-8 printable-content">
-                    <div className="bg-white shadow-lg p-10 relative printable-page" id={printableId}>
+                <div className="flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-950 p-8 printable-content">
+                    <div className="bg-white text-black shadow-lg p-10 relative printable-page" id={printableId}>
                         
                         {/* Unified Header for Screen and Print */}
                         <div className="printable-header" dangerouslySetInnerHTML={{ __html: settings.headerSVG }} />
@@ -52,7 +53,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                  <div>
                                     <h3 className="text-sm font-semibold uppercase text-gray-500 tracking-wider mb-2">Billed To</h3>
                                     <p className="text-lg font-bold text-gray-800">{customer?.name || 'N/A'}</p>
-                                    <p className="text-sm text-gray-600">{customer?.address || ''}</p>
+                                    <p className="text-sm text-gray-600 whitespace-pre-line">{customer?.address || ''}</p>
                                     <p className="text-sm text-gray-600">{customer?.email || ''}</p>
                                  </div>
                                  <div className="text-right">
@@ -65,7 +66,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                             
                             <section className="mt-8">
                                 <table className="min-w-full">
-                                    <thead className="bg-gray-200">
+                                    <thead className="bg-gray-200 text-black">
                                         <tr>
                                             <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">No.</th>
                                             <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item</th>
@@ -74,9 +75,9 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                             <th className="py-3 px-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="text-black">
                                         {invoice.items.map((item, index) => (
-                                            <tr key={item.id} className="border-b even:bg-gray-50">
+                                            <tr key={item.id} className="border-b border-gray-200 even:bg-gray-50">
                                                 <td className="py-4 px-4 text-sm text-gray-700">{index + 1}</td>
                                                 <td className="py-4 px-4">
                                                 <p className="font-medium text-gray-900">{item.name}</p>
@@ -95,16 +96,16 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                 <section className="mt-8">
                                     <h4 className="font-semibold text-gray-800 mb-2">Payments Received</h4>
                                     <table className="min-w-full text-sm">
-                                        <thead className="bg-gray-100">
+                                        <thead className="bg-gray-100 text-black">
                                             <tr>
                                                 <th className="py-2 px-3 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
                                                 <th className="py-2 px-3 text-left text-xs font-semibold text-gray-600 uppercase">Method</th>
                                                 <th className="py-2 px-3 text-right text-xs font-semibold text-gray-600 uppercase">Amount</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody className="text-black">
                                             {invoice.payments.map(p => (
-                                                <tr key={p.id} className="border-b">
+                                                <tr key={p.id} className="border-b border-gray-200">
                                                     <td className="py-2 px-3 text-gray-700">{p.date}</td>
                                                     <td className="py-2 px-3 text-gray-700">{p.method}</td>
                                                     <td className="py-2 px-3 text-right text-gray-700">{formatCurrency(p.amount)}</td>
@@ -116,7 +117,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                             )}
 
                             <section className="mt-8 flex justify-end">
-                                <div className="w-full max-w-sm bg-gray-50 p-4 rounded-lg space-y-3 text-sm">
+                                <div className="w-full max-w-sm bg-gray-50 p-4 rounded-lg space-y-3 text-sm text-black">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Subtotal:</span>
                                         <span className="text-gray-800 font-medium">{formatCurrency(subtotal)}</span>
@@ -129,7 +130,13 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                         <span className="text-gray-600">Discount:</span>
                                         <span className="text-red-600 font-medium">-{formatCurrency(discount)}</span>
                                     </div>
-                                    <div className="flex justify-between pt-2 border-t">
+                                     {taxAmount > 0 && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Tax:</span>
+                                            <span className="text-gray-800 font-medium">{formatCurrency(taxAmount)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between pt-2 border-t border-gray-200">
                                         <span className="font-semibold text-gray-800">Grand Total:</span>
                                         <span className="font-semibold text-gray-800">{formatCurrency(grandTotal)}</span>
                                     </div>
@@ -144,7 +151,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                 </div>
                             </section>
                             
-                            <footer className="mt-16 pt-8 border-t text-sm text-gray-600">
+                            <footer className="mt-16 pt-8 border-t border-gray-200 text-sm text-gray-600">
                                 {(invoice.selectedTerms || []).length > 0 && (
                                     <div className="mb-8">
                                         <h4 className="font-semibold text-gray-800 mb-2">Terms & Conditions</h4>
@@ -159,7 +166,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                 <div className="flex justify-between items-end">
                                     <div className="text-center">
                                         <div className="pt-8 w-48 h-16"></div>
-                                        <p className="border-t w-48 font-semibold pt-1 mt-1">{settings.preparedByLabel}</p>
+                                        <p className="border-t border-gray-400 w-48 font-semibold pt-1 mt-1">{settings.preparedByLabel}</p>
                                     </div>
                                     <div className="text-center">
                                         {settings.authorizedSignatureImage ? (
@@ -167,7 +174,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                         ) : (
                                             <div className="pt-8 w-48 h-16"></div>
                                         )}
-                                        <p className="border-t w-48 font-semibold pt-1 mt-1">{settings.authorizedSignatureLabel}</p>
+                                        <p className="border-t border-gray-400 w-48 font-semibold pt-1 mt-1">{settings.authorizedSignatureLabel}</p>
                                     </div>
                                 </div>
                             </footer>

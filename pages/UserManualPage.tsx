@@ -8,14 +8,14 @@ interface ManualSectionProps {
 }
 
 const ManualSection: React.FC<ManualSectionProps> = ({ IconComponent, title, children }) => (
-  <section className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+  <section className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
     <div className="flex items-center space-x-4 mb-4">
-      <div className="bg-brand-blue-light text-white p-3 rounded-full">
+      <div className="bg-brand-blue-light dark:bg-blue-600 text-white p-3 rounded-full">
         <IconComponent className="h-8 w-8" />
       </div>
-      <h3 className="text-2xl font-semibold text-gray-800">{title}</h3>
+      <h3 className="text-2xl font-semibold text-gray-800 dark:text-white">{title}</h3>
     </div>
-    <div className="text-gray-600 space-y-4 prose max-w-none prose-sm prose-a:text-brand-blue hover:prose-a:underline">
+    <div className="text-gray-600 dark:text-gray-300 space-y-4 prose max-w-none prose-sm dark:prose-invert prose-a:text-brand-blue dark:prose-a:text-blue-400 hover:prose-a:underline">
       {children}
     </div>
   </section>
@@ -31,14 +31,14 @@ interface WorkflowStepProps {
 const WorkflowStep: React.FC<WorkflowStepProps> = ({ icon, title, children, isLast = false }) => (
   <div className="flex">
     <div className="flex flex-col items-center mr-6">
-      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 border-2 border-white shadow-md text-brand-blue">
+      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-gray-800 shadow-md text-brand-blue dark:text-blue-400">
           {icon}
       </div>
-      {!isLast && <div className="w-px h-full bg-gray-300 my-2"></div>}
+      {!isLast && <div className="w-px h-full bg-gray-300 dark:bg-gray-600 my-2"></div>}
     </div>
     <div className={`pb-8 ${isLast ? '' : 'pt-1'}`}>
-      <p className="mb-2 text-xl font-semibold text-gray-800">{title}</p>
-      <div className="text-gray-600 space-y-2">{children}</div>
+      <p className="mb-2 text-xl font-semibold text-gray-800 dark:text-white">{title}</p>
+      <div className="text-gray-600 dark:text-gray-300 space-y-2">{children}</div>
     </div>
   </div>
 );
@@ -47,8 +47,8 @@ const UserManualPage: React.FC = React.memo(() => {
   return (
     <div className="container mx-auto space-y-12">
       <div>
-        <h1 className="text-4xl font-bold text-gray-800">ShopSathi User Manual</h1>
-        <p className="mt-2 text-lg text-gray-600">Your comprehensive guide to mastering the application and managing your business with ease.</p>
+        <h1 className="text-4xl font-bold text-gray-800 dark:text-white">ShopSathi User Manual</h1>
+        <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">Your comprehensive guide to mastering the application and managing your business with ease.</p>
       </div>
 
       <ManualSection IconComponent={LayoutDashboard} title="Getting Started: The Dashboard">
@@ -65,7 +65,7 @@ const UserManualPage: React.FC = React.memo(() => {
       <ManualSection IconComponent={Settings} title="Initial Setup: Settings">
         <p>Before you start, it's crucial to configure your company details. Navigate to the <strong>Settings</strong> page from the sidebar.</p>
         <ul>
-            <li><strong>Company Profile:</strong> Fill in your company name, address, phone number, and upload your logo. This information will appear on all your documents.</li>
+            <li><strong>Document Header:</strong> Upload your company logo or letterhead as an SVG file. This will appear at the top of all your documents.</li>
             <li><strong>Document Customization:</strong> Add a default footer text for invoices and upload a signature image to automatically sign documents.</li>
             <li><strong>Terms & Conditions:</strong> We've pre-loaded some essential terms for invoices, quotes, and purchase orders. You can customize, add, or delete these to fit your business needs. These terms can be selected when creating the respective documents.</li>
         </ul>
@@ -80,7 +80,7 @@ const UserManualPage: React.FC = React.memo(() => {
                   <li>Navigate to the <strong>Quotes</strong> page from the sidebar.</li>
                   <li>Click "Add New Quote" and fill in the details. You can select an existing customer or create a new one on the fly.</li>
                   <li>Add line items. You can select from your inventory or type them manually.</li>
-                  <li>Select your pre-defined Terms & Conditions from the multiselect box (Hold Ctrl/Cmd to select multiple).</li>
+                  <li>Select your pre-defined Terms & Conditions from the multiselect box (Hold <code>Ctrl</code>/<code>Cmd</code> to select multiple).</li>
                   <li>Save the quote. Its initial status will be 'DRAFT'. Change it to 'SENT' after sending it to your customer.</li>
               </ul>
             </WorkflowStep>
@@ -89,7 +89,7 @@ const UserManualPage: React.FC = React.memo(() => {
               <p>Once the customer accepts your quote, you can convert it into a Job Order for production or directly into an Invoice for billing.</p>
               <ul className="list-disc list-inside">
                   <li>Find the accepted quote and change its status to 'ACCEPTED'.</li>
-                  <li>New action buttons will appear: "To Job" and "To Invoice".</li>
+                  <li>New action buttons will appear: "Convert to Job" and "Convert to Invoice".</li>
                   <li><strong>To Job:</strong> This is for work that requires production tracking. It creates a new entry on the <strong>Jobs</strong> page, pre-filled with the quote's details.</li>
                   <li><strong>To Invoice:</strong> This is for simple sales. It creates a new draft Invoice on the <strong>Invoices</strong> page.</li>
               </ul>

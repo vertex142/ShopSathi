@@ -15,6 +15,7 @@ import { parseTemplate, generateWhatsAppLink } from '../utils/whatsappHelper';
 import useDebounce from '../hooks/useDebounce';
 import SearchableSelect from '../components/SearchableSelect';
 import EmptyState from '../components/EmptyState';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 interface InvoicesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -256,8 +257,28 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                         filteredInvoices.map((invoice) => {
                             const customer = state.customers.find(c => c.id === invoice.customerId);
                             const { grandTotal, totalPaid, balanceDue } = getInvoiceTotals(invoice);
-                            const canCreateCreditNote = invoice.status !== InvoiceStatus.Draft && invoice.status !== InvoiceStatus.Credited;
-                            const canConvertToChallan = !invoice.challanId;
+                            
+                            const actions: ActionMenuItem[] = [
+                                { label: 'Preview', icon: Eye, onClick: () => setInvoiceToPreview(invoice) },
+                                { label: 'Email', icon: Mail, onClick: () => setInvoiceToEmail(invoice) },
+                                { label: 'WhatsApp', icon: WhatsAppIcon, onClick: () => handleSendWhatsApp(invoice) },
+                            ];
+
+                            if (!invoice.challanId) {
+                                actions.push({ label: 'Create Challan', icon: Truck, onClick: () => handleConvertToChallan(invoice.id) });
+                            }
+                            if (invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Credited) {
+                                actions.push({ label: 'Add Payment', icon: CircleDollarSign, onClick: () => setInvoiceForPayment(invoice), className: 'text-green-600 dark:text-green-400' });
+                            }
+                             if (invoice.status !== InvoiceStatus.Draft && invoice.status !== InvoiceStatus.Credited) {
+                                actions.push({ label: 'Create Credit Note', icon: FileMinus, onClick: () => setInvoiceForCreditNote(invoice), className: 'text-orange-600 dark:text-orange-400' });
+                            }
+
+                            actions.push(
+                                { label: 'Edit', icon: Edit, onClick: () => handleEdit(invoice), className: 'text-indigo-600 dark:text-indigo-400' },
+                                { label: 'Delete', icon: Trash2, onClick: () => handleDelete(invoice.id), className: 'text-red-600 dark:text-red-400' }
+                            );
+
                             return (
                                 <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{invoice.invoiceNumber}</td>
@@ -289,22 +310,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex justify-end items-center space-x-1">
-                                            <button onClick={() => setInvoiceToPreview(invoice)} className="text-blue-600 hover:text-blue-900 p-1" aria-label="Preview Invoice"><Eye className="h-4 w-4" /></button>
-                                            <button onClick={() => setInvoiceToEmail(invoice)} className="text-cyan-600 hover:text-cyan-900 p-1" aria-label="Email Invoice"><Mail className="h-4 w-4" /></button>
-                                            <button onClick={() => handleSendWhatsApp(invoice)} className="text-green-600 hover:text-green-900 p-1" aria-label="Send via WhatsApp"><WhatsAppIcon className="h-5 w-5" /></button>
-                                            {canConvertToChallan && (
-                                                <button onClick={() => handleConvertToChallan(invoice.id)} className="text-gray-600 hover:text-gray-900 p-1" aria-label="Create Delivery Challan"><Truck className="h-4 w-4" /></button>
-                                            )}
-                                            {invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Credited && (
-                                              <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900 p-1" aria-label="Add Payment"><CircleDollarSign className="h-4 w-4" /></button>
-                                            )}
-                                            {canCreateCreditNote && (
-                                              <button onClick={() => setInvoiceForCreditNote(invoice)} className="text-orange-600 hover:text-orange-900 p-1" aria-label="Create Credit Note"><FileMinus className="h-4 w-4" /></button>
-                                            )}
-                                            <button onClick={() => handleEdit(invoice)} className="text-indigo-600 hover:text-indigo-900 p-1" aria-label="Edit Invoice"><Edit className="h-4 w-4" /></button>
-                                            <button onClick={() => handleDelete(invoice.id)} className="text-red-600 hover:text-red-900 p-1" aria-label="Delete Invoice"><Trash2 className="h-4 w-4" /></button>
-                                        </div>
+                                        <ActionMenu actions={actions} />
                                     </td>
                                 </tr>
                             )

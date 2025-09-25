@@ -4,6 +4,7 @@ import { CreditNote, CreditNoteStatus } from '../types';
 import { formatCurrency } from '../utils/formatCurrency';
 import CreditNotePreview from '../components/CreditNotePreview';
 import { Eye, Trash2 } from 'lucide-react';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 interface CreditNotesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -49,6 +50,10 @@ const CreditNotesPage: React.FC<CreditNotesPageProps> = React.memo(({ onViewCust
                         state.creditNotes.map((note) => {
                             const customer = state.customers.find(c => c.id === note.customerId);
                             const invoice = state.invoices.find(i => i.id === note.originalInvoiceId);
+                            const actions: ActionMenuItem[] = [
+                                { label: 'Preview', icon: Eye, onClick: () => setNoteToPreview(note) },
+                                { label: 'Delete', icon: Trash2, onClick: () => handleDelete(note), disabled: note.status === CreditNoteStatus.Finalized, className: 'text-red-600' },
+                            ];
                             return (
                                 <tr key={note.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{note.creditNoteNumber}</td>
@@ -68,17 +73,7 @@ const CreditNotesPage: React.FC<CreditNotesPageProps> = React.memo(({ onViewCust
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex justify-end items-center space-x-1">
-                                            <button onClick={() => setNoteToPreview(note)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview Credit Note"><Eye className="h-4 w-4"/></button>
-                                            <button 
-                                                onClick={() => handleDelete(note)} 
-                                                className="text-red-600 hover:text-red-900 p-1 disabled:text-gray-400 disabled:cursor-not-allowed"
-                                                disabled={note.status === CreditNoteStatus.Finalized}
-                                                title={note.status === CreditNoteStatus.Finalized ? "Cannot delete finalized notes" : "Delete"}
-                                            >
-                                                <Trash2 className="h-4 w-4"/>
-                                            </button>
-                                        </div>
+                                        <ActionMenu actions={actions} />
                                     </td>
                                 </tr>
                             )

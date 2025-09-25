@@ -10,6 +10,7 @@ import WhatsAppIcon from '../components/WhatsAppIcon';
 import { parseTemplate, generateWhatsAppLink } from '../utils/whatsappHelper';
 import SearchableSelect from '../components/SearchableSelect';
 import EmptyState from '../components/EmptyState';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 interface QuotesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -236,6 +237,26 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
                         filteredQuotes.map((quote) => {
                             const customer = state.customers.find(c => c.id === quote.customerId);
                             const grandTotal = getQuoteTotal(quote);
+                            
+                            const actions: ActionMenuItem[] = [
+                                { label: 'Preview', icon: Eye, onClick: () => setQuoteToPreview(quote) },
+                                { label: 'WhatsApp', icon: WhatsAppIcon, onClick: () => handleSendWhatsApp(quote) },
+                            ];
+                            
+                            if (quote.status === QuoteStatus.Accepted) {
+                                if (!quote.convertedToJobId) {
+                                    actions.push({ label: 'Convert to Job', icon: Briefcase, onClick: () => handleConvertToJob(quote.id), className: 'text-purple-600 dark:text-purple-400' });
+                                }
+                                if (!quote.convertedToInvoiceId) {
+                                    actions.push({ label: 'Convert to Invoice', icon: FileText, onClick: () => handleConvertToInvoice(quote.id), className: 'text-green-600 dark:text-green-400' });
+                                }
+                            }
+                            
+                            actions.push(
+                                { label: 'Edit', icon: Edit, onClick: () => handleEdit(quote), className: 'text-indigo-600 dark:text-indigo-400' },
+                                { label: 'Delete', icon: Trash2, onClick: () => handleDelete(quote.id), className: 'text-red-600 dark:text-red-400' }
+                            );
+
                             return (
                                 <tr key={quote.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{quote.quoteNumber}</td>
@@ -258,18 +279,7 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex justify-end items-center space-x-1">
-                                            <button onClick={() => setQuoteToPreview(quote)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview Quote"><Eye className="h-4 w-4"/></button>
-                                            <button onClick={() => handleSendWhatsApp(quote)} className="text-green-600 hover:text-green-900 p-1" title="Send via WhatsApp"><WhatsAppIcon className="h-5 w-5" /></button>
-                                            {quote.status === QuoteStatus.Accepted && !quote.convertedToJobId && (
-                                              <button onClick={() => handleConvertToJob(quote.id)} className="text-purple-600 hover:text-purple-900 p-1" title="Convert to Job"><Briefcase className="h-4 w-4"/></button>
-                                            )}
-                                            {quote.status === QuoteStatus.Accepted && !quote.convertedToInvoiceId && (
-                                              <button onClick={() => handleConvertToInvoice(quote.id)} className="text-green-600 hover:text-green-900 p-1" title="Convert to Invoice"><FileText className="h-4 w-4"/></button>
-                                            )}
-                                            <button onClick={() => handleEdit(quote)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Quote"><Edit className="h-4 w-4"/></button>
-                                            <button onClick={() => handleDelete(quote.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Quote"><Trash2 className="h-4 w-4"/></button>
-                                        </div>
+                                        <ActionMenu actions={actions} />
                                     </td>
                                 </tr>
                             )

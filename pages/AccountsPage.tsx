@@ -4,6 +4,7 @@ import { Account, AccountType } from '../types';
 import AccountForm from '../components/AccountForm';
 import { formatCurrency } from '../utils/formatCurrency';
 import { Edit, Trash2 } from 'lucide-react';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 const AccountsPage: React.FC = React.memo(() => {
     const { state, dispatch } = useData();
@@ -69,6 +70,10 @@ const AccountsPage: React.FC = React.memo(() => {
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {accountsByType[type].map((account) => {
                                             const totalBalance = (account.balance || 0) + (account.openingBalance || 0);
+                                            const actions: ActionMenuItem[] = [
+                                                { label: 'Edit', icon: Edit, onClick: () => handleEdit(account), className: 'text-indigo-600' },
+                                                { label: 'Delete', icon: Trash2, onClick: () => handleDelete(account.id), className: 'text-red-600', disabled: account.isSystemAccount },
+                                            ];
                                             return (
                                             <tr key={account.id}>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -77,23 +82,7 @@ const AccountsPage: React.FC = React.memo(() => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right font-mono">{formatCurrency(totalBalance)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex justify-end items-center space-x-1">
-                                                        <button 
-                                                            onClick={() => handleEdit(account)} 
-                                                            className="text-indigo-600 hover:text-indigo-900 p-1"
-                                                            title="Edit Account"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleDelete(account.id)} 
-                                                            className="text-red-600 hover:text-red-900 p-1 disabled:text-gray-400 disabled:cursor-not-allowed"
-                                                            disabled={account.isSystemAccount}
-                                                            title={account.isSystemAccount ? 'System accounts cannot be deleted' : 'Delete account'}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
+                                                    <ActionMenu actions={actions} />
                                                 </td>
                                             </tr>
                                         )})}

@@ -8,6 +8,7 @@ import { Search, X, Eye, Edit, Trash2, ShoppingCart } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import SearchableSelect from '../components/SearchableSelect';
 import EmptyState from '../components/EmptyState';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 interface PurchaseOrdersPageProps {
     onViewSupplier: (supplierId: string) => void;
@@ -157,6 +158,11 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
                 filteredPOs.map((po) => {
                   const supplier = state.suppliers.find(s => s.id === po.supplierId);
                   const { grandTotal, totalPaid, balanceDue } = getPOTotals(po);
+                  const actions: ActionMenuItem[] = [
+                    { label: 'Preview', icon: Eye, onClick: () => setPoToPreview(po) },
+                    { label: 'Edit', icon: Edit, onClick: () => handleEdit(po), className: 'text-indigo-600 dark:text-indigo-400' },
+                    { label: 'Delete', icon: Trash2, onClick: () => handleDelete(po.id), className: 'text-red-600 dark:text-red-400' },
+                  ];
                   return (
                     <tr key={po.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{po.poNumber}</td>
@@ -179,11 +185,7 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end items-center space-x-1">
-                          <button onClick={() => setPoToPreview(po)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview PO"><Eye className="h-4 w-4"/></button>
-                          <button onClick={() => handleEdit(po)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit PO"><Edit className="h-4 w-4"/></button>
-                          <button onClick={() => handleDelete(po.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete PO"><Trash2 className="h-4 w-4"/></button>
-                        </div>
+                        <ActionMenu actions={actions} />
                       </td>
                     </tr>
                   )

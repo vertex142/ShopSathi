@@ -32,6 +32,26 @@
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
       }
       
+      :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9fafb;
+        --text-primary: #1f2937;
+        --text-secondary: #4b5563;
+        --text-muted: #6b7280;
+        --border-color: #e5e7eb;
+        --brand-blue: #004A99;
+      }
+
+      .dark {
+        --bg-primary: #1f2937;
+        --bg-secondary: #374151;
+        --text-primary: #f9fafb;
+        --text-secondary: #d1d5db;
+        --text-muted: #9ca3af;
+        --border-color: #4b5563;
+        --brand-blue: #3b82f6;
+      }
+
       /* Styles for modal backdrop */
       .modal-backdrop {
         backdrop-filter: blur(4px);
@@ -62,6 +82,12 @@
       body.pdf-export-active .printable-header { justify-content: flex-start; align-items: flex-start; padding-bottom: 0; margin-bottom: 1.5rem; border-bottom: none; }
       body.pdf-export-active .printable-footer { padding-top: 1rem; margin-top: 1rem; border-top: 1px solid #ddd; align-items: center; justify-content: space-between; }
       body.pdf-export-active .printable-footer-center { display: none; }
+      /* Disable transitions during export to prevent rendering issues with html2canvas */
+      body.pdf-export-active *,
+      body.pdf-export-active *::before,
+      body.pdf-export-active *::after {
+        transition: none !important;
+      }
 
       /* --- PRINT STYLES (for browser's File > Print) --- */
       @media print {

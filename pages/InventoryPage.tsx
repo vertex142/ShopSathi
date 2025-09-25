@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { InventoryItem } from '../types';
 import InventoryItemForm from '../components/InventoryItemForm';
 import { Edit, Trash2 } from 'lucide-react';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 const InventoryPage: React.FC = React.memo(() => {
   const { state, dispatch } = useData();
@@ -62,6 +63,10 @@ const InventoryPage: React.FC = React.memo(() => {
                 <tbody className="bg-white divide-y divide-gray-200">
                     {inventoryItems.map((item) => {
                         const status = getStatus(item);
+                        const actions: ActionMenuItem[] = [
+                            { label: 'Edit', icon: Edit, onClick: () => handleEdit(item), className: 'text-indigo-600' },
+                            { label: 'Delete', icon: Trash2, onClick: () => handleDelete(item.id), className: 'text-red-600' },
+                        ];
                         return (
                             <tr key={item.id}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
@@ -74,14 +79,7 @@ const InventoryPage: React.FC = React.memo(() => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div className="flex justify-end items-center space-x-1">
-                                        <button onClick={() => handleEdit(item)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Item">
-                                            <Edit className="h-4 w-4" />
-                                        </button>
-                                        <button onClick={() => handleDelete(item.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Item">
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
+                                    <ActionMenu actions={actions} />
                                 </td>
                             </tr>
                         )

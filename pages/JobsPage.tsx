@@ -9,6 +9,7 @@ import { List, Trello, Calendar, FileSearch, Edit, Trash2, Briefcase } from 'luc
 import { formatCurrency } from '../utils/formatCurrency';
 import JobCalendarView from '../components/JobCalendarView';
 import EmptyState from '../components/EmptyState';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 type ViewMode = 'list' | 'kanban' | 'calendar';
 
@@ -81,6 +82,11 @@ const JobsPage: React.FC = React.memo(() => {
                           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                               {state.jobOrders.map((job) => {
                                   const customer = state.customers.find(c => c.id === job.customerId);
+                                  const actions: ActionMenuItem[] = [
+                                    { label: 'View Details', icon: FileSearch, onClick: () => setJobForDetails(job) },
+                                    { label: 'Edit', icon: Edit, onClick: () => handleEdit(job), className: 'text-indigo-600 dark:text-indigo-400' },
+                                    { label: 'Delete', icon: Trash2, onClick: () => handleDelete(job.id), className: 'text-red-600 dark:text-red-400' },
+                                  ];
                                   return (
                                       <tr key={job.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{job.jobName}</td>
@@ -97,11 +103,7 @@ const JobsPage: React.FC = React.memo(() => {
                                               />
                                           </td>
                                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                               <div className="flex justify-end items-center space-x-1">
-                                                    <button onClick={() => setJobForDetails(job)} className="text-blue-600 hover:text-blue-900 p-1" title="View Details"><FileSearch className="h-4 w-4"/></button>
-                                                    <button onClick={() => handleEdit(job)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Job"><Edit className="h-4 w-4"/></button>
-                                                    <button onClick={() => handleDelete(job.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Job"><Trash2 className="h-4 w-4"/></button>
-                                                </div>
+                                               <ActionMenu actions={actions} />
                                           </td>
                                       </tr>
                                   )

@@ -4,6 +4,7 @@ import { Customer } from '../types';
 import CustomerForm from '../components/CustomerForm';
 import { Edit, Trash2, Users } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 interface CustomersPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -59,7 +60,12 @@ const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer
                                 </tr>
                             </thead>
                             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                {state.customers.map((customer) => (
+                                {state.customers.map((customer) => {
+                                    const actions: ActionMenuItem[] = [
+                                        { label: 'Edit', icon: Edit, onClick: () => handleEdit(customer), className: 'text-indigo-600 dark:text-indigo-400' },
+                                        { label: 'Delete', icon: Trash2, onClick: () => handleDelete(customer.id), className: 'text-red-600 dark:text-red-400' },
+                                    ];
+                                    return (
                                     <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <button onClick={() => onViewCustomer(customer.id)} className="text-sm font-medium text-brand-blue dark:text-blue-400 hover:underline">
@@ -69,13 +75,10 @@ const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{customer.email}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{customer.phone}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end items-center space-x-1">
-                                                <button onClick={() => handleEdit(customer)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Customer"><Edit className="h-4 w-4"/></button>
-                                                <button onClick={() => handleDelete(customer.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Customer"><Trash2 className="h-4 w-4"/></button>
-                                            </div>
+                                            <ActionMenu actions={actions} />
                                         </td>
                                     </tr>
-                                ))}
+                                )})}
                             </tbody>
                         </table>
                     </div>

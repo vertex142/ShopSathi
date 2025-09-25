@@ -3,6 +3,7 @@ import { useData } from '../context/DataContext';
 import { RecurringInvoice, RecurringInvoiceFrequency } from '../types';
 import RecurringInvoiceForm from '../components/RecurringInvoiceForm';
 import { Edit, Trash2 } from 'lucide-react';
+import ActionMenu, { ActionMenuItem } from '../components/ActionMenu';
 
 interface RecurringInvoicesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -82,7 +83,12 @@ const RecurringInvoicesPage: React.FC<RecurringInvoicesPageProps> = React.memo((
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                     {profilesWithDetails.length > 0 ? (
-                        profilesWithDetails.map((profile) => (
+                        profilesWithDetails.map((profile) => {
+                            const actions: ActionMenuItem[] = [
+                                { label: 'Edit', icon: Edit, onClick: () => handleEdit(profile), className: 'text-indigo-600' },
+                                { label: 'Delete', icon: Trash2, onClick: () => handleDelete(profile.id), className: 'text-red-600' },
+                            ];
+                            return (
                             <tr key={profile.id}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <button onClick={() => onViewCustomer(profile.customerId)} className="hover:underline text-brand-blue">
@@ -98,13 +104,10 @@ const RecurringInvoicesPage: React.FC<RecurringInvoicesPageProps> = React.memo((
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div className="flex justify-end items-center space-x-1">
-                                        <button onClick={() => handleEdit(profile)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Profile"><Edit className="h-4 w-4"/></button>
-                                        <button onClick={() => handleDelete(profile.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Profile"><Trash2 className="h-4 w-4"/></button>
-                                    </div>
+                                    <ActionMenu actions={actions} />
                                 </td>
                             </tr>
-                        ))
+                        )})
                     ) : (
                         <tr>
                            <td colSpan={6} className="text-center py-10 text-gray-500">

@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useData } from '../context/DataContext';
 import { Expense, Account, AccountType } from '../types';
-import { LoaderCircle, Paperclip, Plus, Edit, Trash2 } from 'lucide-react';
-import { formatCurrency } from '../utils/formatCurrency';
-import AccountForm from '../components/AccountForm';
+import { LoaderCircle, Plus, X } from 'lucide-react';
+import AccountForm from './AccountForm';
 import SearchableSelect from './SearchableSelect';
+import useFocusTrap from '../hooks/useFocusTrap';
 
 interface ExpenseFormProps {
     expense: Expense | null;
@@ -13,6 +13,9 @@ interface ExpenseFormProps {
 
 const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
     const { state, dispatch } = useData();
+    const modalRef = useRef<HTMLDivElement>(null);
+    useFocusTrap(modalRef);
+    
     const [formData, setFormData] = useState<Omit<Expense, 'id'>>({
         date: expense?.date || new Date().toISOString().split('T')[0],
         description: expense?.description || '',
@@ -83,19 +86,22 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
 
     return (
         <>
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-                <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
-                    <header className="flex-shrink-0 p-6 border-b">
-                        <h2 className="text-2xl font-bold">{expense ? 'Edit Expense' : 'Add New Expense'}</h2>
+            <div ref={modalRef} className="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex justify-center items-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="expense-form-title">
+                <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg max-h-[95vh] flex flex-col">
+                    <header className="flex-shrink-0 flex justify-between items-center p-6 border-b dark:border-gray-700">
+                        <h2 id="expense-form-title" className="text-2xl font-bold text-gray-900 dark:text-white">{expense ? 'Edit Expense' : 'Add New Expense'}</h2>
+                        <button type="button" onClick={onClose} className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600">
+                          <X className="h-5 w-5"/>
+                        </button>
                     </header>
                     <main className="flex-grow p-6 space-y-4 overflow-y-auto">
                         <div>
-                            <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
-                            <input type="date" id="date" name="date" value={formData.date} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                            <p className="text-xs text-gray-500 mt-1">The date the expense was incurred.</p>
+                            <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                            <input type="date" id="date" name="date" value={formData.date} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"/>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">The date the expense was incurred.</p>
                         </div>
                         <div>
-                            <label htmlFor="debitAccountId" className="block text-sm font-medium text-gray-700">Expense Account (Debit)</label>
+                            <label htmlFor="debitAccountId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Expense Account (Debit)</label>
                             <div className="flex items-center space-x-2 mt-1">
                                 <SearchableSelect
                                     value={formData.debitAccountId}
@@ -104,14 +110,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
                                     placeholder="Select expense category"
                                     className="w-full"
                                 />
-                                <button type="button" onClick={() => setShowAccountForm(true)} className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" title="Add New Expense Account">
+                                <button type="button" onClick={() => setShowAccountForm(true)} className="p-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500" title="Add New Expense Account">
                                     <Plus className="h-5 w-5" />
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Select the expense category. This increases the balance of the chosen expense account.</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Select the expense category. This increases the balance of the chosen expense account.</p>
                         </div>
                         <div>
-                            <label htmlFor="creditAccountId" className="block text-sm font-medium text-gray-700">Paid From (Credit)</label>
+                            <label htmlFor="creditAccountId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Paid From (Credit)</label>
                             <SearchableSelect
                                 value={formData.creditAccountId}
                                 onChange={(val) => setFormData(prev => ({...prev, creditAccountId: val}))}
@@ -119,32 +125,32 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
                                 placeholder="Select payment source"
                                 className="mt-1"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Select the account you used to pay for this expense (e.g., Cash, Bank). This decreases the balance of that account.</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Select the account you used to pay for this expense (e.g., Cash, Bank). This decreases the balance of that account.</p>
                         </div>
                         <div>
-                            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={3} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
-                            <p className="text-xs text-gray-500 mt-1">A brief description of what this expense was for.</p>
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                            <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={3} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></textarea>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">A brief description of what this expense was for.</p>
                         </div>
                         <div>
-                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
-                            <input type="number" id="amount" name="amount" value={formData.amount} onChange={handleChange} required min="0.01" step="0.01" className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                            <p className="text-xs text-gray-500 mt-1">The total amount of the expense.</p>
+                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                            <input type="number" id="amount" name="amount" value={formData.amount} onChange={handleChange} required min="0.01" step="0.01" className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"/>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">The total amount of the expense.</p>
                         </div>
                         <div>
-                            <label htmlFor="attachment" className="block text-sm font-medium text-gray-700">Attach Receipt</label>
-                            <input type="file" id="attachment" name="attachment" onChange={handleFileChange} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-                            <p className="text-xs text-gray-500 mt-1">Optional. Upload a copy of the receipt (PDF, JPG, PNG). Max 2MB.</p>
+                            <label htmlFor="attachment" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Attach Receipt</label>
+                            <input type="file" id="attachment" name="attachment" onChange={handleFileChange} className="mt-1 block w-full text-sm text-gray-500 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-800 file:text-blue-700 dark:file:text-blue-200 hover:file:bg-blue-100 dark:hover:file:bg-blue-700"/>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Optional. Upload a copy of the receipt (PDF, JPG, PNG). Max 2MB.</p>
                             {formData.attachment && formData.attachmentMimeType?.startsWith('image/') && (
-                                <img src={`data:${formData.attachmentMimeType};base64,${formData.attachment}`} alt="Receipt preview" className="mt-2 max-h-32 rounded border"/>
+                                <img src={`data:${formData.attachmentMimeType};base64,${formData.attachment}`} alt="Receipt preview" className="mt-2 max-h-32 rounded border dark:border-gray-600"/>
                             )}
                         </div>
                     </main>
-                    <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 border-t rounded-b-lg sticky bottom-0">
-                        <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" disabled={isSaving}>Cancel</button>
+                    <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                        <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500" disabled={isSaving}>Cancel</button>
                         <button 
                             type="submit" 
-                            className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center w-28 disabled:opacity-75"
+                            className="bg-brand-blue dark:bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-brand-blue-light dark:hover:bg-blue-500 flex items-center justify-center w-28 disabled:opacity-75"
                             disabled={isSaving}
                         >
                             {isSaving ? (
