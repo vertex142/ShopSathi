@@ -53,21 +53,14 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
 
   const getStatusColor = (status: PurchaseOrderStatus) => {
     switch (status) {
-      case PurchaseOrderStatus.Completed:
-        return 'bg-blue-100 text-blue-800';
-      case PurchaseOrderStatus.Paid:
-        return 'bg-green-100 text-green-800';
-      case PurchaseOrderStatus.PartiallyPaid:
-        return 'bg-yellow-100 text-yellow-800';
-      case PurchaseOrderStatus.Ordered:
-        return 'bg-indigo-100 text-indigo-800';
-      case PurchaseOrderStatus.PartiallyReceived:
-        return 'bg-purple-100 text-purple-800';
-      case PurchaseOrderStatus.Cancelled:
-        return 'bg-red-100 text-red-800';
+      case PurchaseOrderStatus.Completed: return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case PurchaseOrderStatus.Paid: return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case PurchaseOrderStatus.PartiallyPaid: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case PurchaseOrderStatus.Ordered: return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
+      case PurchaseOrderStatus.PartiallyReceived: return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case PurchaseOrderStatus.Cancelled: return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case PurchaseOrderStatus.Pending:
-      default:
-        return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
@@ -91,7 +84,7 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Purchase Orders</h1>
-        <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
+        <button onClick={handleAddNew} className="bg-brand-blue dark:bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-brand-blue-light dark:hover:bg-blue-500 transition-colors">
           Add New PO
         </button>
       </div>
@@ -104,7 +97,7 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
               placeholder="Search PO #"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 pl-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
+              className="w-full p-2 pl-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
@@ -117,7 +110,7 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
+            className="w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
           >
             <option value="">All Statuses</option>
             {Object.values(PurchaseOrderStatus).map((s) => (
@@ -136,69 +129,77 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
         </div>
       </div>
 
+      {state.purchaseOrders.length === 0 ? (
+        <EmptyState 
+            Icon={ShoppingCart}
+            title="No Purchase Orders"
+            message="Manage your inventory purchasing by creating your first purchase order."
+            action={{ label: 'Add New PO', onClick: handleAddNew }}
+        />
+      ) : (
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-        {filteredPOs.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">PO #</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Supplier</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paid</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Balance Due</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredPOs.length > 0 ? (
+                filteredPOs.map((po) => {
+                  const supplier = state.suppliers.find(s => s.id === po.supplierId);
+                  const { grandTotal, totalPaid, balanceDue } = getPOTotals(po);
+                  return (
+                    <tr key={po.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{po.poNumber}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        <button onClick={() => onViewSupplier(po.supplierId)} className="hover:underline text-brand-blue dark:text-blue-400">
+                            {supplier?.name || 'N/A'}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{po.orderDate}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(grandTotal)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400">{formatCurrency(totalPaid)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600 dark:text-red-400">{formatCurrency(balanceDue)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <StatusEditor
+                            item={po}
+                            status={po.status}
+                            statusEnum={PurchaseOrderStatus}
+                            updateActionType="UPDATE_PURCHASE_ORDER"
+                            getStatusColor={getStatusColor}
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end items-center space-x-1">
+                          <button onClick={() => setPoToPreview(po)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview PO"><Eye className="h-4 w-4"/></button>
+                          <button onClick={() => handleEdit(po)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit PO"><Edit className="h-4 w-4"/></button>
+                          <button onClick={() => handleDelete(po.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete PO"><Trash2 className="h-4 w-4"/></button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">PO #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Supplier</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paid</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Balance Due</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                  <td colSpan={8} className="text-center py-10 text-gray-500 dark:text-gray-400">
+                    No purchase orders match your filters.
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredPOs.map((po) => {
-                    const supplier = state.suppliers.find(s => s.id === po.supplierId);
-                    const { grandTotal, totalPaid, balanceDue } = getPOTotals(po);
-                    return (
-                      <tr key={po.id} className="dark:hover:bg-gray-700/50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{po.poNumber}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          <button onClick={() => onViewSupplier(po.supplierId)} className="hover:underline text-brand-blue">
-                              {supplier?.name || 'N/A'}
-                          </button>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{po.orderDate}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(grandTotal)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{formatCurrency(totalPaid)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <StatusEditor
-                              item={po}
-                              status={po.status}
-                              statusEnum={PurchaseOrderStatus}
-                              updateActionType="UPDATE_PURCHASE_ORDER"
-                              getStatusColor={getStatusColor}
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end items-center space-x-1">
-                            <button onClick={() => setPoToPreview(po)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview PO"><Eye className="h-4 w-4"/></button>
-                            <button onClick={() => handleEdit(po)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit PO"><Edit className="h-4 w-4"/></button>
-                            <button onClick={() => handleDelete(po.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete PO"><Trash2 className="h-4 w-4"/></button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-             <EmptyState
-                Icon={ShoppingCart}
-                title="Create Your First Purchase Order"
-                message="Manage your inventory purchases by creating POs for your suppliers."
-                actionButton={<button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">Add New PO</button>}
-            />
-        )}
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+      )}
 
       {showForm && (
         <PurchaseOrderForm

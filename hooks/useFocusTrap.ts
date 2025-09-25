@@ -1,51 +1,42 @@
 import { useEffect, useRef } from 'react';
 
-export const useFocusTrap = (isOpen: boolean) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const previouslyFocusedElement = useRef<HTMLElement | null>(null);
+const useFocusTrap = (modalRef: React.RefObject<HTMLElement>) => {
+  const firstFocusableElement = useRef<HTMLElement | null>(null);
+  const lastFocusableElement = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (!isOpen || !containerRef.current) return;
-
-    previouslyFocusedElement.current = document.activeElement as HTMLElement;
-    
-    const focusableElements = containerRef.current.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), textarea, input, select'
-    );
-    
-    if (focusableElements.length === 0) return;
-
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-    
-    // Delay focus to allow for modal transitions
-    const focusTimeout = setTimeout(() => firstElement.focus(), 100);
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-
-      if (e.shiftKey) { // Shift+Tab
-        if (document.activeElement === firstElement) {
-          lastElement.focus();
-          e.preventDefault();
-        }
-      } else { // Tab
-        if (document.activeElement === lastElement) {
-          firstElement.focus();
-          e.preventDefault();
-        }
+    if (modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements.length > 0) {
+        firstFocusableElement.current = focusableElements[0] as HTMLElement;
+        lastFocusableElement.current = focusableElements[focusableElements.length - 1] as HTMLElement;
+        firstFocusableElement.current.focus();
       }
-    };
 
-    const container = containerRef.current;
-    container.addEventListener('keydown', handleKeyDown);
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key !== 'Tab' || !document.body.contains(document.activeElement)) return;
 
-    return () => {
-      clearTimeout(focusTimeout);
-      container.removeEventListener('keydown', handleKeyDown);
-      previouslyFocusedElement.current?.focus();
-    };
-  }, [isOpen]);
+        if (e.shiftKey) { // Shift + Tab
+          if (document.activeElement === firstFocusableElement.current) {
+            lastFocusableElement.current?.focus();
+            e.preventDefault();
+          }
+        } else { // Tab
+          if (document.activeElement === lastFocusableElement.current) {
+            firstFocusableElement.current?.focus();
+            e.preventDefault();
+          }
+        }
+      };
 
-  return containerRef;
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [modalRef]);
 };
+
+export default useFocusTrap;

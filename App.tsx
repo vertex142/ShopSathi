@@ -7,7 +7,6 @@ import Notifications from './components/Notifications';
 import GlobalSearch from './components/GlobalSearch';
 import FullScreenLoader from './components/FullScreenLoader';
 import { Menu } from 'lucide-react';
-import { useTheme } from './context/ThemeContext';
 
 // Lazy load all page components for code splitting
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
@@ -36,7 +35,6 @@ const App: React.FC = () => {
   const [viewingCustomerId, setViewingCustomerId] = useState<string | null>(null);
   const [viewingSupplierId, setViewingSupplierId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { theme } = useTheme();
 
   const handleSetCurrentPage = (page: Page) => {
     setCurrentPage(page);
@@ -125,21 +123,20 @@ const App: React.FC = () => {
       }
   }
 
-
   return (
-    <div className={`relative min-h-screen md:flex bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 ${theme}`}>
+    <div className="relative min-h-screen md:flex bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
       {isSidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
       
       <Sidebar currentPage={currentPage} setCurrentPage={handleSetCurrentPage} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white dark:bg-gray-800 dark:border-b dark:border-gray-700 shadow-sm p-4 z-10">
+        <header className="bg-white dark:bg-gray-800 shadow-sm p-4 z-10">
             <div className="grid grid-cols-3 items-center gap-4">
                 <div className="flex items-center space-x-3">
-                    <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-1 text-gray-600 dark:text-gray-300 hover:text-brand-blue" aria-label="Open sidebar">
+                    <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-1 text-gray-600 dark:text-gray-300 hover:text-brand-blue dark:hover:text-blue-400" aria-label="Open sidebar">
                         <Menu className="h-6 w-6" />
                     </button>
-                    {CurrentPageIcon && <CurrentPageIcon className="h-6 w-6 text-brand-blue hidden sm:block" />}
+                    {CurrentPageIcon && <CurrentPageIcon className="h-6 w-6 text-brand-blue dark:text-blue-400 hidden sm:block" />}
                     <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white truncate">{pageTitle}</h1>
                 </div>
                 <div className="hidden md:flex justify-center">
@@ -153,7 +150,7 @@ const App: React.FC = () => {
                 <GlobalSearch setCurrentPage={setCurrentPage} onViewCustomer={handleViewCustomer} />
             </div>
         </header>
-        <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-4 md:p-8">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-950 p-4 sm:p-6 md:p-8">
             <Suspense fallback={<FullScreenLoader />}>
               {renderPage()}
             </Suspense>

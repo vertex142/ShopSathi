@@ -34,13 +34,20 @@ const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer
         <div className="container mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Customers</h1>
-                <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
+                <button onClick={handleAddNew} className="bg-brand-blue dark:bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-brand-blue-light dark:hover:bg-blue-500 transition-colors">
                     Add New Customer
                 </button>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-                {state.customers.length > 0 ? (
+            {state.customers.length === 0 ? (
+                <EmptyState 
+                    Icon={Users}
+                    title="No Customers Found"
+                    message="You haven't added any customers yet. Add your first customer to start creating invoices and quotes."
+                    action={{ label: 'Add New Customer', onClick: handleAddNew }}
+                />
+            ) : (
+                <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-700">
@@ -53,14 +60,14 @@ const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer
                             </thead>
                             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 {state.customers.map((customer) => (
-                                    <tr key={customer.id} className="dark:hover:bg-gray-700/50">
+                                    <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <button onClick={() => onViewCustomer(customer.id)} className="text-sm font-medium text-brand-blue hover:underline">
+                                            <button onClick={() => onViewCustomer(customer.id)} className="text-sm font-medium text-brand-blue dark:text-blue-400 hover:underline">
                                                 {customer.name}
                                             </button>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{customer.email}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{customer.phone}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{customer.email}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{customer.phone}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end items-center space-x-1">
                                                 <button onClick={() => handleEdit(customer)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Customer"><Edit className="h-4 w-4"/></button>
@@ -72,21 +79,10 @@ const CustomersPage: React.FC<CustomersPageProps> = React.memo(({ onViewCustomer
                             </tbody>
                         </table>
                     </div>
-                ) : (
-                    <EmptyState
-                        Icon={Users}
-                        title="Add Your First Customer"
-                        message="Manage all your customer information in one place. Add a customer to get started."
-                        actionButton={
-                            <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
-                                Add New Customer
-                            </button>
-                        }
-                    />
-                )}
-            </div>
-
-            {showForm && <CustomerForm customer={selectedCustomer} onClose={() => setShowForm(false)} onSave={() => {}} />}
+                </div>
+            )}
+            
+            {showForm && <CustomerForm customer={selectedCustomer} onClose={() => setShowForm(false)} onSave={() => setShowForm(false)} />}
         </div>
     );
 });

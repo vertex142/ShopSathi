@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'class',
+        darkMode: 'class', // Enable dark mode
         theme: {
           extend: {
             colors: {
@@ -20,33 +20,28 @@
       }
     </script>
     <style>
-      :root {
-        --bg-color: #f3f4f6;
-        --text-color: #1f2937;
-        --card-bg: #ffffff;
-        --border-color: #e5e7eb;
-      }
-      html.dark {
-        --bg-color: #111827;
-        --text-color: #f9fafb;
-        --card-bg: #1f2937;
-        --border-color: #374151;
-      }
+      /* Base styles for smooth transitions and better typography */
       body {
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        transition: background-color 0.3s ease, color 0.3s ease;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
+
+      *, *::before, *::after {
+        transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+        transition-duration: 200ms;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      /* Styles for modal backdrop */
+      .modal-backdrop {
+        backdrop-filter: blur(4px);
+      }
+
       /* --- SCREEN STYLES --- */
       /* Hide repeating print header/footer on screen */
       .printable-header,
       .printable-footer {
         display: none;
-      }
-
-      /* Modal backdrop blur */
-      .modal-backdrop {
-        backdrop-filter: blur(4px);
       }
       
       /* --- NEW SVG HEADER STYLES --- */
@@ -60,7 +55,7 @@
         max-height: 150px; /* Prevent oversized headers on screen */
       }
       
-      /* --- STYLES FOR PDF EXPORT VIA html2canvas --- */
+      /* --- STYLES FOR PDF EXPORT VIA jsPDF --- */
       body.pdf-export-active .non-printable { display: none !important; }
       body.pdf-export-active .printable-header,
       body.pdf-export-active .printable-footer { display: flex !important; position: static !important; width: 100%; box-sizing: border-box; }

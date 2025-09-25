@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useData } from '../context/DataContext';
 import { Customer } from '../types';
 import { Edit } from 'lucide-react';
-import { useFocusTrap } from '../hooks/useFocusTrap';
+import useFocusTrap from '../hooks/useFocusTrap';
 
 interface CustomerFormProps {
     customer: Customer | null;
@@ -12,6 +12,9 @@ interface CustomerFormProps {
 
 const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }) => {
     const { dispatch } = useData();
+    const modalRef = useRef<HTMLDivElement>(null);
+    useFocusTrap(modalRef);
+    
     const [formData, setFormData] = useState<Omit<Customer, 'id'>>({
         name: customer?.name || '',
         email: customer?.email || '',
@@ -20,7 +23,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
         openingBalance: customer?.openingBalance || 0,
     });
     const [isOpeningBalanceEditable, setIsOpeningBalanceEditable] = useState(false);
-    const modalRef = useFocusTrap(true);
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -46,68 +48,65 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ customer, onClose, onSave }
     };
     
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex justify-center items-center z-[60] p-4">
-            <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg max-h-[95vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="customer-form-title">
+        <div ref={modalRef} className="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex justify-center items-center z-[60] p-4" role="dialog" aria-modal="true" aria-labelledby="customer-form-title">
+            <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
                 <header className="flex-shrink-0 p-6 border-b dark:border-gray-700">
                     <h2 id="customer-form-title" className="text-2xl font-bold text-gray-900 dark:text-white">{customer ? 'Edit Customer' : 'Add New Customer'}</h2>
                 </header>
-                <form onSubmit={handleSubmit} className="flex-grow contents">
-                    <main className="flex-grow p-6 space-y-4 overflow-y-auto">
-                        <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                            <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm" aria-describedby="name-description"/>
-                            <p id="name-description" className="text-xs text-gray-500 dark:text-gray-400 mt-1">The customer's full name or company name.</p>
+                <main className="flex-grow p-6 space-y-4 overflow-y-auto">
+                    <div>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                        <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"/>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">The customer's full name or company name.</p>
+                    </div>
+                     <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                        <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"/>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">The primary email address for sending invoices and communications.</p>
+                    </div>
+                     <div>
+                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+                        <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm" placeholder="e.g. 14155552671" />
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">For WhatsApp, include country code without '+', spaces, or dashes.</p>
+                    </div>
+                     <div>
+                        <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
+                        <textarea id="address" name="address" value={formData.address} onChange={handleChange} rows={3} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></textarea>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">The customer's billing address, which will appear on invoices.</p>
+                    </div>
+                     <div>
+                        <label htmlFor="openingBalance" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Opening Balance ($)</label>
+                        <div className="mt-1 flex items-center space-x-2">
+                            <input 
+                                type="number" 
+                                id="openingBalance" 
+                                name="openingBalance" 
+                                value={formData.openingBalance} 
+                                onChange={handleChange} 
+                                step="0.01"
+                                required 
+                                readOnly={!!customer && !isOpeningBalanceEditable}
+                                className="block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm read-only:bg-gray-100 dark:read-only:bg-gray-600 read-only:cursor-not-allowed"
+                            />
+                            {customer && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsOpeningBalanceEditable(!isOpeningBalanceEditable)} 
+                                    className="p-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
+                                    title={isOpeningBalanceEditable ? "Lock field" : "Edit opening balance"}
+                                >
+                                    <Edit className="h-4 w-4" />
+                                </button>
+                            )}
                         </div>
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                            <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm" aria-describedby="email-description"/>
-                            <p id="email-description" className="text-xs text-gray-500 dark:text-gray-400 mt-1">The primary email for invoices and communications.</p>
-                        </div>
-                        <div>
-                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-                            <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm" placeholder="e.g. 14155552671" aria-describedby="phone-description"/>
-                            <p id="phone-description" className="text-xs text-gray-500 dark:text-gray-400 mt-1">For WhatsApp, include country code without '+', spaces, or dashes.</p>
-                        </div>
-                        <div>
-                            <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
-                            <textarea id="address" name="address" value={formData.address} onChange={handleChange} rows={3} required className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm" aria-describedby="address-description"></textarea>
-                            <p id="address-description" className="text-xs text-gray-500 dark:text-gray-400 mt-1">The customer's billing address, for invoices.</p>
-                        </div>
-                        <div>
-                            <label htmlFor="openingBalance" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Opening Balance</label>
-                            <div className="mt-1 flex items-center space-x-2">
-                                <input 
-                                    type="number" 
-                                    id="openingBalance" 
-                                    name="openingBalance" 
-                                    value={formData.openingBalance} 
-                                    onChange={handleChange} 
-                                    step="0.01"
-                                    required 
-                                    readOnly={!!customer && !isOpeningBalanceEditable}
-                                    className="block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm read-only:bg-gray-100 read-only:cursor-not-allowed"
-                                    aria-describedby="balance-description"
-                                />
-                                {customer && (
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setIsOpeningBalanceEditable(!isOpeningBalanceEditable)} 
-                                        className="p-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
-                                        title={isOpeningBalanceEditable ? "Lock field" : "Edit opening balance"}
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </button>
-                                )}
-                            </div>
-                            <p id="balance-description" className="text-xs text-gray-500 dark:text-gray-400 mt-1">Amount owed by this customer before using the app. Leave as 0 for new customers.</p>
-                        </div>
-                    </main>
-                    <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 rounded-b-lg sticky bottom-0">
-                        <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
-                        <button type="submit" className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light">{customer ? 'Update' : 'Save'}</button>
-                    </footer>
-                </form>
-            </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">If this customer owed you money from before you started using this app, enter the amount here. Leave as 0 for new customers.</p>
+                    </div>
+                </main>
+                <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 bg-gray-50 dark:bg-gray-800 dark:border-t dark:border-gray-700 rounded-b-lg sticky bottom-0">
+                    <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500">Cancel</button>
+                    <button type="submit" className="bg-brand-blue dark:bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-brand-blue-light dark:hover:bg-blue-500">{customer ? 'Update' : 'Save'}</button>
+                </footer>
+            </form>
         </div>
     );
 };

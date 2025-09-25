@@ -85,18 +85,18 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
   const getStatusColor = (status: InvoiceStatus) => {
     switch (status) {
       case InvoiceStatus.Paid:
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case InvoiceStatus.PartiallyPaid:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       case InvoiceStatus.Sent:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case InvoiceStatus.Overdue:
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case InvoiceStatus.Credited:
-        return 'bg-gray-200 text-gray-500 line-through';
+        return 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 line-through';
       case InvoiceStatus.Draft:
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
@@ -146,16 +146,15 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
 
   return (
     <div className="container mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <header className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Invoices</h1>
-        <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
+        <button onClick={handleAddNew} className="bg-brand-blue dark:bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-brand-blue-light dark:hover:bg-blue-500 transition-colors shadow-sm">
           Add New Invoice
         </button>
-      </div>
+      </header>
       
       {/* Filter Section */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6 space-y-4">
-        {/* Primary Filters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
                 <label htmlFor="search-invoice" className="sr-only">Search Invoice #</label>
@@ -165,7 +164,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                     placeholder="Search Invoice #"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full p-2 pl-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full p-2 pl-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
                 />
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
@@ -184,7 +183,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                     id="filter-status"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
                 >
                     <option value="">All Statuses</option>
                     {Object.values(InvoiceStatus).map((s) => (
@@ -194,7 +193,6 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
             </div>
         </div>
 
-        {/* Secondary Filters & Actions */}
         <div className="flex flex-wrap items-end gap-4">
             <div className="flex-grow">
                 <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Issue Date From</label>
@@ -203,7 +201,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                     id="start-date"
                     value={filterStartDate}
                     onChange={(e) => setFilterStartDate(e.target.value)}
-                    className="mt-1 w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
+                    className="mt-1 w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
                 />
             </div>
             <div className="flex-grow">
@@ -213,7 +211,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                     id="end-date"
                     value={filterEndDate}
                     onChange={(e) => setFilterEndDate(e.target.value)}
-                    className="mt-1 w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
+                    className="mt-1 w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
                 />
             </div>
             <div className="flex-shrink-0">
@@ -229,9 +227,16 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
         </div>
       </div>
 
+      {state.invoices.length === 0 ? (
+        <EmptyState 
+            Icon={FileText}
+            title="No Invoices Yet"
+            message="You haven't created any invoices. Get started by adding your first one."
+            action={{ label: 'Add New Invoice', onClick: handleAddNew }}
+        />
+      ) : (
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-        {filteredInvoices.length > 0 ? (
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
@@ -247,74 +252,75 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                     </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {filteredInvoices.map((invoice) => {
-                        const customer = state.customers.find(c => c.id === invoice.customerId);
-                        const { grandTotal, totalPaid, balanceDue } = getInvoiceTotals(invoice);
-                        const canCreateCreditNote = invoice.status !== InvoiceStatus.Draft && invoice.status !== InvoiceStatus.Credited;
-                        const canConvertToChallan = !invoice.challanId;
-                        return (
-                            <tr key={invoice.id} className="dark:hover:bg-gray-700/50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{invoice.invoiceNumber}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    <button onClick={() => onViewCustomer(invoice.customerId)} className="hover:underline text-brand-blue" title={`View profile for ${customer?.name}`}>
-                                        {customer?.name || 'N/A'}
-                                    </button>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{invoice.issueDate}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {invoice.dueDate}
-                                    {invoice.reminderDate && (
-                                        <span className="inline-flex items-center ml-2" title={`A notification reminder is set for this invoice on: ${invoice.reminderDate}`}>
-                                            <Bell className="h-4 w-4 text-yellow-600" />
-                                        </span>
-                                    )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{formatCurrency(grandTotal)}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{formatCurrency(totalPaid)}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    <StatusEditor
-                                        item={invoice}
-                                        status={invoice.status}
-                                        statusEnum={InvoiceStatus}
-                                        updateActionType="UPDATE_INVOICE"
-                                        getStatusColor={getStatusColor}
-                                        disabledStatuses={[InvoiceStatus.Paid, InvoiceStatus.PartiallyPaid, InvoiceStatus.Credited]}
-                                    />
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div className="flex justify-end items-center space-x-1">
-                                        <button onClick={() => setInvoiceToPreview(invoice)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview Invoice" aria-label={`Preview invoice ${invoice.invoiceNumber}`}><Eye className="h-4 w-4" /></button>
-                                        <button onClick={() => setInvoiceToEmail(invoice)} className="text-cyan-600 hover:text-cyan-900 p-1" title="Email Invoice" aria-label={`Email invoice ${invoice.invoiceNumber}`}><Mail className="h-4 w-4" /></button>
-                                        <button onClick={() => handleSendWhatsApp(invoice)} className="text-green-600 hover:text-green-900 p-1" title="Send via WhatsApp" aria-label={`Send invoice ${invoice.invoiceNumber} via WhatsApp`}><WhatsAppIcon className="h-5 w-5" /></button>
-                                        {canConvertToChallan && (
-                                            <button onClick={() => handleConvertToChallan(invoice.id)} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white p-1" title="Create Delivery Challan" aria-label={`Create delivery challan for invoice ${invoice.invoiceNumber}`}><Truck className="h-4 w-4" /></button>
+                    {filteredInvoices.length > 0 ? (
+                        filteredInvoices.map((invoice) => {
+                            const customer = state.customers.find(c => c.id === invoice.customerId);
+                            const { grandTotal, totalPaid, balanceDue } = getInvoiceTotals(invoice);
+                            const canCreateCreditNote = invoice.status !== InvoiceStatus.Draft && invoice.status !== InvoiceStatus.Credited;
+                            const canConvertToChallan = !invoice.challanId;
+                            return (
+                                <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{invoice.invoiceNumber}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                        <button onClick={() => onViewCustomer(invoice.customerId)} className="hover:underline text-brand-blue dark:text-blue-400" title={`View profile for ${customer?.name}`}>
+                                            {customer?.name || 'N/A'}
+                                        </button>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{invoice.issueDate}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                        {invoice.dueDate}
+                                        {invoice.reminderDate && (
+                                            <span className="inline-flex items-center ml-2" title={`A notification reminder is set for this invoice on: ${invoice.reminderDate}`}>
+                                                <Bell className="h-4 w-4 text-yellow-600" />
+                                            </span>
                                         )}
-                                        {invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Credited && (
-                                          <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900 p-1" title="Add Payment" aria-label={`Add payment for invoice ${invoice.invoiceNumber}`}><CircleDollarSign className="h-4 w-4" /></button>
-                                        )}
-                                        {canCreateCreditNote && (
-                                          <button onClick={() => setInvoiceForCreditNote(invoice)} className="text-orange-600 hover:text-orange-900 p-1" title="Create Credit Note" aria-label={`Create credit note for invoice ${invoice.invoiceNumber}`}><FileMinus className="h-4 w-4" /></button>
-                                        )}
-                                        <button onClick={() => handleEdit(invoice)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Invoice" aria-label={`Edit invoice ${invoice.invoiceNumber}`}><Edit className="h-4 w-4" /></button>
-                                        <button onClick={() => handleDelete(invoice.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Invoice" aria-label={`Delete invoice ${invoice.invoiceNumber}`}><Trash2 className="h-4 w-4" /></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        )
-                    })}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{formatCurrency(grandTotal)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400">{formatCurrency(totalPaid)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600 dark:text-red-400">{formatCurrency(balanceDue)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <StatusEditor
+                                            item={invoice}
+                                            status={invoice.status}
+                                            statusEnum={InvoiceStatus}
+                                            updateActionType="UPDATE_INVOICE"
+                                            getStatusColor={getStatusColor}
+                                            disabledStatuses={[InvoiceStatus.Paid, InvoiceStatus.PartiallyPaid, InvoiceStatus.Credited]}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div className="flex justify-end items-center space-x-1">
+                                            <button onClick={() => setInvoiceToPreview(invoice)} className="text-blue-600 hover:text-blue-900 p-1" aria-label="Preview Invoice"><Eye className="h-4 w-4" /></button>
+                                            <button onClick={() => setInvoiceToEmail(invoice)} className="text-cyan-600 hover:text-cyan-900 p-1" aria-label="Email Invoice"><Mail className="h-4 w-4" /></button>
+                                            <button onClick={() => handleSendWhatsApp(invoice)} className="text-green-600 hover:text-green-900 p-1" aria-label="Send via WhatsApp"><WhatsAppIcon className="h-5 w-5" /></button>
+                                            {canConvertToChallan && (
+                                                <button onClick={() => handleConvertToChallan(invoice.id)} className="text-gray-600 hover:text-gray-900 p-1" aria-label="Create Delivery Challan"><Truck className="h-4 w-4" /></button>
+                                            )}
+                                            {invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Credited && (
+                                              <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900 p-1" aria-label="Add Payment"><CircleDollarSign className="h-4 w-4" /></button>
+                                            )}
+                                            {canCreateCreditNote && (
+                                              <button onClick={() => setInvoiceForCreditNote(invoice)} className="text-orange-600 hover:text-orange-900 p-1" aria-label="Create Credit Note"><FileMinus className="h-4 w-4" /></button>
+                                            )}
+                                            <button onClick={() => handleEdit(invoice)} className="text-indigo-600 hover:text-indigo-900 p-1" aria-label="Edit Invoice"><Edit className="h-4 w-4" /></button>
+                                            <button onClick={() => handleDelete(invoice.id)} className="text-red-600 hover:text-red-900 p-1" aria-label="Delete Invoice"><Trash2 className="h-4 w-4" /></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )
+                        })
+                    ) : (
+                        <tr>
+                           <td colSpan={9} className="text-center py-10 text-gray-500 dark:text-gray-400">
+                                No invoices match your filters.
+                            </td>
+                        </tr>
+                    )}
                 </tbody>
             </table>
-          </div>
-        ) : (
-            <EmptyState
-                Icon={FileText}
-                title={state.invoices.length > 0 ? "No Invoices Found" : "Create Your First Invoice"}
-                message={state.invoices.length > 0 ? "No invoices match your current filter criteria." : "Get started by creating a new invoice for a customer."}
-                actionButton={<button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">Add New Invoice</button>}
-            />
-        )}
+        </div>
       </div>
+      )}
 
       {showForm && (
         <InvoiceForm

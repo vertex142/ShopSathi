@@ -45,13 +45,20 @@ const ExpensesPage: React.FC = React.memo(() => {
         <div className="container mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Expenses</h1>
-                <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
+                <button onClick={handleAddNew} className="bg-brand-blue dark:bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-brand-blue-light dark:hover:bg-blue-500 transition-colors">
                     Add New Expense
                 </button>
             </div>
-
-            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-                {state.expenses.length > 0 ? (
+            
+            {state.expenses.length === 0 ? (
+                 <EmptyState 
+                    Icon={TrendingDown}
+                    title="No Expenses Recorded"
+                    message="Track your business spending by adding your first expense."
+                    action={{ label: 'Add New Expense', onClick: handleAddNew }}
+                />
+            ) : (
+                <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-700">
@@ -69,12 +76,12 @@ const ExpensesPage: React.FC = React.memo(() => {
                                     const debitAccount = state.accounts.find(a => a.id === expense.debitAccountId);
                                     const creditAccount = state.accounts.find(a => a.id === expense.creditAccountId);
                                     return (
-                                    <tr key={expense.id} className="dark:hover:bg-gray-700/50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{expense.date}</td>
+                                    <tr key={expense.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{expense.date}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{debitAccount?.name || 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{expense.description}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{creditAccount?.name || 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{expense.description}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{creditAccount?.name || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400 font-semibold">
                                             -{formatCurrency(expense.amount)}
                                             {expense.attachment && (
                                                 <button onClick={() => handleViewAttachment(expense)} className="ml-2 text-gray-400 hover:text-brand-blue" title="View attached receipt">
@@ -93,20 +100,9 @@ const ExpensesPage: React.FC = React.memo(() => {
                             </tbody>
                         </table>
                     </div>
-                ) : (
-                    <EmptyState
-                        Icon={TrendingDown}
-                        title="Record Your First Expense"
-                        message="Keep track of where your money is going. Add an expense to see it here."
-                        actionButton={
-                            <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
-                                Add New Expense
-                            </button>
-                        }
-                    />
-                )}
-            </div>
-
+                </div>
+            )}
+            
             {showForm && <ExpenseForm expense={selectedExpense} onClose={() => setShowForm(false)} />}
         </div>
     );

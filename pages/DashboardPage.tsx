@@ -81,21 +81,21 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
 
   const Avatar: React.FC<{ name: string }> = ({ name }) => {
       const initial = name ? name.charAt(0).toUpperCase() : '?';
-      const colors = ['bg-blue-200', 'bg-green-200', 'bg-yellow-200', 'bg-purple-200', 'bg-red-200'];
+      const colors = ['bg-blue-200 dark:bg-blue-800', 'bg-green-200 dark:bg-green-800', 'bg-yellow-200 dark:bg-yellow-800', 'bg-purple-200 dark:bg-purple-800', 'bg-red-200 dark:bg-red-800'];
       const color = colors[name.charCodeAt(0) % colors.length];
-      return <div className={`w-10 h-10 rounded-full flex items-center justify-center ${color} text-gray-700 font-bold`}>{initial}</div>;
+      return <div className={`w-10 h-10 rounded-full flex items-center justify-center ${color} text-gray-700 dark:text-gray-200 font-bold`}>{initial}</div>;
   };
 
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Main Content Area */}
-      <div className="xl:col-span-2 space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+      <div className="lg:col-span-2 space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
             <GreetingCard />
           </div>
-          <div className="lg:col-span-1">
+          <div className="md:col-span-1">
             <QuickActions setCurrentPage={setCurrentPage} />
           </div>
         </div>
@@ -116,10 +116,10 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
                   <stop offset="95%" stopColor="#f87171" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="name" stroke="var(--text-color)" />
-              <YAxis stroke="var(--text-color)" />
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)"/>
-              <Tooltip contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)' }} />
+              <XAxis dataKey="name" stroke="var(--text-muted)" />
+              <YAxis stroke="var(--text-muted)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+              <Tooltip contentStyle={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--border-color)' }} formatter={(value: number) => formatCurrency(value)} />
               <Legend />
               <Area type="monotone" dataKey="income" stroke="#4ade80" fillOpacity={1} fill="url(#colorIncome)" />
               <Area type="monotone" dataKey="expenses" stroke="#f87171" fillOpacity={1} fill="url(#colorExpenses)" />
@@ -133,7 +133,7 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
                 {state.invoices.slice(0, 5).map(inv => {
                     const customer = state.customers.find(c => c.id === inv.customerId);
                     return (
-                        <li key={inv.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md transition-colors">
+                        <li key={inv.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors">
                             <div className="flex items-center space-x-4">
                                 <Avatar name={customer?.name || '?'} />
                                 <div>
@@ -144,10 +144,10 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
                             <div className="text-right">
                                 <p className="font-semibold text-lg text-gray-900 dark:text-white">{formatCurrency(getInvoiceTotals(inv).grandTotal)}</p>
                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                    inv.status === InvoiceStatus.Paid ? 'bg-green-100 text-green-800' :
-                                    inv.status === InvoiceStatus.PartiallyPaid ? 'bg-yellow-100 text-yellow-800' :
-                                    inv.status === InvoiceStatus.Sent ? 'bg-blue-100 text-blue-800' :
-                                    inv.status === InvoiceStatus.Overdue ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                                    inv.status === InvoiceStatus.Paid ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                    inv.status === InvoiceStatus.PartiallyPaid ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                    inv.status === InvoiceStatus.Sent ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                    inv.status === InvoiceStatus.Overdue ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                                 }`}>{inv.status}</span>
                             </div>
                         </li>
@@ -159,9 +159,9 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
       </div>
 
       {/* Sidebar with Stats */}
-      <div className="xl:col-span-1 space-y-8">
+      <div className="lg:col-span-1 space-y-8">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">This Month</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">This Month</h3>
             <div className="space-y-4">
                 <StatCard title="Income" value={formatCurrency(totalIncomeThisMonth)} IconComponent={CircleDollarSign} color="green" />
                 <StatCard title="Expenses" value={formatCurrency(totalExpensesThisMonth)} IconComponent={TrendingDown} color="red" />
@@ -169,7 +169,7 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
         </div>
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Overall</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Overall</h3>
             <div className="space-y-4">
                 <StatCard title="Total Dues" value={formatCurrency(totalDues)} IconComponent={Clock} color="yellow" />
                 <StatCard title="Total Customers" value={state.customers.length.toString()} IconComponent={Users} color="blue" />
@@ -183,9 +183,9 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
                 {state.expenses.slice(0, 5).map(exp => {
                     const expenseAccount = state.accounts.find(a => a.id === exp.debitAccountId);
                     return (
-                         <li key={exp.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md transition-colors">
+                         <li key={exp.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors">
                             <div className="flex items-center space-x-4">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600 dark:bg-red-800/50 dark:text-red-300">
                                     <TrendingDown className="h-5 w-5" />
                                 </div>
                                 <div>
@@ -193,7 +193,7 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
                                     <p className="text-sm text-gray-500 dark:text-gray-400 max-w-[150px] truncate">{exp.description}</p>
                                 </div>
                             </div>
-                            <p className="font-semibold text-lg text-red-600">-{formatCurrency(exp.amount)}</p>
+                            <p className="font-semibold text-lg text-red-600 dark:text-red-400">-{formatCurrency(exp.amount)}</p>
                         </li>
                     );
                 })}

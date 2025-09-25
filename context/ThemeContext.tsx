@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
 
 type Theme = 'light' | 'dark';
@@ -11,15 +11,13 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [storedTheme, setStoredTheme] = useLocalStorage<Theme>('theme', 'light');
-  const [theme, setTheme] = useState<Theme>(storedTheme);
+  const [theme, setTheme] = useLocalStorage<Theme>('shopsathi-theme', 'light');
 
-  useEffect(() => {
+  React.useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove(theme === 'light' ? 'dark' : 'light');
+    root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    setStoredTheme(theme);
-  }, [theme, setStoredTheme]);
+  }, [theme]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
