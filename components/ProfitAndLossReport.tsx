@@ -25,7 +25,6 @@ const ProfitAndLossReport: React.FC = () => {
         setIsExporting(false);
     };
 
-    // FIX: Added an explicit return type to the useMemo hook. This ensures TypeScript correctly infers that `amount` is a number inside `expensesByCategory`, resolving the error when calling `.toFixed()`.
     const pnlData = useMemo((): {
         revenue: number;
         expensesByCategory: { [key: string]: number };
@@ -141,7 +140,7 @@ const ProfitAndLossReport: React.FC = () => {
                 </div>
 
                 <div className="text-center pt-4">
-                    <h2 className="text-2xl font-bold">Company Name from SVG</h2>
+                    <h2 className="text-2xl font-bold">{state.settings.name}</h2>
                     <p className="text-lg">Profit and Loss Statement</p>
                     <p className="text-sm text-gray-600">For the period from {startDate} to {endDate}</p>
                 </div>
@@ -162,7 +161,8 @@ const ProfitAndLossReport: React.FC = () => {
                         Object.entries(pnlData.expensesByCategory).map(([category, amount]) => (
                              <div key={category} className="flex justify-between items-center mt-1 text-gray-700 pl-4">
                                 <span>{category}</span>
-                                <span>{formatCurrency(amount)}</span>
+                                {/* FIX: Cast 'amount' to number as its type is not inferred correctly from Object.entries. */}
+                                <span>{formatCurrency(amount as number)}</span>
                             </div>
                         ))
                      ) : (

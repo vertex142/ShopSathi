@@ -589,7 +589,7 @@ const dataReducer = (state: AppState, action: Action): AppState => {
 
     // --- JOURNAL ENTRIES ---
     case 'ADD_JOURNAL_ENTRY': {
-        const newEntry = { ...action.payload, id: crypto.randomUUID() };
+        const newEntry = { ...(action.payload as Omit<JournalEntry, 'id'>), id: crypto.randomUUID() };
         let accountsForAdd = [...state.accounts];
         newEntry.items.forEach((item: JournalEntryItem) => {
             accountsForAdd = accountsForAdd.map(acc => {

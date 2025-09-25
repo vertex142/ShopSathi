@@ -24,6 +24,13 @@ export const printDocument = async (elementId: string, fileName: string = 'docum
       useCORS: true,
       logging: false,
     });
+
+    if (canvas.height === 0) {
+      console.error("Cannot generate PDF from an element with zero height.");
+      alert('Error: The content to be exported has no height.');
+      document.body.classList.remove('pdf-export-active');
+      return;
+    }
     
     const imgData = canvas.toDataURL('image/png');
     

@@ -46,7 +46,8 @@ const RecurringInvoiceForm: React.FC<RecurringInvoiceFormProps> = ({ profile, on
   };
   
   const handleTermsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    // FIX: Explicitly type 'option' as HTMLOptionElement to resolve type inference issue.
+    const selectedOptions = Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value);
     setFormData({ ...formData, selectedTerms: selectedOptions });
   };
 

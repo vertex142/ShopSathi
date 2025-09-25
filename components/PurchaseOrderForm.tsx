@@ -22,8 +22,6 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
     items: purchaseOrder?.items || [{ id: crypto.randomUUID(), name: '', description: '', quantity: 1, unitCost: 0 }],
     status: purchaseOrder?.status || PurchaseOrderStatus.Pending,
     notes: purchaseOrder?.notes || '',
-    // FIX: The 'payments' property is required by the PurchaseOrder type but was missing.
-    // Initialize it to an empty array for new POs or use existing payments when editing.
     payments: purchaseOrder?.payments || [],
     selectedTerms: purchaseOrder?.selectedTerms || [],
   });
@@ -34,12 +32,18 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
     setFormData({ ...formData, [name]: type === 'number' ? parseFloat(value) || 0 : value });
   };
 
-  // FIX: Switched to using `e.target` which is correctly typed for an HTMLInputElement, resolving the 'property does not exist on type unknown' error that can occur with the broader type of e.currentTarget.
   const handleItemChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     const newItems = [...formData.items];
-    const field = e.target.name as keyof Omit<PurchaseOrderItem, 'id'>;
-    const value = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
-    (newItems[index] as any)[field] = value;
+    const itemToUpdate = { ...newItems[index] };
+
+    if (name === 'name' || name === 'description') {
+        itemToUpdate[name] = value;
+    } else if (name === 'quantity' || name === 'unitCost') {
+        itemToUpdate[name] = parseFloat(value) || 0;
+    }
+
+    newItems[index] = itemToUpdate;
     setFormData({ ...formData, items: newItems });
   };
 
@@ -59,7 +63,8 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
   };
 
   const handleTermsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    // FIX: Explicitly type 'option' as HTMLOptionElement to resolve type inference issue.
+    const selectedOptions = Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value);
     setFormData({ ...formData, selectedTerms: selectedOptions });
   };
 

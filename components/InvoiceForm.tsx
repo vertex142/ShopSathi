@@ -62,12 +62,18 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
     setFormData({ ...formData, [name]: type === 'number' ? parseFloat(value) || 0 : value });
   };
   
-  // FIX: Switched to using `e.target` which is correctly typed for an HTMLInputElement, resolving the 'property does not exist on type unknown' error that can occur with the broader type of e.currentTarget.
   const handleItemChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     const newItems = [...formData.items];
-    const field = e.target.name as keyof Omit<InvoiceItem, 'id'>;
-    const value = e.target.type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value;
-    (newItems[index] as any)[field] = value;
+    const itemToUpdate = { ...newItems[index] };
+
+    if (name === 'name' || name === 'description') {
+        itemToUpdate[name] = value;
+    } else if (name === 'quantity' || name === 'rate') {
+        itemToUpdate[name] = parseFloat(value) || 0;
+    }
+
+    newItems[index] = itemToUpdate;
     setFormData({ ...formData, items: newItems });
   };
 
@@ -87,7 +93,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
   };
 
   const handleTermsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    // FIX: Explicitly type 'option' as HTMLOptionElement to resolve type inference issue.
+    const selectedOptions = Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value);
     setFormData({ ...formData, selectedTerms: selectedOptions });
   };
 
@@ -124,10 +131,16 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
     setReminderEnabled(isEnabled);
     if (isEnabled) {
       if (!formData.reminderDate && formData.dueDate) {
-        const [year, month, day] = formData.dueDate.split('-').map(Number);
-        const dueDateObj = new Date(year, month - 1, day);
-        dueDateObj.setDate(dueDateObj.getDate() - 1);
-        setFormData(prev => ({ ...prev, reminderDate: dueDateObj.toISOString().split('T')[0] }));
+        // Parsing as YYYY-MM-DD to avoid timezone issues with `new Date(string)`
+        const parts = formData.dueDate.split('-');
+        if (parts.length === 3) {
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+          const day = parseInt(parts[2], 10);
+          const dueDateObj = new Date(year, month, day);
+          dueDateObj.setDate(dueDateObj.getDate() - 1);
+          setFormData(prev => ({ ...prev, reminderDate: dueDateObj.toISOString().split('T')[0] }));
+        }
       }
     } else {
       setFormData(prev => ({ ...prev, reminderDate: undefined }));

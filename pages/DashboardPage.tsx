@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import StatCard from '../components/StatCard';
 import { useData } from '../context/DataContext';
 import { Invoice, InvoiceStatus, Expense, Page } from '../types';
@@ -42,29 +42,42 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
     
   const lowStockItems = state.inventoryItems ? state.inventoryItems.filter(item => item.stockQuantity <= item.reorderLevel).length : 0;
     
-  const getMonthlyData = () => {
+  const chartData = useMemo(() => {
     const months = Array.from({length: 6}, (_, i) => {
         const d = new Date();
         d.setMonth(d.getMonth() - i);
-        return { month: d.toLocaleString('default', { month: 'short' }), year: d.getFullYear() };
+        return { 
+            month: d.toLocaleString('default', { month: 'short' }), 
+            year: d.getFullYear(),
+            monthIndex: d.getMonth()
+        };
     }).reverse();
 
-    return months.map(({month, year}) => {
-        const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
+    return months.map(({month, year, monthIndex}) => {
         const income = state.invoices
             .flatMap(inv => inv.payments)
-            .filter(p => new Date(p.date).getMonth() === monthIndex && new Date(p.date).getFullYear() === year)
+            .filter(p => {
+                const paymentDate = new Date(p.date);
+                // Adjust for timezone offset by using UTC methods
+                const paymentMonth = new Date(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), paymentDate.getUTCDate()).getMonth();
+                const paymentYear = new Date(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), paymentDate.getUTCDate()).getFullYear();
+                return paymentMonth === monthIndex && paymentYear === year;
+            })
             .reduce((sum, p) => sum + p.amount, 0);
         
         const expenses = state.expenses
-            .filter(exp => new Date(exp.date).getMonth() === monthIndex && new Date(exp.date).getFullYear() === year)
+            .filter(exp => {
+                 const expenseDate = new Date(exp.date);
+                 // Adjust for timezone offset by using UTC methods
+                 const expenseMonth = new Date(expenseDate.getUTCFullYear(), expenseDate.getUTCMonth(), expenseDate.getUTCDate()).getMonth();
+                 const expenseYear = new Date(expenseDate.getUTCFullYear(), expenseDate.getUTCMonth(), expenseDate.getUTCDate()).getFullYear();
+                 return expenseMonth === monthIndex && expenseYear === year;
+            })
             .reduce((sum, exp) => sum + exp.amount, 0);
         
         return { name: month, income, expenses };
     });
-  };
-
-  const chartData = getMonthlyData();
+  }, [state.invoices, state.expenses]);
 
   const Avatar: React.FC<{ name: string }> = ({ name }) => {
       const initial = name ? name.charAt(0).toUpperCase() : '?';

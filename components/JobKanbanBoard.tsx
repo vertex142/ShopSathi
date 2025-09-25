@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { JobStatus, JobOrder } from '../types';
 import JobKanbanCard from './JobKanbanCard';
@@ -11,6 +11,7 @@ interface JobKanbanBoardProps {
 
 const JobKanbanBoard: React.FC<JobKanbanBoardProps> = ({ onEdit, onDelete, onViewDetails }) => {
     const { state, dispatch } = useData();
+    const [dragOverStatus, setDragOverStatus] = useState<JobStatus | null>(null);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, jobId: string) => {
         e.dataTransfer.setData("jobId", jobId);
@@ -23,16 +24,16 @@ const JobKanbanBoard: React.FC<JobKanbanBoardProps> = ({ onEdit, onDelete, onVie
         if (job && job.status !== status) {
             dispatch({ type: 'UPDATE_JOB_ORDER', payload: { ...job, status } });
         }
-        e.currentTarget.classList.remove('bg-blue-100', 'border-blue-400');
+        setDragOverStatus(null);
     };
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, status: JobStatus) => {
         e.preventDefault();
-        e.currentTarget.classList.add('bg-blue-100', 'border-blue-400');
+        setDragOverStatus(status);
     };
 
     const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-        e.currentTarget.classList.remove('bg-blue-100', 'border-blue-400');
+        setDragOverStatus(null);
     };
 
     const columns = Object.values(JobStatus).map(status => ({
@@ -50,9 +51,9 @@ const JobKanbanBoard: React.FC<JobKanbanBoardProps> = ({ onEdit, onDelete, onVie
                 {columns.map(({ status, title, jobs }) => (
                     <div
                         key={status}
-                        className="w-80 bg-gray-100 rounded-lg shadow-inner flex-shrink-0"
+                        className={`w-80 bg-gray-100 rounded-lg shadow-inner flex-shrink-0 transition-colors duration-200 ${dragOverStatus === status ? 'bg-blue-100 border-2 border-dashed border-blue-400' : ''}`}
                         onDrop={(e) => handleDrop(e, status)}
-                        onDragOver={handleDragOver}
+                        onDragOver={(e) => handleDragOver(e, status)}
                         onDragLeave={handleDragLeave}
                     >
                         <div className="p-4 border-b">

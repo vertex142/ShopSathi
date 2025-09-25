@@ -28,11 +28,19 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
   };
   
   const handleItemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newItems = [...formData.items];
+    const { name, value } = e.target;
     const index = parseInt(e.target.dataset.index || '0', 10);
-    const field = e.target.name as keyof Omit<DeliveryChallanItem, 'id'>;
-    const value = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
-    (newItems[index] as any)[field] = value;
+
+    const newItems = [...formData.items];
+    const itemToUpdate = { ...newItems[index] };
+
+    if (name === 'name' || name === 'description') {
+        itemToUpdate[name] = value;
+    } else if (name === 'quantity') {
+        itemToUpdate[name] = parseFloat(value) || 0;
+    }
+
+    newItems[index] = itemToUpdate;
     setFormData({ ...formData, items: newItems });
   };
 
