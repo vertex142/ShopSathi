@@ -5,13 +5,15 @@ import { Account, AccountType } from '../types';
 interface AccountFormProps {
     account: Account | null;
     onClose: () => void;
+    onSave?: (account: Account) => void;
+    defaultAccountType?: AccountType;
 }
 
-const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
+const AccountForm: React.FC<AccountFormProps> = ({ account, onClose, onSave, defaultAccountType }) => {
     const { dispatch } = useData();
     const [formData, setFormData] = useState({
         name: account?.name || '',
-        type: account?.type || AccountType.Expense,
+        type: account?.type || defaultAccountType || AccountType.Expense,
         openingBalance: account?.openingBalance || 0,
     });
 
@@ -26,26 +28,31 @@ const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (account) {
-            dispatch({ type: 'UPDATE_ACCOUNT', payload: { 
-                ...account, // Preserve id, balance, isSystemAccount from original
+            const updatedAccount = { 
+                ...account,
                 name: formData.name, 
                 openingBalance: formData.openingBalance,
-                type: account.isSystemAccount ? account.type : formData.type, // Prevent type change for system accounts
-            }});
+                type: account.isSystemAccount ? account.type : formData.type,
+            };
+            dispatch({ type: 'UPDATE_ACCOUNT', payload: updatedAccount });
+            if (onSave) onSave(updatedAccount);
         } else {
-            // For new accounts, balance is set from form, and it's not a system account
-            dispatch({ type: 'ADD_ACCOUNT', payload: {
+            const newAccount: Account = {
+                id: crypto.randomUUID(),
                 name: formData.name,
                 type: formData.type,
                 openingBalance: formData.openingBalance,
+                balance: 0,
                 isSystemAccount: false,
-            }});
+            };
+            dispatch({ type: 'ADD_ACCOUNT', payload: newAccount });
+            if (onSave) onSave(newAccount);
         }
         onClose();
     };
     
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
             <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[480px] flex flex-col">
                 <header className="flex-shrink-0 p-6 border-b">
                     <h2 className="text-2xl font-bold">{account ? 'Edit Account' : 'Add New Account'}</h2>
@@ -65,7 +72,7 @@ const AccountForm: React.FC<AccountFormProps> = ({ account, onClose }) => {
                             onChange={handleChange} 
                             required 
                             className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            disabled={account?.isSystemAccount}
+                            disabled={account?.isSystemAccount || !!defaultAccountType}
                             title={account?.isSystemAccount ? "The type of a system account cannot be changed." : ""}
                         >
                             {Object.values(AccountType).map(type => (

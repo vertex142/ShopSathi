@@ -5,10 +5,11 @@ import JobOrderForm from '../components/JobOrderForm';
 import StatusEditor from '../components/StatusEditor';
 import JobKanbanBoard from '../components/JobKanbanBoard';
 import JobDetailsModal from '../components/JobDetailsModal';
-import { List, Trello } from 'lucide-react';
+import { List, Trello, Calendar } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
+import JobCalendarView from '../components/JobCalendarView';
 
-type ViewMode = 'list' | 'kanban';
+type ViewMode = 'list' | 'kanban' | 'calendar';
 
 const JobsPage: React.FC = React.memo(() => {
   const { state, dispatch } = useData();
@@ -59,6 +60,9 @@ const JobsPage: React.FC = React.memo(() => {
             </button>
             <button onClick={() => setViewMode('kanban')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'kanban' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`} title="Kanban Board View">
                 <Trello className="h-5 w-5 inline-block" />
+            </button>
+            <button onClick={() => setViewMode('calendar')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'calendar' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`} title="Calendar View">
+                <Calendar className="h-5 w-5 inline-block" />
             </button>
           </div>
           <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
@@ -112,10 +116,16 @@ const JobsPage: React.FC = React.memo(() => {
           </div>
           {state.jobOrders.length === 0 && <p className="text-center py-10 text-gray-500">No jobs found. Add one to get started!</p>}
         </div>
-      ) : (
+      ) : viewMode === 'kanban' ? (
         <JobKanbanBoard 
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onViewDetails={setJobForDetails}
+        />
+      ) : (
+        <JobCalendarView
+            jobs={state.jobOrders}
+            customers={state.customers}
             onViewDetails={setJobForDetails}
         />
       )}

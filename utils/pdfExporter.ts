@@ -15,14 +15,8 @@ export const printDocument = async (elementId: string, fileName: string = 'docum
     return;
   }
 
-  // Hide non-printable elements to clean up the capture
-  const nonPrintableElements = document.querySelectorAll('.non-printable');
-  nonPrintableElements.forEach(el => ((el as HTMLElement).style.visibility = 'hidden'));
-  
-  // Also, the preview modals have their own headers which we should hide.
-  const previewHeaders = input.closest('.printable-document')?.querySelectorAll('header.non-printable');
-  previewHeaders?.forEach(el => ((el as HTMLElement).style.visibility = 'hidden'));
-
+  // Add a class to the body to trigger special export styles
+  document.body.classList.add('pdf-export-active');
 
   try {
     const canvas = await html2canvas(input, {
@@ -71,8 +65,7 @@ export const printDocument = async (elementId: string, fileName: string = 'docum
       console.error("Error generating PDF:", error);
       alert('An error occurred while generating the PDF. Please try again.');
   } finally {
-      // Restore visibility of hidden elements
-      nonPrintableElements.forEach(el => ((el as HTMLElement).style.visibility = 'visible'));
-      previewHeaders?.forEach(el => ((el as HTMLElement).style.visibility = 'visible'));
+      // Clean up by removing the class
+      document.body.classList.remove('pdf-export-active');
   }
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type Page = 'dashboard' | 'invoices' | 'quotes' | 'jobs' | 'customers' | 'expenses' | 'settings' | 'reports' | 'inventory' | 'suppliers' | 'deliveryChallans' | 'purchaseOrders' | 'accounts' | 'journalEntries' | 'userManual';
+export type Page = 'dashboard' | 'invoices' | 'quotes' | 'jobs' | 'customers' | 'expenses' | 'settings' | 'reports' | 'inventory' | 'suppliers' | 'deliveryChallans' | 'purchaseOrders' | 'accounts' | 'journalEntries' | 'userManual' | 'recurringInvoices' | 'creditNotes';
 
 export interface NavItem {
   id: Page;
@@ -74,6 +74,8 @@ export interface Quote {
     convertedToJobId?: string;
     convertedToInvoiceId?: string;
     selectedTerms?: string[];
+    taxId?: string;
+    taxAmount?: number;
 }
 
 export enum InvoiceStatus {
@@ -82,6 +84,7 @@ export enum InvoiceStatus {
   Paid = 'PAID',
   PartiallyPaid = 'PARTIALLY_PAID',
   Overdue = 'OVERDUE',
+  Credited = 'CREDITED',
 }
 
 export interface Payment {
@@ -110,7 +113,31 @@ export interface Invoice {
   reminderDate?: string;
   challanId?: string;
   selectedTerms?: string[];
+  taxId?: string;
+  taxAmount?: number;
 }
+
+export interface CreditNoteItem extends InvoiceItem {}
+
+export enum CreditNoteStatus {
+  Draft = 'DRAFT',
+  Finalized = 'FINALIZED',
+}
+
+export interface CreditNote {
+  id: string;
+  creditNoteNumber: string;
+  originalInvoiceId: string;
+  customerId: string;
+  issueDate: string;
+  items: CreditNoteItem[];
+  status: CreditNoteStatus;
+  reason: string;
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+}
+
 
 export interface DeliveryChallanItem {
   id: string;
@@ -215,26 +242,28 @@ export interface Expense {
   amount: number;
   debitAccountId: string; // The expense account
   creditAccountId: string; // The account money came from (e.g., cash, bank)
+  attachment?: string; // base64 encoded file
+  attachmentMimeType?: string; // e.g., 'application/pdf', 'image/jpeg'
+}
+
+export interface TaxRate {
+  id: string;
+  name: string;
+  rate: number; // as a percentage, e.g., 5 for 5%
 }
 
 export interface CompanySettings {
   name: string;
-  logo: string; // base64 string
-  address: string;
-  phone1: string;
-  phone2: string;
-  email: string;
-  tagline: string;
-  services: string;
+  headerSVG: string; // base64 string of the SVG header
   footerText: string;
-  // DEPRECATED: termsAndConditions is kept for backward compatibility during import.
-  termsAndConditions?: { id: string; text: string }[];
   invoiceTerms: { id: string; text: string }[];
   quoteTerms: { id: string; text: string }[];
   purchaseOrderTerms: { id: string; text: string }[];
   preparedByLabel: string;
   authorizedSignatureLabel: string;
   authorizedSignatureImage?: string; // base64 string
+  taxRates: TaxRate[];
+  inventoryCategories: { id: string; name: string }[];
 }
 
 export interface InventoryItem {
@@ -279,6 +308,8 @@ export interface PurchaseOrder {
     payments: Payment[];
     selectedTerms?: string[];
     stockReceived?: boolean;
+    taxId?: string;
+    taxAmount?: number;
 }
 
 export enum AccountType {
@@ -324,7 +355,6 @@ export interface TimelineEvent {
     relatedId: string;
 }
 
-// FIX: Added ChatMessage and ChatConversation interfaces for the chat feature.
 export interface ChatMessage {
     id: string;
     text: string;
@@ -340,6 +370,28 @@ export interface ChatConversation {
     unreadByStaff: boolean;
 }
 
+export enum RecurringInvoiceFrequency {
+    Daily = 'DAILY',
+    Weekly = 'WEEKLY',
+    Monthly = 'MONTHLY',
+    Yearly = 'YEARLY',
+}
+
+export interface RecurringInvoice {
+  id: string;
+  customerId: string;
+  frequency: RecurringInvoiceFrequency;
+  startDate: string;
+  endDate?: string; // Optional end date
+  items: InvoiceItem[];
+  notes: string;
+  discount: number;
+  selectedTerms?: string[];
+  lastIssueDate: string; // The date of the last invoice that was generated
+  isActive: boolean;
+}
+
+
 export interface AppState {
   customers: Customer[];
   suppliers: Supplier[];
@@ -354,8 +406,9 @@ export interface AppState {
   accounts: Account[];
   journalEntries: JournalEntry[];
   notifications: Notification[];
-  // FIX: Added chatConversations to AppState.
+  recurringInvoices: RecurringInvoice[];
   chatConversations: ChatConversation[];
+  creditNotes: CreditNote[];
 }
 
 export type Action = { type: string, payload: any };

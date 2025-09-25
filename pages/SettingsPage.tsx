@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '../context/DataContext';
-import { CompanySettings } from '../types';
-import { Upload, RefreshCw, Building2, FileSignature, BookText, DatabaseZap, Trash2, UploadCloud, XCircle, Download } from 'lucide-react';
+import { CompanySettings, TaxRate } from '../types';
+import { Upload, RefreshCw, FileSignature, BookText, DatabaseZap, Trash2, UploadCloud, XCircle, Download, Image, Percent, Package } from 'lucide-react';
 
 type TermCategory = 'invoiceTerms' | 'quoteTerms' | 'purchaseOrderTerms';
 
@@ -24,6 +24,9 @@ const SettingsPage: React.FC = React.memo(() => {
   const [feedback, setFeedback] = useState('');
   const [activeTab, setActiveTab] = useState<TermCategory>('invoiceTerms');
   const importFileRef = useRef<HTMLInputElement>(null);
+
+  const [newTaxRate, setNewTaxRate] = useState({ name: '', rate: '' });
+  const [newCategoryName, setNewCategoryName] = useState('');
   
   useEffect(() => {
     setSettings(state.settings);
@@ -33,14 +36,18 @@ const SettingsPage: React.FC = React.memo(() => {
     setSettings({ ...settings, [e.target.name]: e.target.value });
   };
   
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHeaderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.type !== 'image/svg+xml') {
+        alert('Please upload a valid SVG file.');
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSettings({ ...settings, logo: reader.result as string });
+        setSettings({ ...settings, headerSVG: reader.result as string });
       };
-      reader.readAsDataURL(file);
+      reader.readAsText(file);
     }
   };
 
@@ -73,6 +80,40 @@ const SettingsPage: React.FC = React.memo(() => {
     setSettings(prev => ({
         ...prev,
         [activeTab]: (prev[activeTab] || []).filter(term => term.id !== id)
+    }));
+  };
+
+  const handleAddTaxRate = () => {
+    if (newTaxRate.name.trim() && newTaxRate.rate.trim()) {
+        const newRate: TaxRate = {
+            id: crypto.randomUUID(),
+            name: newTaxRate.name,
+            rate: parseFloat(newTaxRate.rate)
+        };
+        dispatch({ type: 'ADD_TAX_RATE', payload: newRate });
+        setNewTaxRate({ name: '', rate: '' });
+    }
+  };
+
+  const handleDeleteTaxRate = (id: string) => {
+    dispatch({ type: 'DELETE_TAX_RATE', payload: id });
+  };
+
+  const handleAddCategory = () => {
+    if (newCategoryName.trim()) {
+        const newCategory = { id: crypto.randomUUID(), name: newCategoryName.trim() };
+        setSettings(prev => ({
+            ...prev,
+            inventoryCategories: [...(prev.inventoryCategories || []), newCategory]
+        }));
+        setNewCategoryName('');
+    }
+  };
+
+  const handleDeleteCategory = (id: string) => {
+    setSettings(prev => ({
+        ...prev,
+        inventoryCategories: (prev.inventoryCategories || []).filter(cat => cat.id !== id)
     }));
   };
 
@@ -146,54 +187,30 @@ const SettingsPage: React.FC = React.memo(() => {
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
         
-        <SettingsCard title="Company Profile" icon={<Building2 className="h-6 w-6 text-brand-blue" />}>
+        <SettingsCard title="Document Header" icon={<Image className="h-6 w-6 text-brand-blue" />}>
             <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Company Name</label>
-                <input type="text" name="name" id="name" value={settings.name} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                <p className="text-xs text-gray-500 mt-1">This name appears on all your documents, like invoices and quotes.</p>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Company Logo</label>
-                <div className="mt-2 flex items-center space-x-4">
-                    {settings.logo ? 
-                        <img src={settings.logo} alt="Company Logo" className="h-16 w-16 object-contain rounded-md bg-gray-100 p-1 border" /> 
-                        : <div className="h-16 w-16 bg-gray-100 rounded-md flex items-center justify-center text-xs text-gray-400">No Logo</div>
-                    }
-                    <input type="file" id="logo" onChange={handleLogoChange} accept="image/*" className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                <label className="block text-sm font-medium text-gray-700">Company Letterhead</label>
+                <div className="mt-2 flex flex-col space-y-4">
+                     <div className="w-full border-2 border-dashed rounded-lg p-4">
+                        {settings.headerSVG ? (
+                            <div dangerouslySetInnerHTML={{ __html: settings.headerSVG }} />
+                        ) : (
+                            <div className="text-center text-gray-400 py-8">Header Preview</div>
+                        )}
+                    </div>
+                    <input 
+                        type="file" 
+                        id="headerSVG" 
+                        onChange={handleHeaderChange} 
+                        accept=".svg, image/svg+xml" 
+                        className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Upload your company logo. It will be displayed on all printable documents.</p>
-            </div>
-            <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
-                <input type="text" name="address" id="address" value={settings.address} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                 <p className="text-xs text-gray-500 mt-1">Your company's physical address, shown on documents.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label htmlFor="phone1" className="block text-sm font-medium text-gray-700">Phone 1</label>
-                    <input type="text" name="phone1" id="phone1" value={settings.phone1} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                </div>
-                <div>
-                    <label htmlFor="phone2" className="block text-sm font-medium text-gray-700">Phone 2</label>
-                    <input type="text" name="phone2" id="phone2" value={settings.phone2} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                </div>
-            </div>
-            <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" name="email" id="email" value={settings.email} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                 <p className="text-xs text-gray-500 mt-1">The primary contact email for your business.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label htmlFor="tagline" className="block text-sm font-medium text-gray-700">Tagline</label>
-                    <input type="text" name="tagline" id="tagline" value={settings.tagline} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                    <p className="text-xs text-gray-500 mt-1">A short slogan for your business, shown under your logo.</p>
-                </div>
-                <div>
-                    <label htmlFor="services" className="block text-sm font-medium text-gray-700">Services</label>
-                    <input type="text" name="services" id="services" value={settings.services} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                    <p className="text-xs text-gray-500 mt-1">A brief list of services you offer (e.g., "Offset & Digital Printing").</p>
-                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                    Upload your company letterhead. This will appear at the top of all documents.
+                    <br />
+                    <strong>Recommended format:</strong> SVG. For best print results, use a landscape orientation (e.g., A4 width, 5-7cm height).
+                </p>
             </div>
         </SettingsCard>
         
@@ -236,7 +253,63 @@ const SettingsPage: React.FC = React.memo(() => {
                         <input id="signatureUpload" name="signatureUpload" type="file" className="sr-only" onChange={handleSignatureChange} accept="image/*" />
                     </label>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Upload an image of a signature to be automatically added to documents.</p>
+                <p className="text-xs text-gray-500 mt-1">Automatically add a signature to documents.<br/><strong>Recommended:</strong> PNG with transparent background, max 200KB.</p>
+            </div>
+        </SettingsCard>
+
+        <SettingsCard title="Taxes" icon={<Percent className="h-6 w-6 text-brand-blue" />}>
+            <p className="text-sm text-gray-600 -mt-4">Create and manage tax rates that can be applied to invoices, quotes, and purchase orders.</p>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                {(state.settings.taxRates || []).map(tax => (
+                    <div key={tax.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <p className="text-sm text-gray-800 flex-grow">{tax.name} ({tax.rate}%)</p>
+                        <button type="button" onClick={() => handleDeleteTaxRate(tax.id)} className="text-red-500 hover:text-red-700 p-1 ml-2 flex-shrink-0">
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+                <input 
+                    type="text"
+                    value={newTaxRate.name}
+                    onChange={(e) => setNewTaxRate({ ...newTaxRate, name: e.target.value })}
+                    placeholder="Tax Name (e.g., VAT)"
+                    className="flex-grow p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+                />
+                 <input 
+                    type="number"
+                    value={newTaxRate.rate}
+                    onChange={(e) => setNewTaxRate({ ...newTaxRate, rate: e.target.value })}
+                    placeholder="Rate %"
+                    className="w-24 p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+                    step="0.01"
+                />
+                <button type="button" onClick={handleAddTaxRate} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Add</button>
+            </div>
+        </SettingsCard>
+
+        <SettingsCard title="Inventory Categories" icon={<Package className="h-6 w-6 text-brand-blue" />}>
+            <p className="text-sm text-gray-600 -mt-4">Manage categories for your inventory items to keep them organized.</p>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                {(settings.inventoryCategories || []).map(cat => (
+                    <div key={cat.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                        <p className="text-sm text-gray-800 flex-grow">{cat.name}</p>
+                        <button type="button" onClick={() => handleDeleteCategory(cat.id)} className="text-red-500 hover:text-red-700 p-1 ml-2 flex-shrink-0">
+                            <Trash2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+                <input 
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="New category name"
+                    className="flex-grow p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+                />
+                <button type="button" onClick={handleAddCategory} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300">Add</button>
             </div>
         </SettingsCard>
         

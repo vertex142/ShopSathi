@@ -3,6 +3,7 @@ import type { Invoice } from '../types';
 import { useData } from '../context/DataContext';
 import { X, Printer } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface InvoicePreviewProps {
   invoice: Invoice;
@@ -42,43 +43,9 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
 
                 <div className="flex-grow overflow-y-auto bg-gray-100 p-8 printable-content">
                     <div className="bg-white shadow-lg p-10 relative printable-page" id={printableId}>
-                        {/* Screen-only Header */}
-                        <header className="flex justify-between items-start pb-6 mb-6 border-b non-printable">
-                            <div className="text-center">
-                                {settings.logo && (
-                                    <>
-                                        <img src={settings.logo} alt="Logo" className="h-20 w-auto max-w-[8rem] object-contain" />
-                                        <p className="text-sm text-gray-500 mt-2 max-w-[12rem] break-words">{settings.tagline}</p>
-                                    </>
-                                )}
-                            </div>
-                            <div className="text-right">
-                                <h2 className="text-3xl font-bold text-brand-blue">{settings.name}</h2>
-                                <p className="text-md text-gray-600 mt-2">{settings.address}</p>
-                                <p className="text-md text-gray-600">{settings.phone1}</p>
-                                {settings.phone2 && <p className="text-md text-gray-600">{settings.phone2}</p>}
-                                <p className="text-md text-gray-600">{settings.email}</p>
-                            </div>
-                        </header>
-
-                        {/* Print-only Header (repeats on each page) */}
-                        <div className="printable-header">
-                            <div className="text-center">
-                                {settings.logo && (
-                                    <>
-                                        <img src={settings.logo} alt="Logo" className="h-14 object-contain" />
-                                        <p className="text-[8pt] text-gray-600 mt-1 max-w-[15ch] leading-tight">{settings.tagline}</p>
-                                    </>
-                                )}
-                            </div>
-                            <div className="text-right text-[9pt]">
-                                <h2 className="text-xl font-bold text-brand-blue">{settings.name}</h2>
-                                <p className="leading-snug">{settings.address}</p>
-                                <p className="leading-snug">{settings.phone1}</p>
-                                {settings.phone2 && <p className="leading-snug">{settings.phone2}</p>}
-                                <p className="leading-snug">{settings.email}</p>
-                            </div>
-                        </div>
+                        
+                        {/* Unified Header for Screen and Print */}
+                        <div className="printable-header" dangerouslySetInnerHTML={{ __html: settings.headerSVG }} />
 
                         <div className="pb-8">
                              <div className="flex justify-between items-start mb-10">
@@ -116,8 +83,8 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                                 {item.description && <p className="mt-1 text-xs text-gray-500">{item.description}</p>}
                                                 </td>
                                                 <td className="py-4 px-4 text-center text-sm text-gray-700">{item.quantity}</td>
-                                                <td className="py-4 px-4 text-right text-sm text-gray-700">${item.rate.toFixed(2)}</td>
-                                                <td className="py-4 px-4 text-right text-sm font-medium text-gray-900">${(item.quantity * item.rate).toFixed(2)}</td>
+                                                <td className="py-4 px-4 text-right text-sm text-gray-700">{formatCurrency(item.rate)}</td>
+                                                <td className="py-4 px-4 text-right text-sm font-medium text-gray-900">{formatCurrency(item.quantity * item.rate)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -140,7 +107,7 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                                 <tr key={p.id} className="border-b">
                                                     <td className="py-2 px-3 text-gray-700">{p.date}</td>
                                                     <td className="py-2 px-3 text-gray-700">{p.method}</td>
-                                                    <td className="py-2 px-3 text-right text-gray-700">${p.amount.toFixed(2)}</td>
+                                                    <td className="py-2 px-3 text-right text-gray-700">{formatCurrency(p.amount)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -152,27 +119,27 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                 <div className="w-full max-w-sm bg-gray-50 p-4 rounded-lg space-y-3 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Subtotal:</span>
-                                        <span className="text-gray-800 font-medium">${subtotal.toFixed(2)}</span>
+                                        <span className="text-gray-800 font-medium">{formatCurrency(subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Previous Due:</span>
-                                        <span className="text-gray-800 font-medium">${previousDue.toFixed(2)}</span>
+                                        <span className="text-gray-800 font-medium">{formatCurrency(previousDue)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Discount:</span>
-                                        <span className="text-red-600 font-medium">-${discount.toFixed(2)}</span>
+                                        <span className="text-red-600 font-medium">-{formatCurrency(discount)}</span>
                                     </div>
                                     <div className="flex justify-between pt-2 border-t">
                                         <span className="font-semibold text-gray-800">Grand Total:</span>
-                                        <span className="font-semibold text-gray-800">${grandTotal.toFixed(2)}</span>
+                                        <span className="font-semibold text-gray-800">{formatCurrency(grandTotal)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Amount Paid:</span>
-                                        <span className="text-green-600 font-medium">-${totalPaid.toFixed(2)}</span>
+                                        <span className="text-green-600 font-medium">-{formatCurrency(totalPaid)}</span>
                                     </div>
                                     <div className="flex justify-between py-3 px-4 bg-gray-200 rounded-lg mt-2 -mx-4 -mb-4">
                                         <span className="text-base font-bold text-gray-900">Balance Due:</span>
-                                        <span className="text-base font-bold text-gray-900">${balanceDue.toFixed(2)}</span>
+                                        <span className="text-base font-bold text-gray-900">{formatCurrency(balanceDue)}</span>
                                     </div>
                                 </div>
                             </section>
@@ -186,13 +153,19 @@ const InvoicePreview: React.FC<InvoicePreviewProps> = ({ invoice, onClose }) => 
                                         </ul>
                                     </div>
                                 )}
-                                <div className="flex justify-between items-end">
+                                <div className="mb-24">
                                     <p className="text-xs text-gray-500 max-w-xs">{settings.footerText}</p>
+                                </div>
+                                <div className="flex justify-between items-end">
+                                    <div className="text-center">
+                                        <div className="pt-8 w-48 h-16"></div>
+                                        <p className="border-t w-48 font-semibold pt-1 mt-1">{settings.preparedByLabel}</p>
+                                    </div>
                                     <div className="text-center">
                                         {settings.authorizedSignatureImage ? (
-                                            <img src={settings.authorizedSignatureImage} alt="Signature" className="h-16 mx-auto" />
+                                            <img src={settings.authorizedSignatureImage} alt="Signature" className="h-16 object-contain mx-auto" />
                                         ) : (
-                                            <div className="pt-8 w-48"></div>
+                                            <div className="pt-8 w-48 h-16"></div>
                                         )}
                                         <p className="border-t w-48 font-semibold pt-1 mt-1">{settings.authorizedSignatureLabel}</p>
                                     </div>

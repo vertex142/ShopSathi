@@ -80,14 +80,14 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
       <div className="lg:col-span-2 space-y-8">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           <div className="xl:col-span-2">
-            <GreetingCard companyName={state.settings.name} />
+            <GreetingCard />
           </div>
           <div className="xl:col-span-1">
             <QuickActions setCurrentPage={setCurrentPage} />
           </div>
         </div>
         
-        {process.env.API_KEY && <AIActions />}
+        {process.env.GEMINI_API_KEY && <AIActions />}
 
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Last 6 Months Overview</h2>

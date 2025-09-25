@@ -153,11 +153,11 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
     // FIX: Add a check for the customer existing and return JSX.
     if (!customer) {
         return (
-            <div className="text-center">
+            <div className="text-center p-8">
                 <h2 className="text-2xl font-bold text-red-600">Customer not found</h2>
                 <button onClick={onBack} className="mt-4 flex items-center justify-center mx-auto bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Go Back
+                    Go Back To Customers
                 </button>
             </div>
         );
@@ -306,8 +306,11 @@ const CustomerProfilePage: React.FC<CustomerProfilePageProps> = React.memo(({ cu
                    )}
                    {activeTab === 'ledger' && (
                        <div id="customer-ledger-content" className="printable-page">
+                           {/* Unified Header for Screen and Print */}
+                           <div className="printable-header" dangerouslySetInnerHTML={{ __html: state.settings.headerSVG }} />
+                           
                            <div className="flex justify-between items-center mb-4">
-                               <h3 className="text-xl font-semibold text-gray-800">Customer Ledger</h3>
+                               <h3 className="text-xl font-semibold text-gray-800">Customer Ledger: {customer.name}</h3>
                                <button onClick={handlePrintLedger} disabled={isPrinting} className="flex items-center bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-50 non-printable">
                                    {isPrinting ? <LoaderCircle className="h-4 w-4 mr-2 animate-spin" /> : <Printer className="h-4 w-4 mr-2" />}
                                    Print Ledger

@@ -33,42 +33,8 @@ const DeliveryChallanPreview: React.FC<DeliveryChallanPreviewProps> = ({ challan
 
                  <div className="flex-grow overflow-y-auto bg-gray-100 p-8 printable-content">
                      <div className="bg-white shadow-lg p-10 relative printable-page" id={printableId}>
-                        {/* Screen-only Header */}
-                        <header className="flex justify-between items-start pb-6 mb-6 border-b non-printable">
-                            <div className="text-center">
-                                {settings.logo && (
-                                    <>
-                                        <img src={settings.logo} alt="Logo" className="h-20 w-auto max-w-[8rem] object-contain" />
-                                        <p className="text-sm text-gray-500 mt-2 max-w-[12rem] break-words">{settings.tagline}</p>
-                                    </>
-                                )}
-                            </div>
-                            <div className="text-right">
-                                <h2 className="text-3xl font-bold text-brand-blue">{settings.name}</h2>
-                                <p className="text-md text-gray-600 mt-2">{settings.address}</p>
-                                <p className="text-md text-gray-600">{settings.phone1}</p>
-                                {settings.phone2 && <p className="text-md text-gray-600">{settings.phone2}</p>}
-                                <p className="text-md text-gray-600">{settings.email}</p>
-                            </div>
-                        </header>
-                        {/* Print-only Header (repeats on each page) */}
-                        <div className="printable-header">
-                           <div className="text-center">
-                                {settings.logo && (
-                                    <>
-                                        <img src={settings.logo} alt="Logo" className="h-14 object-contain" />
-                                        <p className="text-[8pt] text-gray-600 mt-1 max-w-[15ch] leading-tight">{settings.tagline}</p>
-                                    </>
-                                )}
-                            </div>
-                            <div className="text-right text-[9pt]">
-                                <h2 className="text-xl font-bold text-brand-blue">{settings.name}</h2>
-                                <p className="leading-snug">{settings.address}</p>
-                                <p className="leading-snug">{settings.phone1}</p>
-                                {settings.phone2 && <p className="leading-snug">{settings.phone2}</p>}
-                                <p className="leading-snug">{settings.email}</p>
-                            </div>
-                        </div>
+                        {/* Unified Header for Screen and Print */}
+                        <div className="printable-header" dangerouslySetInnerHTML={{ __html: settings.headerSVG }} />
 
                         <div className="pb-8">
                             <div className="flex justify-between items-start mb-10">

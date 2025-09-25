@@ -1,13 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 
-if (!process.env.API_KEY) {
-    console.warn("API_KEY environment variable not set. AI features will be disabled.");
+if (!process.env.GEMINI_API_KEY) {
+    console.warn("GEMINI_API_KEY environment variable not set. AI features will be disabled.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 export const enhanceDescription = async (description: string): Promise<string> => {
-    if (!process.env.API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
         return Promise.reject(new Error("API key not configured."));
     }
     try {
@@ -27,7 +27,7 @@ export const enhanceDescription = async (description: string): Promise<string> =
 };
 
 export const analyzeImageWithPrompt = async (base64Image: string, mimeType: string, prompt: string): Promise<string> => {
-    if (!process.env.API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
         return Promise.reject(new Error("API key not configured."));
     }
     try {
@@ -55,7 +55,7 @@ export const analyzeImageWithPrompt = async (base64Image: string, mimeType: stri
 
 
 export const generateActionableInsight = async (prompt: string, context: object): Promise<string> => {
-     if (!process.env.API_KEY) {
+     if (!process.env.GEMINI_API_KEY) {
         return Promise.reject(new Error("API key not configured."));
     }
     try {
@@ -83,7 +83,7 @@ export const generateActionableInsight = async (prompt: string, context: object)
 
 // FIX: Add suggestChatReply function to provide AI-powered chat suggestions.
 export const suggestChatReply = async (chatHistory: string, companyName: string): Promise<string> => {
-    if (!process.env.API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
         return Promise.reject(new Error("API key not configured."));
     }
     try {

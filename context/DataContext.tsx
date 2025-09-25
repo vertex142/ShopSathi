@@ -1,41 +1,28 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
-// FIX: Import ChatMessage and ChatConversation types.
-import { AppState, Action, CompanySettings, AccountType, InvoiceStatus, JobStatus, QuoteStatus, DeliveryChallanItem, PurchaseOrderStatus, PurchaseOrder, JobOrder, Payment, JournalEntry, Expense, Invoice, Quote, DeliveryChallan, JournalEntryItem, ChatConversation, ChatMessage } from '../types';
+import { AppState, Action, CompanySettings, AccountType, InvoiceStatus, JobStatus, QuoteStatus, DeliveryChallanItem, PurchaseOrderStatus, PurchaseOrder, JobOrder, Payment, JournalEntry, Expense, Invoice, Quote, DeliveryChallan, JournalEntryItem, ChatConversation, ChatMessage, RecurringInvoice, RecurringInvoiceFrequency, CreditNote, CreditNoteStatus, Account } from '../types';
 import { generateNotifications } from '../utils/notificationGenerator';
 import { generateNextDocumentNumber } from '../utils/documentNumber';
 
 const defaultSettings: CompanySettings = {
-    name: 'Your Company Name',
-    logo: '',
-    address: '',
-    phone1: '',
-    phone2: '',
-    email: '',
-    tagline: '',
-    services: '',
+    name: 'Your Company Name Here',
+    headerSVG: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 841.89 238.11"><text transform="translate(0 100)" style="font-size:90px;font-family:Arial, sans-serif;font-weight:bold;fill:#004a99;">YOUR LOGO</text><text transform="translate(0 150)" style="font-size:24px;font-family:Arial, sans-serif;fill:#333;">Your Company Name Here</text><text transform="translate(500 150)" style="font-size:18px;font-family:Arial, sans-serif;fill:#333;text-anchor:end;">123 Business Rd, City, State</text><text transform="translate(500 175)" style="font-size:18px;font-family:Arial, sans-serif;fill:#333;text-anchor:end;">(123) 456-7890 | email@example.com</text></svg>`,
     footerText: 'Thank you for your business!',
     invoiceTerms: [
         { id: crypto.randomUUID(), text: 'Payment is due within 30 days of the invoice date.' },
         { id: crypto.randomUUID(), text: 'A late fee of 1.5% per month will be charged on overdue invoices.' },
-        { id: crypto.randomUUID(), text: 'All goods remain the property of the seller until paid for in full.' },
-        { id: crypto.randomUUID(), text: 'Please inspect all goods upon delivery. Claims for shortages or damages must be made within 48 hours.' },
     ],
     quoteTerms: [
         { id: crypto.randomUUID(), text: 'This quotation is valid for 30 days from the date of issue.' },
-        { id: crypto.randomUUID(), text: 'Prices are subject to change based on final artwork and material costs.' },
-        { id: crypto.randomUUID(), text: 'A 50% deposit is required to commence work, with the balance due upon completion.' },
-        { id: crypto.randomUUID(), text: 'Any changes to the original specifications may result in additional charges.' },
     ],
     purchaseOrderTerms: [
         { id: crypto.randomUUID(), text: 'Delivery is expected on or before the date specified on this purchase order.' },
-        { id: crypto.randomUUID(), text: 'Supplier must notify us immediately of any potential delays or issues with fulfilling this order.' },
-        { id: crypto.randomUUID(), text: 'All delivered goods must meet the specifications and quality standards outlined.' },
-        { id: crypto.randomUUID(), text: 'Payment will be made within 30 days of receiving a correct invoice and satisfactory delivery of goods.' },
     ],
     preparedByLabel: 'Prepared By',
     authorizedSignatureLabel: 'Authorized Signature',
     authorizedSignatureImage: '',
+    taxRates: [],
+    inventoryCategories: [],
 };
 
 const initialAccounts = [
@@ -43,6 +30,7 @@ const initialAccounts = [
     { id: 'asset-ar', name: 'Accounts Receivable', type: AccountType.Asset, balance: 0, openingBalance: 0, isSystemAccount: true },
     { id: 'asset-inventory', name: 'Inventory', type: AccountType.Asset, balance: 0, openingBalance: 0, isSystemAccount: true },
     { id: 'liability-ap', name: 'Accounts Payable', type: AccountType.Liability, balance: 0, openingBalance: 0, isSystemAccount: true },
+    { id: 'liability-tax', name: 'Tax Payable', type: AccountType.Liability, balance: 0, openingBalance: 0, isSystemAccount: true },
     { id: 'equity-owner', name: "Owner's Equity", type: AccountType.Equity, balance: 0, openingBalance: 0, isSystemAccount: true },
     { id: 'revenue-sales', name: 'Sales Revenue', type: AccountType.Revenue, balance: 0, openingBalance: 0, isSystemAccount: true },
     { id: 'expense-cogs', name: 'Cost of Goods Sold', type: AccountType.Expense, balance: 0, openingBalance: 0, isSystemAccount: true },
@@ -51,8 +39,7 @@ const initialAccounts = [
 const initialState: AppState = {
   customers: [], suppliers: [], invoices: [], quotes: [], jobOrders: [], expenses: [],
   inventoryItems: [], deliveryChallans: [], purchaseOrders: [], accounts: initialAccounts,
-  // FIX: Add chatConversations to initial state.
-  journalEntries: [], notifications: [], chatConversations: [], settings: defaultSettings,
+  journalEntries: [], notifications: [], recurringInvoices: [], chatConversations: [], creditNotes: [], settings: defaultSettings,
 };
 
 const dataReducer = (state: AppState, action: Action): AppState => {
@@ -83,7 +70,7 @@ const dataReducer = (state: AppState, action: Action): AppState => {
           if (inv.id === invoiceId) {
               const newPayments = [...(inv.payments || []), payment];
               const subtotal = inv.items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
-              const grandTotal = subtotal + (inv.previousDue || 0) - (inv.discount || 0);
+              const grandTotal = subtotal + (inv.previousDue || 0) - (inv.discount || 0) + (inv.taxAmount || 0);
               const totalPaid = newPayments.reduce((acc, p) => acc + p.amount, 0);
 
               let newStatus = inv.status;
@@ -130,14 +117,14 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         const updatedInvoices = [...state.invoices];
 
         const dueInvoices = updatedInvoices
-            .filter(inv => inv.customerId === customerId && inv.status !== InvoiceStatus.Paid && inv.status !== InvoiceStatus.Draft)
+            .filter(inv => inv.customerId === customerId && inv.status !== InvoiceStatus.Paid && inv.status !== InvoiceStatus.Draft && inv.status !== InvoiceStatus.Credited)
             .sort((a, b) => new Date(a.issueDate).getTime() - new Date(b.issueDate).getTime());
 
         for (const invoice of dueInvoices) {
             if (remainingPayment <= 0) break;
 
             const subtotal = invoice.items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
-            const grandTotal = subtotal + (invoice.previousDue || 0) - (invoice.discount || 0);
+            const grandTotal = subtotal + (invoice.previousDue || 0) - (invoice.discount || 0) + (invoice.taxAmount || 0);
             const totalPaid = (invoice.payments || []).reduce((acc, p) => acc + p.amount, 0);
             const balanceDue = grandTotal - totalPaid;
 
@@ -197,7 +184,7 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         for (const po of duePOs) {
             if (remainingPayment <= 0) break;
 
-            const grandTotal = po.items.reduce((acc, item) => acc + item.quantity * item.unitCost, 0);
+            const grandTotal = po.items.reduce((acc, item) => acc + item.quantity * item.unitCost, 0) + (po.taxAmount || 0);
             const totalPaid = (po.payments || []).reduce((acc, p) => acc + p.amount, 0);
             const balanceDue = grandTotal - totalPaid;
 
@@ -392,14 +379,18 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         };
     }
 
-    // --- SETTINGS ---
+    // --- SETTINGS & TAX ---
     case 'UPDATE_SETTINGS':
       return { ...state, settings: action.payload };
+    case 'ADD_TAX_RATE':
+      return { ...state, settings: { ...state.settings, taxRates: [...state.settings.taxRates, action.payload] }};
+    case 'UPDATE_TAX_RATE':
+      return { ...state, settings: { ...state.settings, taxRates: state.settings.taxRates.map(t => t.id === action.payload.id ? action.payload : t) }};
+    case 'DELETE_TAX_RATE':
+      return { ...state, settings: { ...state.settings, taxRates: state.settings.taxRates.filter(t => t.id !== action.payload) }};
     case 'IMPORT_DATA':
-        // A simple overwrite. A more robust importer would validate the data.
         return { ...initialState, ...action.payload };
     case 'RESET_APP':
-        // Here we could clear localStorage too, but useLocalStorage hook handles it.
         return initialState;
 
     // --- SUPPLIERS ---
@@ -475,14 +466,9 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         
     // --- ACCOUNTS ---
     case 'ADD_ACCOUNT': {
-        const newAccountPayload = action.payload;
-        const newAccount = { 
-            ...newAccountPayload, 
-            id: crypto.randomUUID(), 
-            balance: 0, // Transactional balance starts at 0
-            openingBalance: newAccountPayload.openingBalance || 0 
-        };
-        return { ...state, accounts: [...state.accounts, newAccount] };
+      // Payload is now expected to be a full Account object
+      const newAccount = action.payload as Account;
+      return { ...state, accounts: [...state.accounts, newAccount] };
     }
     case 'UPDATE_ACCOUNT': {
         const updatedAccountPayload = action.payload;
@@ -514,7 +500,7 @@ const dataReducer = (state: AppState, action: Action): AppState => {
             accounts: accountsForAdd,
         };
     }
-    case 'UPDATE_JOURNAL_ENTRY': // Manual updates are complex, typically handled by reversing and re-posting.
+    case 'UPDATE_JOURNAL_ENTRY':
         return state;
     case 'DELETE_JOURNAL_ENTRY': {
         const entryToDelete = state.journalEntries.find(je => je.id === action.payload);
@@ -523,7 +509,6 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         entryToDelete.items.forEach((item: JournalEntryItem) => {
              accountsForDelete = accountsForDelete.map(acc => {
                 if (acc.id === item.accountId) {
-                    // Reverse the entry
                     return { ...acc, balance: acc.balance - item.debit + item.credit };
                 }
                 return acc;
@@ -536,6 +521,47 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         };
     }
 
+    // --- CREDIT NOTES ---
+    case 'ADD_CREDIT_NOTE': {
+        const newCreditNote: CreditNote = { ...action.payload, id: crypto.randomUUID() };
+        
+        // Create reversing journal entry
+        const reversalJournalEntry: JournalEntry = {
+            id: crypto.randomUUID(),
+            date: newCreditNote.issueDate,
+            memo: `Credit Note #${newCreditNote.creditNoteNumber} for Invoice #${state.invoices.find(i => i.id === newCreditNote.originalInvoiceId)?.invoiceNumber}`,
+            items: [
+                { id: crypto.randomUUID(), accountId: 'revenue-sales', debit: newCreditNote.subtotal, credit: 0 },
+                { id: crypto.randomUUID(), accountId: 'liability-tax', debit: newCreditNote.taxAmount, credit: 0 },
+                { id: crypto.randomUUID(), accountId: 'asset-ar', debit: 0, credit: newCreditNote.total },
+            ]
+        };
+
+        // Update account balances
+        const updatedAccounts = state.accounts.map(acc => {
+            if (acc.id === 'revenue-sales') return { ...acc, balance: acc.balance - newCreditNote.subtotal };
+            if (acc.id === 'liability-tax') return { ...acc, balance: acc.balance - newCreditNote.taxAmount };
+            if (acc.id === 'asset-ar') return { ...acc, balance: acc.balance - newCreditNote.total };
+            return acc;
+        });
+
+        // Update original invoice status
+        const updatedInvoices = state.invoices.map(inv => inv.id === newCreditNote.originalInvoiceId ? { ...inv, status: InvoiceStatus.Credited } : inv);
+
+        return {
+            ...state,
+            creditNotes: [...state.creditNotes, newCreditNote],
+            invoices: updatedInvoices,
+            accounts: updatedAccounts,
+            journalEntries: [...state.journalEntries, reversalJournalEntry]
+        };
+    }
+    case 'UPDATE_CREDIT_NOTE':
+         return { ...state, creditNotes: state.creditNotes.map(cn => cn.id === action.payload.id ? action.payload : cn) };
+    case 'DELETE_CREDIT_NOTE':
+        // Deleting finalized credit notes is complex; not implemented to prevent accounting issues.
+        return { ...state, creditNotes: state.creditNotes.filter(cn => cn.id !== action.payload && cn.status === CreditNoteStatus.Draft) };
+
     // --- NOTIFICATIONS ---
     case 'ADD_NOTIFICATIONS':
         const newNotifications = action.payload.filter((newNotif: any) => 
@@ -544,6 +570,15 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         return { ...state, notifications: [...state.notifications, ...newNotifications] };
     case 'MARK_ALL_NOTIFICATIONS_AS_READ':
         return { ...state, notifications: state.notifications.map(n => ({...n, read: true})) };
+
+    // --- RECURRING INVOICES ---
+    case 'ADD_RECURRING_INVOICE':
+      return { ...state, recurringInvoices: [...state.recurringInvoices, { ...action.payload, id: crypto.randomUUID() }] };
+    case 'UPDATE_RECURRING_INVOICE':
+      return { ...state, recurringInvoices: state.recurringInvoices.map(ri => ri.id === action.payload.id ? action.payload : ri) };
+    case 'DELETE_RECURRING_INVOICE':
+      return { ...state, recurringInvoices: state.recurringInvoices.filter(ri => ri.id !== action.payload) };
+
 
     // --- CONVERSIONS ---
     case 'CONVERT_QUOTE_TO_JOB': {
@@ -557,11 +592,11 @@ const dataReducer = (state: AppState, action: Action): AppState => {
             dueDate: '',
             status: JobStatus.Pending,
             description: quote.items.map(i => i.name).join(', '),
-            quantity: 1, // Default quantity, user should edit
+            quantity: 1,
             paperType: '',
             size: '',
             finishing: '',
-            price: quote.items.reduce((sum, item) => sum + item.quantity * item.rate, 0) - (quote.discount || 0),
+            price: quote.items.reduce((sum, item) => sum + item.quantity * item.rate, 0) - (quote.discount || 0) + (quote.taxAmount || 0),
             notes: `Converted from Quote #${quote.quoteNumber}. \n\nOriginal notes: ${quote.notes}`,
             materialsUsed: [],
             inventoryConsumed: false,
@@ -588,9 +623,11 @@ const dataReducer = (state: AppState, action: Action): AppState => {
             status: InvoiceStatus.Draft,
             notes: `Converted from Quote #${quote.quoteNumber}. \n\nOriginal notes: ${quote.notes}`,
             payments: [],
-            previousDue: 0, // Should be calculated
+            previousDue: 0,
             discount: quote.discount,
             selectedTerms: quote.selectedTerms,
+            taxId: quote.taxId,
+            taxAmount: quote.taxAmount,
         };
         const newInvoiceId = crypto.randomUUID();
         const updatedQuote: Quote = { ...quote, status: QuoteStatus.Converted, convertedToInvoiceId: newInvoiceId };
@@ -629,8 +666,6 @@ const dataReducer = (state: AppState, action: Action): AppState => {
         };
     }
 
-    // FIX: Add reducer cases for chat functionality.
-    // --- CHAT ---
     case 'SEND_CHAT_MESSAGE': {
         const { customerId, text, author } = action.payload;
         const existingConversation = state.chatConversations.find(c => c.id === customerId);
@@ -681,6 +716,7 @@ const DataContext = createContext<{ state: AppState; dispatch: React.Dispatch<Ac
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [storedState, setStoredState] = useLocalStorage<AppState>('shopSathiData', initialState);
+  const [lastCheck, setLastCheck] = useLocalStorage<number>('recurringInvoiceLastCheck', 0);
 
   const [state, dispatch] = useReducer(dataReducer, storedState);
   
@@ -694,6 +730,72 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           dispatch({ type: 'ADD_NOTIFICATIONS', payload: newNotifications });
       }
   }, [state.invoices, state.inventoryItems]);
+
+  useEffect(() => {
+    const now = new Date();
+    const lastCheckDate = new Date(lastCheck);
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    now.setHours(0,0,0,0);
+    lastCheckDate.setHours(0,0,0,0);
+
+    if (now.getTime() <= lastCheckDate.getTime()) {
+        return;
+    }
+    
+    state.recurringInvoices.forEach(profile => {
+        if (!profile.isActive) return;
+
+        let lastIssue = new Date(profile.lastIssueDate);
+        let nextIssueDate = new Date(lastIssue);
+
+        do {
+             switch (profile.frequency) {
+                case RecurringInvoiceFrequency.Daily: nextIssueDate.setDate(nextIssueDate.getDate() + 1); break;
+                case RecurringInvoiceFrequency.Weekly: nextIssueDate.setDate(nextIssueDate.getDate() + 7); break;
+                case RecurringInvoiceFrequency.Monthly: nextIssueDate.setMonth(nextIssueDate.getMonth() + 1); break;
+                case RecurringInvoiceFrequency.Yearly: nextIssueDate.setFullYear(nextIssueDate.getFullYear() + 1); break;
+            }
+            
+            const profileEndDate = profile.endDate ? new Date(profile.endDate) : null;
+            if (profileEndDate && nextIssueDate > profileEndDate) {
+                break; // Stop if next date is past the end date
+            }
+
+            if (now >= nextIssueDate) {
+                const issueDateStr = nextIssueDate.toISOString().split('T')[0];
+                const dueDate = new Date(nextIssueDate);
+                dueDate.setDate(dueDate.getDate() + 30); // Default due date 30 days later
+                const dueDateStr = dueDate.toISOString().split('T')[0];
+
+                const newInvoice: Omit<Invoice, 'id'> = {
+                    invoiceNumber: generateNextDocumentNumber(state.invoices, 'invoiceNumber', 'INV-'),
+                    customerId: profile.customerId,
+                    issueDate: issueDateStr,
+                    dueDate: dueDateStr,
+                    items: profile.items.map(item => ({...item, id: crypto.randomUUID()})),
+                    status: InvoiceStatus.Draft,
+                    notes: profile.notes,
+                    payments: [],
+                    previousDue: 0,
+                    discount: profile.discount,
+                    selectedTerms: profile.selectedTerms,
+                };
+                
+                dispatch({ type: 'ADD_INVOICE', payload: newInvoice });
+
+                const updatedProfile = { ...profile, lastIssueDate: issueDateStr };
+                dispatch({ type: 'UPDATE_RECURRING_INVOICE', payload: updatedProfile });
+                
+                lastIssue = nextIssueDate;
+            }
+
+        } while(now >= nextIssueDate)
+    });
+
+    setLastCheck(now.getTime());
+  }, []);
+
 
   return (
     <DataContext.Provider value={{ state, dispatch }}>

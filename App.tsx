@@ -26,6 +26,8 @@ const PurchaseOrdersPage = lazy(() => import('./pages/PurchaseOrdersPage'));
 const AccountsPage = lazy(() => import('./pages/AccountsPage'));
 const JournalEntriesPage = lazy(() => import('./pages/JournalEntriesPage'));
 const UserManualPage = lazy(() => import('./pages/UserManualPage'));
+const RecurringInvoicesPage = lazy(() => import('./pages/RecurringInvoicesPage'));
+const CreditNotesPage = lazy(() => import('./pages/CreditNotesPage'));
 
 
 const App: React.FC = () => {
@@ -68,6 +70,10 @@ const App: React.FC = () => {
         return <DashboardPage setCurrentPage={handleSetCurrentPage} />;
       case 'invoices':
         return <InvoicesPage onViewCustomer={handleViewCustomer} />;
+      case 'recurringInvoices':
+        return <RecurringInvoicesPage onViewCustomer={handleViewCustomer} />;
+      case 'creditNotes':
+        return <CreditNotesPage onViewCustomer={handleViewCustomer} />;
       case 'quotes':
         return <QuotesPage onViewCustomer={handleViewCustomer} />;
       case 'deliveryChallans':
@@ -151,7 +157,7 @@ const App: React.FC = () => {
             </Suspense>
         </div>
       </main>
-      {process.env.API_KEY && <AIAssistant />}
+      {process.env.GEMINI_API_KEY && <AIAssistant />}
     </div>
   );
 };

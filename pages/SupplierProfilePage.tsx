@@ -4,6 +4,7 @@ import { PurchaseOrder, Payment, PurchaseOrderStatus } from '../types';
 import StatCard from '../components/StatCard';
 import MakePaymentModal from '../components/MakePaymentModal';
 import { ArrowLeft, CircleDollarSign, Receipt, TrendingDown } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
 
 interface SupplierProfilePageProps {
   supplierId: string;
@@ -91,9 +92,9 @@ const SupplierProfilePage: React.FC<SupplierProfilePageProps> = React.memo(({ su
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard title="Total Ordered" value={`$${supplierStats.totalOrdered.toFixed(2)}`} IconComponent={CircleDollarSign} color="blue" />
-            <StatCard title="Total Paid" value={`$${supplierStats.totalPaid.toFixed(2)}`} IconComponent={Receipt} color="green" />
-            <StatCard title="Current Due" value={`$${supplierStats.totalDue.toFixed(2)}`} IconComponent={TrendingDown} color="red" />
+            <StatCard title="Total Ordered" value={formatCurrency(supplierStats.totalOrdered)} IconComponent={CircleDollarSign} color="blue" />
+            <StatCard title="Total Paid" value={formatCurrency(supplierStats.totalPaid)} IconComponent={Receipt} color="green" />
+            <StatCard title="Current Due" value={formatCurrency(supplierStats.totalDue)} IconComponent={TrendingDown} color="red" />
         </div>
         
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -116,9 +117,9 @@ const SupplierProfilePage: React.FC<SupplierProfilePageProps> = React.memo(({ su
                                 <tr key={po.id}>
                                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{po.poNumber}</td>
                                     <td className="px-6 py-4 text-sm text-gray-500">{po.orderDate}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">${grandTotal.toFixed(2)}</td>
-                                    <td className="px-6 py-4 text-sm text-green-600">${totalPaid.toFixed(2)}</td>
-                                    <td className="px-6 py-4 text-sm font-semibold text-red-600">${balanceDue.toFixed(2)}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-500">{formatCurrency(grandTotal)}</td>
+                                    <td className="px-6 py-4 text-sm text-green-600">{formatCurrency(totalPaid)}</td>
+                                    <td className="px-6 py-4 text-sm font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
                                     <td className="px-6 py-4 text-sm">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPOStatusColor(po.status)}`}>{po.status}</span>
                                     </td>

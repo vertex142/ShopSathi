@@ -58,6 +58,10 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+        if (file.size > 2 * 1024 * 1024) { // 2MB limit
+            alert("File is too large. Please upload an image under 2MB.");
+            return;
+        }
         const reader = new FileReader();
         reader.onload = (event) => {
             const base64String = (event.target?.result as string).split(',')[1];
@@ -213,7 +217,7 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                   <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={5} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
                   <p className="text-xs text-gray-500 mt-1">Provide detailed requirements for the job.</p>
                 </div>
-                {process.env.API_KEY && (
+                {process.env.GEMINI_API_KEY && (
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">Customer Design</label>
                         {formData.designImage ? (
@@ -230,6 +234,11 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                                 <input id="image-upload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                             </label>
                         )}
+                        <p className="text-xs text-gray-500 mt-1">
+                            For internal reference and AI analysis.
+                            <br />
+                            <strong>Formats:</strong> JPG, PNG, GIF. <strong>Max Size:</strong> 2MB.
+                        </p>
                         <div className="flex space-x-2">
                             <button type="button" onClick={() => handleAiAnalysis("Analyze the primary colors in this design and list them with hex codes.")} disabled={!formData.designImage || isAnalyzing} className="text-xs flex items-center p-2 border rounded-md hover:bg-gray-100 disabled:opacity-50" title="Use AI to analyze the design and suggest primary colors with hex codes.">
                                 {isAnalyzing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Palette className="h-4 w-4 mr-1"/>} Analyze Colors

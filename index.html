@@ -25,111 +25,45 @@
       .printable-footer {
         display: none;
       }
+      
+      /* --- NEW SVG HEADER STYLES --- */
+      .printable-header {
+        width: 100%;
+        margin-bottom: 1.5rem;
+      }
+      .printable-header svg {
+        width: 100%;
+        height: auto;
+        max-height: 150px; /* Prevent oversized headers on screen */
+      }
+      
+      /* --- STYLES FOR PDF EXPORT VIA html2canvas --- */
+      body.pdf-export-active .non-printable { display: none !important; }
+      body.pdf-export-active .printable-header,
+      body.pdf-export-active .printable-footer { display: flex !important; position: static !important; width: 100%; box-sizing: border-box; }
+      body.pdf-export-active .printable-header { justify-content: flex-start; align-items: flex-start; padding-bottom: 0; margin-bottom: 1.5rem; border-bottom: none; }
+      body.pdf-export-active .printable-footer { padding-top: 1rem; margin-top: 1rem; border-top: 1px solid #ddd; align-items: center; justify-content: space-between; }
+      body.pdf-export-active .printable-footer-center { display: none; }
 
-      /* --- PRINT STYLES --- */
+      /* --- PRINT STYLES (for browser's File > Print) --- */
       @media print {
-        @page {
-          size: A4;
-          margin: 20mm 15mm 15mm 15mm;
-        }
-
-        html, body {
-          background-color: #fff !important;
-          -webkit-print-color-adjust: exact !important;
-          color-adjust: exact !important;
-          font-size: 10pt;
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-          counter-reset: page;
-          padding: 0;
-          margin: 0;
-        }
-
-        /* Hide all non-essential UI */
-        .non-printable, #root > div > div:first-child, #root > div > main > header, #root > .fixed.bottom-6.right-6 {
-          display: none !important;
-        }
-
-        /* Reset layout for printable content */
-        main, .printable-container, .printable-document, .flex-grow.overflow-y-auto, .printable-content {
-          position: static !important;
-          display: block !important;
-          width: 100% !important;
-          height: auto !important;
-          max-height: none !important;
-          overflow: visible !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          box-shadow: none !important;
-          border: none !important;
-          border-radius: 0 !important;
-          background: none !important;
-        }
-
-        .printable-page {
-          page-break-after: always;
-        }
-        .printable-page:last-child {
-          page-break-after: auto;
-        }
-        
-        .printable-header, .printable-footer {
-          position: fixed;
-          left: 15mm;
-          right: 15mm;
-          width: calc(210mm - 30mm); /* A4 width minus L/R margins */
-          display: flex !important;
-          justify-content: space-between;
-          align-items: flex-start;
-          box-sizing: border-box;
-        }
-
-        .printable-header {
-            top: 0;
-            height: 20mm;
-            padding-top: 0; /* Let margin handle positioning */
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .printable-footer {
-            bottom: 0;
-            height: 15mm;
-            padding-bottom: 0; /* Let margin handle positioning */
-            border-top: 1px solid #ddd;
-            font-size: 9pt;
-            color: #555;
-            align-items: center;
-        }
-
-        /* The main document content needs space to avoid the fixed header/footer. This is handled by @page margin */
-
-        .printable-footer-center {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .printable-footer-center::after {
-            content: "Page " counter(page);
-            counter-increment: page;
-        }
-        
-        thead {
-           display: table-header-group !important;
-        }
-        
-        tfoot {
-            display: table-footer-group !important;
-        }
-        
-        table, tr, td, th, img, .avoid-break {
-            page-break-inside: avoid;
-        }
-         h1, h2, h3, h4 {
-            page-break-after: avoid;
-        }
+        @page { size: A4; margin: 15mm 15mm 15mm 15mm; }
+        html, body { background-color: #fff !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important; font-size: 10pt; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { counter-reset: page; padding: 0; margin: 0; }
+        .non-printable, #root > div > div:first-child, #root > div > main > header, #root > .fixed.bottom-6.right-6 { display: none !important; }
+        main, .printable-container, .printable-document, .flex-grow.overflow-y-auto, .printable-content { position: static !important; display: block !important; width: 100% !important; height: auto !important; max-height: none !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; background: none !important; }
+        .printable-page { page-break-after: always; }
+        .printable-page:last-child { page-break-after: auto; }
+        .printable-header, .printable-footer { position: fixed; left: 15mm; right: 15mm; width: calc(210mm - 30mm); display: flex !important; justify-content: space-between; box-sizing: border-box; }
+        .printable-header { top: 0; height: auto; max-height: 40mm; padding-top: 0; align-items: flex-start; border-bottom: none; }
+        .printable-header svg { max-height: 40mm; }
+        .printable-footer { bottom: 0; height: 15mm; padding-bottom: 0; border-top: 1px solid #ddd; font-size: 9pt; color: #555; align-items: center; }
+        .printable-footer-center { position: absolute; left: 50%; transform: translateX(-50%); }
+        .printable-footer-center::after { content: "Page " counter(page); counter-increment: page; }
+        thead { display: table-header-group !important; }
+        tfoot { display: table-footer-group !important; }
+        table, tr, td, th, img, .avoid-break { page-break-inside: avoid; }
+        h1, h2, h3, h4 { page-break-after: avoid; }
       }
     </style>
   <script type="importmap">

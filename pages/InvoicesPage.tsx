@@ -7,8 +7,9 @@ import InvoicePreview from '../components/InvoicePreview';
 import MoneyReceiptPreview from '../components/MoneyReceiptPreview';
 import EmailModal from '../components/EmailModal';
 import StatusEditor from '../components/StatusEditor';
-import { Search, X, Bell } from 'lucide-react';
+import { Search, X, Bell, FileMinus } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
+import CreditNoteForm from '../components/CreditNoteForm';
 
 interface InvoicesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -22,6 +23,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
   const [invoiceToPreview, setInvoiceToPreview] = useState<Invoice | null>(null);
   const [paymentForReceipt, setPaymentForReceipt] = useState<{ invoice: Invoice, payment: Payment } | null>(null);
   const [invoiceToEmail, setInvoiceToEmail] = useState<Invoice | null>(null);
+  const [invoiceForCreditNote, setInvoiceForCreditNote] = useState<Invoice | null>(null);
   
   // State for filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -63,7 +65,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
 
   const getInvoiceTotals = (invoice: Invoice) => {
     const subtotal = invoice.items.reduce((acc, item) => acc + item.quantity * item.rate, 0);
-    const grandTotal = subtotal + (invoice.previousDue || 0) - (invoice.discount || 0);
+    const grandTotal = subtotal + (invoice.previousDue || 0) - (invoice.discount || 0) + (invoice.taxAmount || 0);
     const totalPaid = (invoice.payments || []).reduce((acc, p) => acc + p.amount, 0);
     const balanceDue = grandTotal - totalPaid;
     return { grandTotal, totalPaid, balanceDue };
@@ -79,6 +81,8 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
         return 'bg-blue-100 text-blue-800';
       case InvoiceStatus.Overdue:
         return 'bg-red-100 text-red-800';
+      case InvoiceStatus.Credited:
+        return 'bg-gray-200 text-gray-500 line-through';
       case InvoiceStatus.Draft:
       default:
         return 'bg-gray-100 text-gray-800';
@@ -217,6 +221,7 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                         filteredInvoices.map((invoice) => {
                             const customer = state.customers.find(c => c.id === invoice.customerId);
                             const { grandTotal, totalPaid, balanceDue } = getInvoiceTotals(invoice);
+                            const canCreateCreditNote = invoice.status !== InvoiceStatus.Draft && invoice.status !== InvoiceStatus.Credited;
                             return (
                                 <tr key={invoice.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{invoice.invoiceNumber}</td>
@@ -244,19 +249,21 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
                                             statusEnum={InvoiceStatus}
                                             updateActionType="UPDATE_INVOICE"
                                             getStatusColor={getStatusColor}
-                                            disabledStatuses={[InvoiceStatus.Paid, InvoiceStatus.PartiallyPaid]}
+                                            disabledStatuses={[InvoiceStatus.Paid, InvoiceStatus.PartiallyPaid, InvoiceStatus.Credited]}
                                         />
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div className="flex justify-end items-center space-x-4">
+                                        <div className="flex justify-end items-center space-x-2">
                                             <button onClick={() => setInvoiceToPreview(invoice)} className="text-blue-600 hover:text-blue-900">Preview</button>
                                             <button onClick={() => setInvoiceToEmail(invoice)} className="text-cyan-600 hover:text-cyan-900" title="Get a pre-written email template to send this invoice.">Email</button>
-                                            {invoice.status !== InvoiceStatus.Paid && (
-                                              <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900" title="Record a new payment for this invoice.">Add Payment</button>
+                                            {invoice.status !== InvoiceStatus.Paid && invoice.status !== InvoiceStatus.Credited && (
+                                              <button onClick={() => setInvoiceForPayment(invoice)} className="text-green-600 hover:text-green-900" title="Record a new payment for this invoice.">Payment</button>
                                             )}
-                                            <button onClick={() => handleConvertToChallan(invoice.id)} className="text-purple-600 hover:text-purple-900 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!!invoice.challanId} title={invoice.challanId ? "Already converted" : "Generate a new delivery challan from this invoice"}>
-                                                To Challan
-                                            </button>
+                                            {canCreateCreditNote && (
+                                              <button onClick={() => setInvoiceForCreditNote(invoice)} className="text-orange-600 hover:text-orange-900 flex items-center" title="Create a credit note for this invoice.">
+                                                <FileMinus className="h-4 w-4 mr-1" /> Credit
+                                              </button>
+                                            )}
                                             <button onClick={() => handleEdit(invoice)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
                                             <button onClick={() => handleDelete(invoice.id)} className="text-red-600 hover:text-red-900">Delete</button>
                                         </div>
@@ -310,6 +317,12 @@ const InvoicesPage: React.FC<InvoicesPageProps> = React.memo(({ onViewCustomer }
             invoice={invoiceForPayment}
             onClose={() => setInvoiceForPayment(null)}
             onConfirm={handleAddPayment}
+        />
+      )}
+      {invoiceForCreditNote && (
+        <CreditNoteForm
+          originalInvoice={invoiceForCreditNote}
+          onClose={() => setInvoiceForCreditNote(null)}
         />
       )}
     </div>

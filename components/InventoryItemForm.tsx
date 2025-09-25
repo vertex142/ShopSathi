@@ -8,7 +8,7 @@ interface InventoryItemFormProps {
 }
 
 const InventoryItemForm: React.FC<InventoryItemFormProps> = ({ item, onClose }) => {
-  const { dispatch } = useData();
+  const { state, dispatch } = useData();
   const [formData, setFormData] = useState<Omit<InventoryItem, 'id'>>({
     name: item?.name || '',
     sku: item?.sku || '',
@@ -57,7 +57,22 @@ const InventoryItemForm: React.FC<InventoryItemFormProps> = ({ item, onClose }) 
                 </div>
                 <div>
                     <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-                    <input type="text" id="category" name="category" placeholder="e.g., Paper, Ink, Supplies" value={formData.category} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md shadow-sm"/>
+                    <input 
+                        type="text" 
+                        id="category" 
+                        name="category" 
+                        placeholder="e.g., Paper, Ink, Supplies" 
+                        value={formData.category} 
+                        onChange={handleChange} 
+                        required 
+                        className="mt-1 block w-full p-2 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md shadow-sm"
+                        list="inventory-categories"
+                    />
+                    <datalist id="inventory-categories">
+                        {(state.settings.inventoryCategories || []).map(cat => (
+                            <option key={cat.id} value={cat.name} />
+                        ))}
+                    </datalist>
                     <p className="text-xs text-gray-500 mt-1">Group similar items together (e.g., 'Paper', 'Ink').</p>
                 </div>
                 <div>

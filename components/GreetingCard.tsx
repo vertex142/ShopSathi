@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Cloud } from 'lucide-react';
 
-interface GreetingCardProps {
-    companyName: string;
-}
-
-const GreetingCard: React.FC<GreetingCardProps> = ({ companyName }) => {
+const GreetingCard: React.FC = () => {
     const [time, setTime] = useState(new Date());
 
     useEffect(() => {
@@ -34,7 +30,7 @@ const GreetingCard: React.FC<GreetingCardProps> = ({ companyName }) => {
             <div>
                 <div className="flex items-center space-x-3">
                     {icon}
-                    <h2 className="text-2xl font-bold text-gray-800">{text}, {companyName.split(' ')[0]}!</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">{text}!</h2>
                 </div>
                 <p className="text-gray-500 mt-1">{formattedDate}</p>
             </div>

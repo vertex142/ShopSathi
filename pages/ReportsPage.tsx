@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useData } from '../context/DataContext';
 import { InvoiceStatus } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Legend as PieLegend } from 'recharts';
 import GeneralLedgerReport from '../components/GeneralLedgerReport';
 import ProfitAndLossReport from '../components/ProfitAndLossReport';
+import AgedReceivablesReport from '../components/AgedReceivablesReport';
+import AgedPayablesReport from '../components/AgedPayablesReport';
 import { Download, LoaderCircle } from 'lucide-react';
 import { printDocument } from '../utils/pdfExporter';
 import { formatCurrency } from '../utils/formatCurrency';
+import FullScreenLoader from '../components/FullScreenLoader';
+
+const BalanceSheetReport = lazy(() => import('../components/BalanceSheetReport'));
+
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF4560'];
 
@@ -38,7 +44,7 @@ const FinancialOverview: React.FC = () => {
 
     const getInvoiceTotals = (invoice: any) => {
         const subtotal = invoice.items.reduce((sum: number, item: any) => sum + item.quantity * item.rate, 0);
-        const grandTotal = subtotal + (invoice.previousDue || 0) - (invoice.discount || 0);
+        const grandTotal = subtotal + (invoice.previousDue || 0) - (invoice.discount || 0) + (invoice.taxAmount || 0);
         const totalPaid = (invoice.payments || []).reduce((sum: number, p: any) => sum + p.amount, 0);
         return { grandTotal, totalPaid };
     };
@@ -112,15 +118,7 @@ const FinancialOverview: React.FC = () => {
 
     return (
         <div className="space-y-6 printable-page">
-             <div className="printable-header">
-                {state.settings.logo && <img src={state.settings.logo} alt="Logo" className="h-12 object-contain" />}
-                <div className="text-right text-xs">
-                    <p className="font-bold text-base">{state.settings.name}</p>
-                    <p>{state.settings.address}</p>
-                    <p>Phone: {state.settings.phone1}</p>
-                    <p>Email: {state.settings.email}</p>
-                </div>
-            </div>
+             <div className="printable-header" dangerouslySetInnerHTML={{ __html: state.settings.headerSVG }} />
 
             <div id="financial-overview-report-content" className="space-y-8">
                  <div className="flex justify-between items-center non-printable">
@@ -206,7 +204,7 @@ const FinancialOverview: React.FC = () => {
 };
 
 const ReportsPage: React.FC = React.memo(() => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'pnl'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'pnl' | 'agedReceivables' | 'agedPayables' | 'balanceSheet'>('overview');
 
     return (
         <div className="space-y-6">
@@ -230,6 +228,24 @@ const ReportsPage: React.FC = React.memo(() => {
                     >
                         Profit & Loss
                     </button>
+                    <button
+                        onClick={() => setActiveTab('balanceSheet')}
+                        className={`${activeTab === 'balanceSheet' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                        Balance Sheet
+                    </button>
+                     <button
+                        onClick={() => setActiveTab('agedReceivables')}
+                        className={`${activeTab === 'agedReceivables' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                        Aged Receivables
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('agedPayables')}
+                        className={`${activeTab === 'agedPayables' ? 'border-brand-blue text-brand-blue' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                        Aged Payables
+                    </button>
                 </nav>
             </div>
 
@@ -237,6 +253,13 @@ const ReportsPage: React.FC = React.memo(() => {
                 {activeTab === 'overview' && <FinancialOverview />}
                 {activeTab === 'ledger' && <GeneralLedgerReport />}
                 {activeTab === 'pnl' && <ProfitAndLossReport />}
+                {activeTab === 'agedReceivables' && <AgedReceivablesReport />}
+                {activeTab === 'agedPayables' && <AgedPayablesReport />}
+                {activeTab === 'balanceSheet' && (
+                    <Suspense fallback={<FullScreenLoader />}>
+                        <BalanceSheetReport />
+                    </Suspense>
+                )}
             </div>
         </div>
     );

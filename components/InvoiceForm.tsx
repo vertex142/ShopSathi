@@ -234,7 +234,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
                                         onChange={(e) => handleItemChange(index, e)} 
                                         className="p-2 w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"
                                     />
-                                    {process.env.API_KEY && (
+                                    {process.env.GEMINI_API_KEY && (
                                         <button type="button" onClick={() => handleEnhance(index)} disabled={enhancingItemId === item.id} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-yellow-500 hover:text-yellow-700 disabled:opacity-50" title="Use AI to rewrite your description for a more professional tone.">
                                             {enhancingItemId === item.id ? (
                                                 <LoaderCircle className="animate-spin h-5 w-5" />

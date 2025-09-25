@@ -84,41 +84,8 @@ const ProfitAndLossReport: React.FC = () => {
     return (
         <>
         <div className="bg-white p-6 rounded-lg shadow-md space-y-6 printable-page">
-            {/* Screen-only Header */}
-            <header className="flex justify-between items-start pb-6 mb-6 border-b non-printable">
-                <div className="text-center">
-                    {state.settings.logo && (
-                        <>
-                            <img src={state.settings.logo} alt="Logo" className="h-20 w-auto max-w-[8rem] object-contain" />
-                            <p className="text-sm text-gray-500 mt-2 max-w-[12rem] break-words">{state.settings.tagline}</p>
-                        </>
-                    )}
-                </div>
-                <div className="text-right">
-                    <h2 className="text-3xl font-bold text-brand-blue">{state.settings.name}</h2>
-                    <p className="text-md text-gray-600 mt-2">{state.settings.address}</p>
-                    <p className="text-md text-gray-600">{state.settings.phone1}</p>
-                    {state.settings.phone2 && <p className="text-md text-gray-600">{state.settings.phone2}</p>}
-                    <p className="text-md text-gray-600">{state.settings.email}</p>
-                </div>
-            </header>
-            <div className="printable-header">
-                <div className="text-center">
-                    {state.settings.logo && (
-                        <>
-                            <img src={state.settings.logo} alt="Logo" className="h-14 object-contain" />
-                            <p className="text-[8pt] text-gray-600 mt-1 max-w-[15ch] leading-tight">{state.settings.tagline}</p>
-                        </>
-                    )}
-                </div>
-                <div className="text-right text-[9pt]">
-                    <h2 className="text-xl font-bold text-brand-blue">{state.settings.name}</h2>
-                    <p className="leading-snug">{state.settings.address}</p>
-                    <p className="leading-snug">{state.settings.phone1}</p>
-                    {state.settings.phone2 && <p className="leading-snug">{state.settings.phone2}</p>}
-                    <p className="leading-snug">{state.settings.email}</p>
-                </div>
-            </div>
+            <div className="printable-header" dangerouslySetInnerHTML={{ __html: state.settings.headerSVG }} />
+            
             <div className="flex justify-between items-center non-printable">
                 <h2 className="text-xl font-semibold text-gray-700">Profit & Loss Statement (Cash Basis)</h2>
                 <div className="flex items-center space-x-2">
@@ -174,7 +141,7 @@ const ProfitAndLossReport: React.FC = () => {
                 </div>
 
                 <div className="text-center pt-4">
-                    <h2 className="text-2xl font-bold">{state.settings.name}</h2>
+                    <h2 className="text-2xl font-bold">Company Name from SVG</h2>
                     <p className="text-lg">Profit and Loss Statement</p>
                     <p className="text-sm text-gray-600">For the period from {startDate} to {endDate}</p>
                 </div>

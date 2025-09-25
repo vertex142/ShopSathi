@@ -5,6 +5,8 @@ interface DocumentWithNumber {
     quoteNumber?: string;
     challanNumber?: string;
     poNumber?: string;
+    // FIX: Add creditNoteNumber to support generating numbers for credit notes.
+    creditNoteNumber?: string;
 }
 
 /**
