@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { JournalEntry, JournalEntryItem } from '../types';
 import { Trash2 } from 'lucide-react';
+import SearchableSelect from './SearchableSelect';
 
 interface JournalEntryFormProps {
     entry: JournalEntry | null;
@@ -18,6 +19,8 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
             { id: crypto.randomUUID(), accountId: '', debit: 0, credit: 0, description: '' },
         ],
     });
+
+    const accountOptions = useMemo(() => state.accounts.map(acc => ({ value: acc.id, label: acc.name })), [state.accounts]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -113,15 +116,12 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ entry, onClose }) =
                                 {formData.items.map((item, index) => (
                                     <tr key={item.id} className="border-b">
                                         <td className="py-2 pr-2">
-                                            <select 
-                                                value={item.accountId} 
-                                                onChange={(e) => handleItemChange(index, 'accountId', e.target.value)}
-                                                required
-                                                className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
-                                            >
-                                                <option value="">Select Account</option>
-                                                {state.accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                                            </select>
+                                            <SearchableSelect
+                                                value={item.accountId}
+                                                onChange={(val) => handleItemChange(index, 'accountId', val)}
+                                                options={accountOptions}
+                                                placeholder="Select Account"
+                                            />
                                         </td>
                                         <td className="py-2 px-2">
                                             <input 

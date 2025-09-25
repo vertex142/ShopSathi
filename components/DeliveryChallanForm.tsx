@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { DeliveryChallan, DeliveryChallanItem, Customer } from '../types';
 import { useData } from '../context/DataContext';
 import { Trash2, Plus } from 'lucide-react';
 import { generateNextDocumentNumber } from '../utils/documentNumber';
 import CustomerForm from './CustomerForm';
+import SearchableSelect from './SearchableSelect';
 
 interface DeliveryChallanFormProps {
   challan: DeliveryChallan | null;
@@ -21,6 +22,12 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
     invoiceId: challan?.invoiceId,
   });
   const [showCustomerForm, setShowCustomerForm] = useState(false);
+
+  const customerOptions = useMemo(() => state.customers.map(c => ({ value: c.id, label: c.name })), [state.customers]);
+  const inventoryOptions = useMemo(() => [
+    { value: '', label: 'Select an inventory item (optional)' },
+    ...state.inventoryItems.map(i => ({ value: i.id, label: i.name }))
+  ], [state.inventoryItems]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -97,10 +104,13 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
                 <div>
                     <label htmlFor="customerId" className="block text-sm font-medium text-gray-700">Customer</label>
                     <div className="flex items-center space-x-2 mt-1">
-                        <select id="customerId" name="customerId" value={formData.customerId} onChange={handleChange} className="block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Select Customer</option>
-                            {state.customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
+                         <SearchableSelect
+                            value={formData.customerId}
+                            onChange={(val) => setFormData(prev => ({ ...prev, customerId: val }))}
+                            options={customerOptions}
+                            placeholder="Select Customer"
+                            className="w-full"
+                        />
                          <button type="button" onClick={() => setShowCustomerForm(true)} className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" title="Add New Customer">
                             <Plus className="h-5 w-5" />
                         </button>
@@ -124,16 +134,12 @@ const DeliveryChallanForm: React.FC<DeliveryChallanFormProps> = ({ challan, onCl
                     {formData.items.map((item, index) => (
                         <div key={item.id} className="grid grid-cols-12 gap-x-3 gap-y-2 items-start p-3 border rounded-md">
                             <div className="col-span-12 md:col-span-8 space-y-2">
-                                <select 
-                                    value={item.inventoryItemId || ''} 
-                                    onChange={(e) => handleItemSelect(index, e.target.value)} 
-                                    className="p-2 w-full bg-white text-gray-900 border border-gray-300 rounded-md"
-                                >
-                                    <option value="">Select an inventory item (optional)</option>
-                                    {state.inventoryItems.map(invItem => (
-                                        <option key={invItem.id} value={invItem.id}>{invItem.name}</option>
-                                    ))}
-                                </select>
+                                <SearchableSelect
+                                    value={item.inventoryItemId || ''}
+                                    onChange={(val) => handleItemSelect(index, val)}
+                                    options={inventoryOptions}
+                                    placeholder="Select an inventory item (optional)"
+                                />
                                 <input 
                                     type="text" 
                                     name="name" 

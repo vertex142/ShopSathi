@@ -5,6 +5,7 @@ import { useData } from '../context/DataContext';
 import { Trash2, LoaderCircle, Plus } from 'lucide-react';
 import CustomerForm from './CustomerForm';
 import { formatCurrency } from '../utils/formatCurrency';
+import SearchableSelect from './SearchableSelect';
 
 interface RecurringInvoiceFormProps {
   profile: RecurringInvoice | null;
@@ -27,6 +28,8 @@ const RecurringInvoiceForm: React.FC<RecurringInvoiceFormProps> = ({ profile, on
   });
   const [isSaving, setIsSaving] = useState(false);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
+
+  const customerOptions = useMemo(() => state.customers.map(c => ({ value: c.id, label: c.name })), [state.customers]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -109,10 +112,13 @@ const RecurringInvoiceForm: React.FC<RecurringInvoiceFormProps> = ({ profile, on
                 <div>
                     <label htmlFor="customerId" className="block text-sm font-medium text-gray-700">Customer</label>
                     <div className="flex items-center space-x-2 mt-1">
-                        <select id="customerId" name="customerId" value={formData.customerId} onChange={handleChange} className="block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Select Customer</option>
-                            {state.customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
+                        <SearchableSelect
+                            value={formData.customerId}
+                            onChange={(val) => setFormData(prev => ({ ...prev, customerId: val }))}
+                            options={customerOptions}
+                            placeholder="Select Customer"
+                            className="w-full"
+                        />
                         <button type="button" onClick={() => setShowCustomerForm(true)} className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" title="Add New Customer">
                             <Plus className="h-5 w-5" />
                         </button>

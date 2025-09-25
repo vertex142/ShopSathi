@@ -4,6 +4,7 @@ import { DeliveryChallan } from '../types';
 import DeliveryChallanForm from '../components/DeliveryChallanForm';
 import DeliveryChallanPreview from '../components/DeliveryChallanPreview';
 import { Search, X, Eye, Edit, Trash2 } from 'lucide-react';
+import SearchableSelect from '../components/SearchableSelect';
 
 interface DeliveryChallansPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -17,6 +18,11 @@ const DeliveryChallansPage: React.FC<DeliveryChallansPageProps> = React.memo(({ 
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('');
+
+  const customerOptions = useMemo(() => [
+    { value: '', label: 'All Customers' },
+    ...state.customers.map(c => ({ value: c.id, label: c.name }))
+  ], [state.customers]);
 
   const handleEdit = (challan: DeliveryChallan) => {
     setSelectedChallan(challan);
@@ -74,17 +80,12 @@ const DeliveryChallansPage: React.FC<DeliveryChallansPageProps> = React.memo(({ 
             </div>
             <div className="md:col-span-1">
                 <label htmlFor="filter-customer" className="sr-only">Filter by customer</label>
-                <select
-                    id="filter-customer"
+                <SearchableSelect
                     value={filterCustomer}
-                    onChange={(e) => setFilterCustomer(e.target.value)}
-                    className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                    <option value="">All Customers</option>
-                    {state.customers.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                </select>
+                    onChange={setFilterCustomer}
+                    options={customerOptions}
+                    placeholder="All Customers"
+                />
             </div>
              <div className="md:col-span-1 flex justify-end items-center">
                  <button

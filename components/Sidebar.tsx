@@ -2,6 +2,8 @@ import React from 'react';
 import type { Page } from '../types';
 import { NAV_GROUPS } from '../constants';
 import Logo from './Logo';
+import { useTheme } from '../context/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 
 interface SidebarProps {
   currentPage: Page;
@@ -11,6 +13,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, isOpen, onClose }) => {
+  const { theme, toggleTheme } = useTheme();
+
   const handleLinkClick = (page: Page) => {
     setCurrentPage(page);
     onClose();
@@ -46,9 +50,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, isOpen, 
           </div>
         ))}
       </nav>
-       <div className="p-4 border-t border-brand-blue-light text-center text-xs text-blue-200">
-          <p>&copy; {new Date().getFullYear()} ShopSathi</p>
-          <p>Built by Shahidul Islam</p>
+       <div className="p-4 border-t border-brand-blue-light flex justify-between items-center text-xs text-blue-200">
+          <div className="text-left">
+            <p>&copy; {new Date().getFullYear()} ShopSathi</p>
+            <p>Built by Shahidul Islam</p>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full bg-brand-blue-light hover:bg-brand-blue-dark transition-colors"
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          >
+            {theme === 'light' ? <Moon className="h-4 w-4 text-white" /> : <Sun className="h-4 w-4 text-yellow-300" />}
+          </button>
       </div>
     </div>
   );

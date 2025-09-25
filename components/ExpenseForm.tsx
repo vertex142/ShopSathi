@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { Expense, Account, AccountType } from '../types';
 import { LoaderCircle, Paperclip, Plus, Edit, Trash2 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import AccountForm from '../components/AccountForm';
+import SearchableSelect from './SearchableSelect';
 
 interface ExpenseFormProps {
     expense: Expense | null;
@@ -23,6 +24,14 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
     });
     const [isSaving, setIsSaving] = useState(false);
     const [showAccountForm, setShowAccountForm] = useState(false);
+
+    const expenseAccountOptions = useMemo(() => 
+        state.accounts.filter(a => a.type === AccountType.Expense).map(a => ({ value: a.id, label: a.name }))
+    , [state.accounts]);
+
+    const paymentAccountOptions = useMemo(() =>
+        state.accounts.filter(a => a.type === AccountType.Asset || a.type === AccountType.Liability).map(a => ({ value: a.id, label: a.name }))
+    , [state.accounts]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -72,9 +81,6 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
         setShowAccountForm(false);
     };
 
-    const expenseAccounts = state.accounts.filter(a => a.type === AccountType.Expense);
-    const paymentAccounts = state.accounts.filter(a => a.type === AccountType.Asset || a.type === AccountType.Liability);
-
     return (
         <>
             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
@@ -91,10 +97,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
                         <div>
                             <label htmlFor="debitAccountId" className="block text-sm font-medium text-gray-700">Expense Account (Debit)</label>
                             <div className="flex items-center space-x-2 mt-1">
-                                <select id="debitAccountId" name="debitAccountId" value={formData.debitAccountId} onChange={handleChange} required className="block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm">
-                                    <option value="">Select expense category</option>
-                                    {expenseAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                                </select>
+                                <SearchableSelect
+                                    value={formData.debitAccountId}
+                                    onChange={(val) => setFormData(prev => ({...prev, debitAccountId: val}))}
+                                    options={expenseAccountOptions}
+                                    placeholder="Select expense category"
+                                    className="w-full"
+                                />
                                 <button type="button" onClick={() => setShowAccountForm(true)} className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" title="Add New Expense Account">
                                     <Plus className="h-5 w-5" />
                                 </button>
@@ -103,10 +112,13 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, onClose }) => {
                         </div>
                         <div>
                             <label htmlFor="creditAccountId" className="block text-sm font-medium text-gray-700">Paid From (Credit)</label>
-                            <select id="creditAccountId" name="creditAccountId" value={formData.creditAccountId} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm">
-                                <option value="">Select payment source</option>
-                                {paymentAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                            </select>
+                            <SearchableSelect
+                                value={formData.creditAccountId}
+                                onChange={(val) => setFormData(prev => ({...prev, creditAccountId: val}))}
+                                options={paymentAccountOptions}
+                                placeholder="Select payment source"
+                                className="mt-1"
+                            />
                             <p className="text-xs text-gray-500 mt-1">Select the account you used to pay for this expense (e.g., Cash, Bank). This decreases the balance of that account.</p>
                         </div>
                         <div>

@@ -8,6 +8,7 @@ import CustomerForm from './CustomerForm';
 import { analyzeImageWithPrompt } from '../services/geminiService';
 import AIResponseModal from './AIResponseModal';
 import { formatCurrency } from '../utils/formatCurrency';
+import SearchableSelect from './SearchableSelect';
 
 interface JobOrderFormProps {
   job: JobOrder | null;
@@ -46,6 +47,8 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
 
+  const customerOptions = useMemo(() => state.customers.map(c => ({ value: c.id, label: c.name })), [state.customers]);
+  const inventoryOptions = useMemo(() => state.inventoryItems.map(i => ({ value: i.id, label: `${i.name} (In Stock: ${i.stockQuantity})` })), [state.inventoryItems]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -194,10 +197,13 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                   <div>
                       <label htmlFor="customerId" className="block text-sm font-medium text-gray-700">Customer</label>
                       <div className="flex items-center space-x-2 mt-1">
-                        <select id="customerId" name="customerId" value={formData.customerId} onChange={handleChange} required className="block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Select Customer</option>
-                            {state.customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
+                        <SearchableSelect
+                            value={formData.customerId}
+                            onChange={(val) => setFormData(prev => ({...prev, customerId: val}))}
+                            options={customerOptions}
+                            placeholder="Select Customer"
+                            className="w-full"
+                        />
                         <button type="button" onClick={() => setShowCustomerForm(true)} className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" title="Add New Customer">
                             <Plus className="h-5 w-5" />
                         </button>
@@ -282,19 +288,12 @@ const JobOrderForm: React.FC<JobOrderFormProps> = ({ job, onClose }) => {
                           return (
                               <div key={index} className="grid grid-cols-12 gap-x-3 items-center">
                                   <div className="col-span-6">
-                                      <select 
-                                          value={material.itemId} 
-                                          onChange={(e) => handleMaterialChange(index, 'itemId', e.target.value)} 
-                                          className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
-                                          required
-                                      >
-                                          <option value="">Select a material</option>
-                                          {state.inventoryItems.map(item => (
-                                              <option key={item.id} value={item.id}>
-                                                  {item.name} (In Stock: {item.stockQuantity})
-                                              </option>
-                                          ))}
-                                      </select>
+                                      <SearchableSelect
+                                          value={material.itemId}
+                                          onChange={(val) => handleMaterialChange(index, 'itemId', val)}
+                                          options={inventoryOptions}
+                                          placeholder="Select a material"
+                                      />
                                   </div>
                                   <div className="col-span-3">
                                       <input 

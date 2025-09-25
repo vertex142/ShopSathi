@@ -6,6 +6,7 @@ import { Trash2, Plus } from 'lucide-react';
 import { generateNextDocumentNumber } from '../utils/documentNumber';
 import SupplierForm from './SupplierForm';
 import { formatCurrency } from '../utils/formatCurrency';
+import SearchableSelect from './SearchableSelect';
 
 interface PurchaseOrderFormProps {
   purchaseOrder: PurchaseOrder | null;
@@ -26,6 +27,12 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
     selectedTerms: purchaseOrder?.selectedTerms || [],
   });
   const [showSupplierForm, setShowSupplierForm] = useState(false);
+
+  const supplierOptions = useMemo(() => state.suppliers.map(s => ({ value: s.id, label: s.name })), [state.suppliers]);
+  const inventoryOptions = useMemo(() => [
+    { value: '', label: 'Select an inventory item' },
+    ...state.inventoryItems.map(i => ({ value: i.id, label: i.name }))
+  ], [state.inventoryItems]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -111,10 +118,13 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
             <div>
               <label htmlFor="supplierId" className="block text-sm font-medium text-gray-700">Supplier</label>
                <div className="flex items-center space-x-2 mt-1">
-                  <select id="supplierId" name="supplierId" value={formData.supplierId} onChange={handleChange} className="block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm">
-                    <option value="">Select Supplier</option>
-                    {state.suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <SearchableSelect
+                      value={formData.supplierId}
+                      onChange={(val) => setFormData(prev => ({ ...prev, supplierId: val }))}
+                      options={supplierOptions}
+                      placeholder="Select Supplier"
+                      className="w-full"
+                  />
                    <button type="button" onClick={() => setShowSupplierForm(true)} className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" title="Add New Supplier">
                         <Plus className="h-5 w-5" />
                     </button>
@@ -141,16 +151,12 @@ const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ purchaseOrder, on
               {formData.items.map((item, index) => (
                 <div key={item.id} className="grid grid-cols-12 gap-x-3 gap-y-2 items-start p-3 border rounded-md">
                   <div className="col-span-12 md:col-span-6 space-y-2">
-                    <select 
-                        value={item.inventoryItemId || ''} 
-                        onChange={(e) => handleItemSelect(index, e.target.value)} 
-                        className="p-2 w-full bg-white text-gray-900 border border-gray-300 rounded-md"
-                    >
-                        <option value="">Select an inventory item</option>
-                        {state.inventoryItems.map(invItem => (
-                            <option key={invItem.id} value={invItem.id}>{invItem.name}</option>
-                        ))}
-                    </select>
+                    <SearchableSelect
+                        value={item.inventoryItemId || ''}
+                        onChange={(val) => handleItemSelect(index, val)}
+                        options={inventoryOptions}
+                        placeholder="Select an inventory item"
+                    />
                     <input type="text" name="name" placeholder="Or type item name manually" value={item.name} onChange={(e) => handleItemChange(index, e)} className="p-2 w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md" />
                     <input type="text" name="description" placeholder="Item Description" value={item.description} onChange={(e) => handleItemChange(index, e)} className="p-2 w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md" />
                   </div>

@@ -5,9 +5,10 @@ import JobOrderForm from '../components/JobOrderForm';
 import StatusEditor from '../components/StatusEditor';
 import JobKanbanBoard from '../components/JobKanbanBoard';
 import JobDetailsModal from '../components/JobDetailsModal';
-import { List, Trello, Calendar, FileSearch, Edit, Trash2 } from 'lucide-react';
+import { List, Trello, Calendar, FileSearch, Edit, Trash2, Briefcase } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import JobCalendarView from '../components/JobCalendarView';
+import EmptyState from '../components/EmptyState';
 
 type ViewMode = 'list' | 'kanban' | 'calendar';
 
@@ -52,16 +53,16 @@ const JobsPage: React.FC = React.memo(() => {
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Job Orders</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Job Orders</h1>
         <div className="flex items-center space-x-4">
-          <div className="flex items-center bg-gray-200 rounded-lg p-1">
-            <button onClick={() => setViewMode('list')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'list' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`} title="List View">
+          <div className="flex items-center bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+            <button onClick={() => setViewMode('list')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'list' ? 'bg-white dark:bg-gray-800 text-brand-blue shadow' : 'text-gray-600 dark:text-gray-300'}`} title="List View">
                 <List className="h-5 w-5 inline-block" />
             </button>
-            <button onClick={() => setViewMode('kanban')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'kanban' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`} title="Kanban Board View">
+            <button onClick={() => setViewMode('kanban')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'kanban' ? 'bg-white dark:bg-gray-800 text-brand-blue shadow' : 'text-gray-600 dark:text-gray-300'}`} title="Kanban Board View">
                 <Trello className="h-5 w-5 inline-block" />
             </button>
-            <button onClick={() => setViewMode('calendar')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'calendar' ? 'bg-white text-brand-blue shadow' : 'text-gray-600'}`} title="Calendar View">
+            <button onClick={() => setViewMode('calendar')} className={`px-3 py-1 rounded-md text-sm font-medium ${viewMode === 'calendar' ? 'bg-white dark:bg-gray-800 text-brand-blue shadow' : 'text-gray-600 dark:text-gray-300'}`} title="Calendar View">
                 <Calendar className="h-5 w-5 inline-block" />
             </button>
           </div>
@@ -71,60 +72,72 @@ const JobsPage: React.FC = React.memo(() => {
         </div>
       </div>
 
-      {viewMode === 'list' ? (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                      <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Name</th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                      {state.jobOrders.map((job) => {
-                          const customer = state.customers.find(c => c.id === job.customerId);
-                          return (
-                              <tr key={job.id}>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{job.jobName}</td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{customer?.name || 'N/A'}</td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{job.dueDate}</td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(job.price)}</td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                      <StatusEditor
-                                          item={job}
-                                          status={job.status}
-                                          statusEnum={JobStatus}
-                                          updateActionType="UPDATE_JOB_ORDER"
-                                          getStatusColor={getStatusColor}
-                                      />
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                       <div className="flex justify-end items-center space-x-1">
+      {viewMode === 'list' && (
+        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+          {state.jobOrders.length > 0 ? (
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Job Name</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Due Date</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Price</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {state.jobOrders.map((job) => {
+                            const customer = state.customers.find(c => c.id === job.customerId);
+                            return (
+                                <tr key={job.id} className="dark:hover:bg-gray-700/50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{job.jobName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{customer?.name || 'N/A'}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{job.dueDate}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{formatCurrency(job.price)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <StatusEditor
+                                            item={job}
+                                            status={job.status}
+                                            statusEnum={JobStatus}
+                                            updateActionType="UPDATE_JOB_ORDER"
+                                            getStatusColor={getStatusColor}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div className="flex justify-end items-center space-x-1">
                                             <button onClick={() => setJobForDetails(job)} className="text-blue-600 hover:text-blue-900 p-1" title="View Details"><FileSearch className="h-4 w-4"/></button>
                                             <button onClick={() => handleEdit(job)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Job"><Edit className="h-4 w-4"/></button>
                                             <button onClick={() => handleDelete(job.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete Job"><Trash2 className="h-4 w-4"/></button>
                                         </div>
-                                  </td>
-                              </tr>
-                          )
-                      })}
-                  </tbody>
-              </table>
-          </div>
-          {state.jobOrders.length === 0 && <p className="text-center py-10 text-gray-500">No jobs found. Add one to get started!</p>}
+                                    </td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            ) : (
+                <EmptyState
+                    Icon={Briefcase}
+                    title="Create Your First Job Order"
+                    message="Track your production process from quote to completion. Add a job to get started."
+                    actionButton={<button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">Add New Job</button>}
+                />
+            )}
         </div>
-      ) : viewMode === 'kanban' ? (
+      )}
+
+      {viewMode === 'kanban' && (
         <JobKanbanBoard 
             onEdit={handleEdit}
             onDelete={handleDelete}
             onViewDetails={setJobForDetails}
         />
-      ) : (
+      )}
+      
+      {viewMode === 'calendar' && (
         <JobCalendarView
             jobs={state.jobOrders}
             customers={state.customers}

@@ -4,10 +4,12 @@ import { Quote, QuoteStatus } from '../types';
 import QuoteForm from '../components/QuoteForm';
 import StatusEditor from '../components/StatusEditor';
 import QuotePreview from '../components/QuotePreview';
-import { Search, X, Eye, Briefcase, FileText, Edit, Trash2 } from 'lucide-react';
+import { Search, X, Eye, Briefcase, FileText, Edit, Trash2, ClipboardCheck } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { parseTemplate, generateWhatsAppLink } from '../utils/whatsappHelper';
+import SearchableSelect from '../components/SearchableSelect';
+import EmptyState from '../components/EmptyState';
 
 interface QuotesPageProps {
     onViewCustomer: (customerId: string) => void;
@@ -25,6 +27,11 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
   const [filterStatus, setFilterStatus] = useState('');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
+
+  const customerOptions = useMemo(() => [
+    { value: '', label: 'All Customers' },
+    ...state.customers.map(c => ({ value: c.id, label: c.name }))
+  ], [state.customers]);
 
 
   const handleEdit = (quote: Quote) => {
@@ -123,14 +130,14 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Quotes</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Quotes</h1>
         <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
           Add New Quote
         </button>
       </div>
       
       {/* Filter Section */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6 space-y-4">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
                 <label htmlFor="search-quote" className="sr-only">Search Quote #</label>
@@ -140,23 +147,18 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
                     placeholder="Search Quote #"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full p-2 pl-10 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full p-2 pl-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 />
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             </div>
             <div>
                 <label htmlFor="filter-customer" className="sr-only">Filter by customer</label>
-                <select
-                    id="filter-customer"
+                <SearchableSelect
                     value={filterCustomer}
-                    onChange={(e) => setFilterCustomer(e.target.value)}
-                    className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                    <option value="">All Customers</option>
-                    {state.customers.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                </select>
+                    onChange={setFilterCustomer}
+                    options={customerOptions}
+                    placeholder="All Customers"
+                />
             </div>
             <div>
                 <label htmlFor="filter-status" className="sr-only">Filter by status</label>
@@ -164,7 +166,7 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
                     id="filter-status"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                 >
                     <option value="">All Statuses</option>
                     {Object.values(QuoteStatus).map((s) => (
@@ -176,29 +178,29 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
 
         <div className="flex flex-wrap items-end gap-4">
             <div className="flex-grow">
-                <label htmlFor="start-date" className="block text-sm font-medium text-gray-700">Issue Date From</label>
+                <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Issue Date From</label>
                 <input
                     type="date"
                     id="start-date"
                     value={filterStartDate}
                     onChange={(e) => setFilterStartDate(e.target.value)}
-                    className="mt-1 w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+                    className="mt-1 w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
                 />
             </div>
             <div className="flex-grow">
-                <label htmlFor="end-date" className="block text-sm font-medium text-gray-700">To</label>
+                <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
                 <input
                     type="date"
                     id="end-date"
                     value={filterEndDate}
                     onChange={(e) => setFilterEndDate(e.target.value)}
-                    className="mt-1 w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+                    className="mt-1 w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
                 />
             </div>
             <div className="flex-shrink-0">
                 <button
                     onClick={handleResetFilters}
-                    className="w-full md:w-auto flex items-center justify-center p-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300"
+                    className="w-full md:w-auto flex items-center justify-center p-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
                     aria-label="Reset filters"
                 >
                     <X className="h-4 w-4 mr-2" />
@@ -208,36 +210,36 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
         </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                    <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quote #</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Date</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry Date</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredQuotes.length > 0 ? (
-                        filteredQuotes.map((quote) => {
+      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+        {filteredQuotes.length > 0 ? (
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Quote #</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Issue Date</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Expiry Date</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {filteredQuotes.map((quote) => {
                             const customer = state.customers.find(c => c.id === quote.customerId);
                             const grandTotal = getQuoteTotal(quote);
                             return (
-                                <tr key={quote.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{quote.quoteNumber}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <tr key={quote.id} className="dark:hover:bg-gray-700/50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{quote.quoteNumber}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                         <button onClick={() => onViewCustomer(quote.customerId)} className="hover:underline text-brand-blue">
                                             {customer?.name || 'N/A'}
                                         </button>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.issueDate}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.expiryDate}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatCurrency(grandTotal)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{quote.issueDate}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{quote.expiryDate}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{formatCurrency(grandTotal)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         <StatusEditor
                                             item={quote}
@@ -264,17 +266,18 @@ const QuotesPage: React.FC<QuotesPageProps> = React.memo(({ onViewCustomer }) =>
                                     </td>
                                 </tr>
                             )
-                        })
-                    ) : (
-                        <tr>
-                           <td colSpan={7} className="text-center py-10 text-gray-500">
-                                {state.quotes.length > 0 ? 'No quotes match your filters.' : 'No quotes found. Add one to get started!'}
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
-        </div>
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            ) : (
+                <EmptyState
+                    Icon={ClipboardCheck}
+                    title={state.quotes.length > 0 ? "No Quotes Found" : "Create Your First Quote"}
+                    message={state.quotes.length > 0 ? "No quotes match your current filter criteria." : "Start the sales process by sending a professional quote to a customer."}
+                    actionButton={<button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">Add New Quote</button>}
+                />
+            )}
       </div>
 
       {showForm && (

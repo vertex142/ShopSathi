@@ -1,10 +1,9 @@
-
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Supplier, Payment } from '../types';
 import { PAYMENT_METHODS, AccountType } from '../types';
 import { useData } from '../context/DataContext';
 import { formatCurrency } from '../utils/formatCurrency';
+import SearchableSelect from './SearchableSelect';
 
 interface MakePaymentModalProps {
   supplier: Supplier;
@@ -15,14 +14,18 @@ interface MakePaymentModalProps {
 
 const MakePaymentModal: React.FC<MakePaymentModalProps> = ({ supplier, totalDue, onClose, onConfirm }) => {
   const { state } = useData();
-  const assetAccounts = state.accounts.filter(a => a.type === AccountType.Asset);
+  const assetAccountOptions = useMemo(() =>
+    state.accounts
+        .filter(a => a.type === AccountType.Asset)
+        .map(a => ({ value: a.id, label: a.name }))
+  , [state.accounts]);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     amount: totalDue > 0 ? totalDue : 0,
     method: PAYMENT_METHODS[0],
     // FIX: Initialize accountId to satisfy the Payment type.
-    accountId: assetAccounts.length > 0 ? assetAccounts[0].id : '',
+    accountId: assetAccountOptions.length > 0 ? assetAccountOptions[0].value : '',
     notes: '',
   });
 
@@ -68,10 +71,13 @@ const MakePaymentModal: React.FC<MakePaymentModalProps> = ({ supplier, totalDue,
             {/* FIX: Add account selection dropdown */}
             <div>
               <label htmlFor="accountId" className="block text-sm font-medium text-gray-700">Pay From Account</label>
-              <select id="accountId" name="accountId" value={formData.accountId} onChange={handleChange} required className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm">
-                <option value="">Select an account</option>
-                {assetAccounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-              </select>
+              <SearchableSelect
+                value={formData.accountId}
+                onChange={(val) => setFormData(prev => ({ ...prev, accountId: val }))}
+                options={assetAccountOptions}
+                placeholder="Select an account"
+                className="mt-1"
+              />
               <p className="text-xs text-gray-500 mt-1">This will decrease the balance of the selected account (e.g., Cash or Bank).</p>
             </div>
             <div>

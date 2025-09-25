@@ -7,6 +7,8 @@ import { Sparkles, Trash2, LoaderCircle, Bell, Plus } from 'lucide-react';
 import { generateNextDocumentNumber } from '../utils/documentNumber';
 import CustomerForm from './CustomerForm';
 import { formatCurrency } from '../utils/formatCurrency';
+import SearchableSelect from './SearchableSelect';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface InvoiceFormProps {
   invoice: Invoice | null;
@@ -33,6 +35,14 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(!!invoice?.reminderDate);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
+  
+  const modalRef = useFocusTrap(true);
+
+  const customerOptions = useMemo(() => state.customers.map(c => ({ value: c.id, label: c.name })), [state.customers]);
+  const inventoryOptions = useMemo(() => [
+    { value: '', label: 'Select an inventory item' },
+    ...state.inventoryItems.map(i => ({ value: i.id, label: i.name }))
+  ], [state.inventoryItems]);
 
   useEffect(() => {
     if (formData.customerId) {
@@ -181,252 +191,253 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onClose }) => {
 
   return (
     <>
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-full flex flex-col">
-        <header className="flex-shrink-0 p-6 border-b">
-            <h2 className="text-2xl font-bold">{invoice ? 'Edit Invoice' : 'Create Invoice'}</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex justify-center items-center z-50 p-4">
+      <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="invoice-form-title">
+        <header className="flex-shrink-0 p-6 border-b dark:border-gray-700">
+            <h2 id="invoice-form-title" className="text-2xl font-bold text-gray-900 dark:text-white">{invoice ? 'Edit Invoice' : 'Create Invoice'}</h2>
         </header>
-        <main className="flex-grow p-6 space-y-6 overflow-y-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label htmlFor="customerId" className="block text-sm font-medium text-gray-700">Customer</label>
-                    <div className="flex items-center space-x-2 mt-1">
-                        <select id="customerId" name="customerId" value={formData.customerId} onChange={handleChange} className="block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Select Customer</option>
-                            {state.customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                        <button type="button" onClick={() => setShowCustomerForm(true)} className="p-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" title="Add New Customer">
-                            <Plus className="h-5 w-5" />
-                        </button>
+        <form onSubmit={handleSubmit} className="flex-grow contents">
+            <main className="flex-grow p-6 space-y-6 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label htmlFor="customerId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
+                        <div className="flex items-center space-x-2 mt-1">
+                            <SearchableSelect
+                                value={formData.customerId}
+                                onChange={(val) => setFormData(prev => ({ ...prev, customerId: val }))}
+                                options={customerOptions}
+                                placeholder="Select Customer"
+                                className="w-full"
+                            />
+                            <button type="button" onClick={() => setShowCustomerForm(true)} className="p-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500" title="Add New Customer">
+                                <Plus className="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="invoiceNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Number</label>
+                        <input type="text" id="invoiceNumber" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleChange} className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"/>
+                    </div>
+                    <div>
+                        <label htmlFor="issueDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Issue Date</label>
+                        <input type="date" id="issueDate" name="issueDate" value={formData.issueDate} onChange={handleChange} className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"/>
+                    </div>
+                    <div>
+                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Due Date</label>
+                        <input type="date" id="dueDate" name="dueDate" value={formData.dueDate} onChange={handleChange} className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"/>
                     </div>
                 </div>
-                <div>
-                    <label htmlFor="invoiceNumber" className="block text-sm font-medium text-gray-700">Invoice Number</label>
-                    <input type="text" id="invoiceNumber" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                </div>
-                <div>
-                    <label htmlFor="issueDate" className="block text-sm font-medium text-gray-700">Issue Date</label>
-                    <input type="date" id="issueDate" name="issueDate" value={formData.issueDate} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                </div>
-                <div>
-                    <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">Due Date</label>
-                    <input type="date" id="dueDate" name="dueDate" value={formData.dueDate} onChange={handleChange} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"/>
-                </div>
-            </div>
 
-            <div className="mt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Items</h3>
-                <div className="space-y-4">
-                    {formData.items.map((item, index) => (
-                        <div key={item.id} className="grid grid-cols-12 gap-x-3 gap-y-2 items-start p-3 border rounded-md">
-                            <div className="col-span-12 md:col-span-6 space-y-2">
-                                <select 
-                                    value={item.inventoryItemId || ''} 
-                                    onChange={(e) => handleItemSelect(index, e.target.value)} 
-                                    className="p-2 w-full bg-white text-gray-900 border border-gray-300 rounded-md"
-                                >
-                                    <option value="">Select an inventory item</option>
-                                    {state.inventoryItems.map(invItem => (
-                                        <option key={invItem.id} value={invItem.id}>{invItem.name}</option>
-                                    ))}
-                                </select>
-                                <input 
-                                    type="text" 
-                                    name="name" 
-                                    placeholder="Or type item name manually" 
-                                    value={item.name} 
-                                    onChange={(e) => handleItemChange(index, e)} 
-                                    className="p-2 w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"
-                                />
-                                <div className="relative">
+                <div className="mt-6">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Items</h3>
+                    <div className="space-y-4">
+                        {formData.items.map((item, index) => (
+                            <div key={item.id} className="grid grid-cols-12 gap-x-3 gap-y-2 items-start p-3 border dark:border-gray-700 rounded-md">
+                                <div className="col-span-12 md:col-span-6 space-y-2">
+                                    <SearchableSelect
+                                        value={item.inventoryItemId || ''}
+                                        onChange={(val) => handleItemSelect(index, val)}
+                                        options={inventoryOptions}
+                                        placeholder="Select an inventory item"
+                                    />
                                     <input 
                                         type="text" 
-                                        name="description" 
-                                        placeholder="Item Description (optional)" 
-                                        value={item.description} 
+                                        name="name" 
+                                        placeholder="Or type item name manually" 
+                                        value={item.name} 
                                         onChange={(e) => handleItemChange(index, e)} 
-                                        className="p-2 w-full bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"
+                                        className="p-2 w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 border border-gray-300 dark:border-gray-600 rounded-md"
                                     />
-                                    {process.env.API_KEY && (
-                                        <button type="button" onClick={() => handleEnhance(index)} disabled={enhancingItemId === item.id} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-yellow-500 hover:text-yellow-700 disabled:opacity-50" title="Use AI to rewrite your description for a more professional tone.">
-                                            {enhancingItemId === item.id ? (
-                                                <LoaderCircle className="animate-spin h-5 w-5" />
-                                            ) : (
-                                                <Sparkles className="h-5 w-5" />
-                                            )}
-                                        </button>
-                                    )}
+                                    <div className="relative">
+                                        <input 
+                                            type="text" 
+                                            name="description" 
+                                            placeholder="Item Description (optional)" 
+                                            value={item.description} 
+                                            onChange={(e) => handleItemChange(index, e)} 
+                                            className="p-2 w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                        {process.env.API_KEY && (
+                                            <button type="button" onClick={() => handleEnhance(index)} disabled={enhancingItemId === item.id} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-yellow-500 hover:text-yellow-700 disabled:opacity-50" title="Use AI to rewrite your description for a more professional tone.">
+                                                {enhancingItemId === item.id ? (
+                                                    <LoaderCircle className="animate-spin h-5 w-5" />
+                                                ) : (
+                                                    <Sparkles className="h-5 w-5" />
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="col-span-12 md:col-span-6 grid grid-cols-12 gap-3 items-center">
-                                <input type="number" name="quantity" placeholder="Qty" value={item.quantity} onChange={(e) => handleItemChange(index, e)} className="col-span-4 md:col-span-3 p-2 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"/>
-                                <input type="number" name="rate" placeholder="Rate" value={item.rate} onChange={(e) => handleItemChange(index, e)} className="col-span-4 md:col-span-3 p-2 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md"/>
-                                <span className="col-span-3 md:col-span-4 text-center font-medium">{formatCurrency((item.quantity || 0) * (item.rate || 0))}</span>
-                                <button type="button" onClick={() => removeItem(index)} className="col-span-1 md:col-span-2 flex justify-center text-red-500 hover:text-red-700">
-                                    <Trash2 className="h-5 w-5" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <button type="button" onClick={addItem} className="mt-4 text-sm font-medium text-indigo-600 hover:text-indigo-500">+ Add Item</button>
-            </div>
-            
-            <div className="mt-6 border-t pt-4">
-                <div className="flex justify-end">
-                    <div className="w-full max-w-sm space-y-2">
-                        <div className="flex justify-between">
-                            <span className="text-gray-600">Subtotal:</span>
-                            <span className="font-medium">{formatCurrency(subtotal)}</span>
-                        </div>
-                         <div className="flex justify-between" title="This is the total outstanding balance from this customer's previous invoices, calculated automatically.">
-                            <span className="text-gray-600 border-b border-dotted cursor-help">Previous Due:</span>
-                            <span className="font-medium">{formatCurrency(formData.previousDue)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <label htmlFor="discount" className="text-gray-600">Discount:</label>
-                            <div className="flex items-center">
-                                <span className="mr-1 text-gray-600">৳</span>
-                                <input 
-                                    type="number" 
-                                    id="discount"
-                                    name="discount"
-                                    value={formData.discount} 
-                                    onChange={handleChange}
-                                    className="w-24 p-1 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md text-right shadow-sm"
-                                    placeholder="0.00"
-                                    aria-describedby="discount-description"
-                                />
-                            </div>
-                        </div>
-                        <p id="discount-description" className="text-xs text-gray-500 text-right -mt-1">A flat amount subtracted from the total.</p>
-                        <div className="flex justify-between border-t pt-2 mt-2">
-                            <span className="font-bold text-xl">Grand Total:</span>
-                            <span className="font-bold text-xl">{formatCurrency(grandTotal)}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {formData.payments.length > 0 && (
-                <div className="mt-6 border-t pt-4">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Payments Received</h3>
-                    <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
-                        {formData.payments.map(payment => (
-                            <div key={payment.id} className="grid grid-cols-3 gap-4 p-2 bg-gray-50 rounded">
-                                <div>
-                                    <span className="text-xs text-gray-500">Date</span>
-                                    <p className="text-sm font-medium text-gray-800">{payment.date}</p>
-                                </div>
-                                <div>
-                                    <span className="text-xs text-gray-500">Method</span>
-                                    <p className="text-sm font-medium text-gray-800">{payment.method}</p>
-                                </div>
-                                <div className="text-right">
-                                    <span className="text-xs text-gray-500">Amount</span>
-                                    <p className="text-sm font-medium text-green-600">{formatCurrency(payment.amount)}</p>
+                                <div className="col-span-12 md:col-span-6 grid grid-cols-12 gap-3 items-center">
+                                    <input type="number" name="quantity" placeholder="Qty" value={item.quantity} onChange={(e) => handleItemChange(index, e)} className="col-span-4 md:col-span-3 p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 border border-gray-300 dark:border-gray-600 rounded-md"/>
+                                    <input type="number" name="rate" placeholder="Rate" value={item.rate} onChange={(e) => handleItemChange(index, e)} className="col-span-4 md:col-span-3 p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 border border-gray-300 dark:border-gray-600 rounded-md"/>
+                                    <span className="col-span-3 md:col-span-4 text-center font-medium dark:text-white">{formatCurrency((item.quantity || 0) * (item.rate || 0))}</span>
+                                    <button type="button" onClick={() => removeItem(index)} className="col-span-1 md:col-span-2 flex justify-center text-red-500 hover:text-red-700">
+                                        <Trash2 className="h-5 w-5" />
+                                    </button>
                                 </div>
                             </div>
                         ))}
                     </div>
+                    <button type="button" onClick={addItem} className="mt-4 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">+ Add Item</button>
                 </div>
-            )}
+                
+                <div className="mt-6 border-t dark:border-gray-700 pt-4">
+                    <div className="flex justify-end">
+                        <div className="w-full max-w-sm space-y-2">
+                            <div className="flex justify-between">
+                                <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                                <span className="font-medium dark:text-white">{formatCurrency(subtotal)}</span>
+                            </div>
+                            <div className="flex justify-between" title="This is the total outstanding balance from this customer's previous invoices, calculated automatically.">
+                                <span className="text-gray-600 dark:text-gray-400 border-b border-dotted cursor-help">Previous Due:</span>
+                                <span className="font-medium dark:text-white">{formatCurrency(formData.previousDue)}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <label htmlFor="discount" className="text-gray-600 dark:text-gray-400">Discount:</label>
+                                <div className="flex items-center">
+                                    <span className="mr-1 text-gray-600 dark:text-gray-400">৳</span>
+                                    <input 
+                                        type="number" 
+                                        id="discount"
+                                        name="discount"
+                                        value={formData.discount} 
+                                        onChange={handleChange}
+                                        className="w-24 p-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 border border-gray-300 dark:border-gray-600 rounded-md text-right shadow-sm"
+                                        placeholder="0.00"
+                                        aria-describedby="discount-description"
+                                    />
+                                </div>
+                            </div>
+                            <p id="discount-description" className="text-xs text-gray-500 dark:text-gray-400 text-right -mt-1">A flat amount subtracted from the total.</p>
+                            <div className="flex justify-between border-t dark:border-gray-700 pt-2 mt-2">
+                                <span className="font-bold text-xl dark:text-white">Grand Total:</span>
+                                <span className="font-bold text-xl dark:text-white">{formatCurrency(grandTotal)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t mt-6">
-                 <div>
-                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
-                    <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows={4} className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"></textarea>
-                    <p className="text-xs text-gray-500 mt-1">This will be visible to the customer on the final invoice.</p>
-                 </div>
-                 <div className="space-y-4">
+                {formData.payments.length > 0 && (
+                    <div className="mt-6 border-t dark:border-gray-700 pt-4">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Payments Received</h3>
+                        <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
+                            {formData.payments.map(payment => (
+                                <div key={payment.id} className="grid grid-cols-3 gap-4 p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                    <div>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">Date</span>
+                                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{payment.date}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">Method</span>
+                                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{payment.method}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">Amount</span>
+                                        <p className="text-sm font-medium text-green-600">{formatCurrency(payment.amount)}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t dark:border-gray-700 mt-6">
                     <div>
-                        <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
-                        <select 
-                            id="status" 
-                            name="status" 
-                            value={formData.status} 
-                            onChange={handleChange} 
-                            className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
-                            disabled={!manuallySetableStatuses.includes(formData.status)}
-                        >
-                            {manuallySetableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
-                            {!manuallySetableStatuses.includes(formData.status) && <option value={formData.status}>{formData.status}</option>}
-                        </select>
-                        {!manuallySetableStatuses.includes(formData.status) && (
-                            <p className="text-xs text-gray-500 mt-1">Status is updated automatically by payments.</p>
+                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                        <textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} rows={4} className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"></textarea>
+                        <p id="notes-description" className="text-xs text-gray-500 dark:text-gray-400 mt-1">This will be visible to the customer on the final invoice.</p>
+                    </div>
+                    <div className="space-y-4">
+                        <div>
+                            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                            <select 
+                                id="status" 
+                                name="status" 
+                                value={formData.status} 
+                                onChange={handleChange} 
+                                className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
+                                disabled={!manuallySetableStatuses.includes(formData.status)}
+                            >
+                                {manuallySetableStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                                {!manuallySetableStatuses.includes(formData.status) && <option value={formData.status}>{formData.status}</option>}
+                            </select>
+                            {!manuallySetableStatuses.includes(formData.status) && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Status is updated automatically by payments.</p>
+                            )}
+                        </div>
+                        <div className="relative flex items-start">
+                            <div className="flex items-center h-5">
+                                <input
+                                    id="reminder"
+                                    aria-describedby="reminder-description"
+                                    name="reminder"
+                                    type="checkbox"
+                                    checked={reminderEnabled}
+                                    onChange={handleReminderToggle}
+                                    className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                                />
+                            </div>
+                            <div className="ml-3 text-sm">
+                                <label htmlFor="reminder" className="font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                                    <Bell className="h-4 w-4 mr-1 text-yellow-600"/>
+                                    Set Payment Reminder
+                                </label>
+                                <p id="reminder-description" className="text-gray-500 dark:text-gray-400 text-xs">A notification will be generated on the reminder date.</p>
+                            </div>
+                        </div>
+                        {reminderEnabled && (
+                            <div>
+                                <label htmlFor="reminderDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Reminder Date</label>
+                                <input 
+                                    type="date" 
+                                    id="reminderDate" 
+                                    name="reminderDate" 
+                                    value={formData.reminderDate || ''} 
+                                    onChange={handleReminderDateChange}
+                                    className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
+                                />
+                            </div>
                         )}
                     </div>
-                    <div className="relative flex items-start">
-                        <div className="flex items-center h-5">
-                            <input
-                                id="reminder"
-                                aria-describedby="reminder-description"
-                                name="reminder"
-                                type="checkbox"
-                                checked={reminderEnabled}
-                                onChange={handleReminderToggle}
-                                className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                            />
-                        </div>
-                        <div className="ml-3 text-sm">
-                            <label htmlFor="reminder" className="font-medium text-gray-700 flex items-center">
-                                <Bell className="h-4 w-4 mr-1 text-yellow-600"/>
-                                Set Payment Reminder
-                            </label>
-                            <p id="reminder-description" className="text-gray-500 text-xs">A notification will be generated on the reminder date.</p>
-                        </div>
-                    </div>
-                     {reminderEnabled && (
-                        <div>
-                            <label htmlFor="reminderDate" className="block text-sm font-medium text-gray-700">Reminder Date</label>
-                            <input 
-                                type="date" 
-                                id="reminderDate" 
-                                name="reminderDate" 
-                                value={formData.reminderDate || ''} 
-                                onChange={handleReminderDateChange}
-                                className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
-                            />
-                        </div>
-                    )}
-                 </div>
-            </div>
+                </div>
 
-            <div className="border-t pt-6 mt-6">
-                <label htmlFor="selectedTerms" className="block text-sm font-medium text-gray-700">Terms & Conditions</label>
-                <select 
-                    id="selectedTerms"
-                    name="selectedTerms"
-                    multiple
-                    value={formData.selectedTerms}
-                    onChange={handleTermsChange}
-                    className="mt-1 block w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm h-24"
+                <div className="border-t dark:border-gray-700 pt-6 mt-6">
+                    <label htmlFor="selectedTerms" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Terms & Conditions</label>
+                    <select 
+                        id="selectedTerms"
+                        name="selectedTerms"
+                        multiple
+                        value={formData.selectedTerms}
+                        onChange={handleTermsChange}
+                        className="mt-1 block w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm h-24"
+                    >
+                        {(state.settings.invoiceTerms || []).map(term => (
+                            <option key={term.id} value={term.text}>{term.text}</option>
+                        ))}
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple terms.</p>
+                </div>
+            </main>
+            <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-lg sticky bottom-0">
+                <button type="button" onClick={onClose} className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500" disabled={isSaving}>Cancel</button>
+                <button 
+                    type="submit" 
+                    className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center w-36 disabled:opacity-75"
+                    disabled={isSaving}
                 >
-                    {(state.settings.invoiceTerms || []).map(term => (
-                        <option key={term.id} value={term.text}>{term.text}</option>
-                    ))}
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Hold Ctrl (or Cmd on Mac) to select multiple terms.</p>
-            </div>
-        </main>
-        <footer className="flex-shrink-0 flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-lg sticky bottom-0">
-            <button type="button" onClick={onClose} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300" disabled={isSaving}>Cancel</button>
-            <button 
-                type="submit" 
-                className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light flex items-center justify-center w-36 disabled:opacity-75"
-                disabled={isSaving}
-            >
-                {isSaving ? (
-                    <>
-                        <LoaderCircle className="animate-spin h-5 w-5 mr-2" />
-                        Saving...
-                    </>
-                ) : (
-                    invoice ? 'Update Invoice' : 'Save Invoice'
-                )}
-            </button>
-        </footer>
-      </form>
+                    {isSaving ? (
+                        <>
+                            <LoaderCircle className="animate-spin h-5 w-5 mr-2" />
+                            Saving...
+                        </>
+                    ) : (
+                        invoice ? 'Update Invoice' : 'Save Invoice'
+                    )}
+                </button>
+            </footer>
+        </form>
+      </div>
     </div>
     {showCustomerForm && (
         <CustomerForm 

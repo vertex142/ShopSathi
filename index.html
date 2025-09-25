@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
@@ -19,11 +20,33 @@
       }
     </script>
     <style>
+      :root {
+        --bg-color: #f3f4f6;
+        --text-color: #1f2937;
+        --card-bg: #ffffff;
+        --border-color: #e5e7eb;
+      }
+      html.dark {
+        --bg-color: #111827;
+        --text-color: #f9fafb;
+        --card-bg: #1f2937;
+        --border-color: #374151;
+      }
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
       /* --- SCREEN STYLES --- */
       /* Hide repeating print header/footer on screen */
       .printable-header,
       .printable-footer {
         display: none;
+      }
+
+      /* Modal backdrop blur */
+      .modal-backdrop {
+        backdrop-filter: blur(4px);
       }
       
       /* --- NEW SVG HEADER STYLES --- */
@@ -81,7 +104,7 @@
 }
 </script>
 </head>
-  <body class="bg-gray-100">
+  <body class="bg-gray-100 dark:bg-gray-900">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>

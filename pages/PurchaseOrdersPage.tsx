@@ -4,8 +4,10 @@ import { PurchaseOrder, PurchaseOrderStatus } from '../types';
 import PurchaseOrderForm from '../components/PurchaseOrderForm';
 import PurchaseOrderPreview from '../components/PurchaseOrderPreview';
 import StatusEditor from '../components/StatusEditor';
-import { Search, X, Eye, Edit, Trash2 } from 'lucide-react';
+import { Search, X, Eye, Edit, Trash2, ShoppingCart } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
+import SearchableSelect from '../components/SearchableSelect';
+import EmptyState from '../components/EmptyState';
 
 interface PurchaseOrdersPageProps {
     onViewSupplier: (supplierId: string) => void;
@@ -20,6 +22,11 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSupplier, setFilterSupplier] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  
+  const supplierOptions = useMemo(() => [
+    { value: '', label: 'All Suppliers' },
+    ...state.suppliers.map(s => ({ value: s.id, label: s.name }))
+  ], [state.suppliers]);
 
   const handleEdit = (po: PurchaseOrder) => {
     setSelectedPO(po);
@@ -83,13 +90,13 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
   return (
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Purchase Orders</h1>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Purchase Orders</h1>
         <button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">
           Add New PO
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6 space-y-4">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative md:col-span-2">
             <input
@@ -97,24 +104,20 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
               placeholder="Search PO #"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 pl-10 bg-white text-gray-900 placeholder:text-gray-500 border border-gray-300 rounded-md shadow-sm"
+              className="w-full p-2 pl-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           </div>
-          <select
+          <SearchableSelect
             value={filterSupplier}
-            onChange={(e) => setFilterSupplier(e.target.value)}
-            className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
-          >
-            <option value="">All Suppliers</option>
-            {state.suppliers.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+            onChange={setFilterSupplier}
+            options={supplierOptions}
+            placeholder="All Suppliers"
+          />
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full p-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm"
+            className="w-full p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
           >
             <option value="">All Statuses</option>
             {Object.values(PurchaseOrderStatus).map((s) => (
@@ -124,7 +127,7 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
           <div className="md:col-span-4 flex justify-end">
             <button
                 onClick={handleResetFilters}
-                className="flex items-center justify-center p-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300"
+                className="flex items-center justify-center p-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500"
             >
                 <X className="h-4 w-4 mr-2" />
                 Reset
@@ -133,67 +136,68 @@ const PurchaseOrdersPage: React.FC<PurchaseOrdersPageProps> = React.memo(({ onVi
         </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PO #</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance Due</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPOs.length > 0 ? (
-                filteredPOs.map((po) => {
-                  const supplier = state.suppliers.find(s => s.id === po.supplierId);
-                  const { grandTotal, totalPaid, balanceDue } = getPOTotals(po);
-                  return (
-                    <tr key={po.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{po.poNumber}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button onClick={() => onViewSupplier(po.supplierId)} className="hover:underline text-brand-blue">
-                            {supplier?.name || 'N/A'}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{po.orderDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">{formatCurrency(grandTotal)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{formatCurrency(totalPaid)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <StatusEditor
-                            item={po}
-                            status={po.status}
-                            statusEnum={PurchaseOrderStatus}
-                            updateActionType="UPDATE_PURCHASE_ORDER"
-                            getStatusColor={getStatusColor}
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end items-center space-x-1">
-                          <button onClick={() => setPoToPreview(po)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview PO"><Eye className="h-4 w-4"/></button>
-                          <button onClick={() => handleEdit(po)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit PO"><Edit className="h-4 w-4"/></button>
-                          <button onClick={() => handleDelete(po.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete PO"><Trash2 className="h-4 w-4"/></button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              ) : (
+      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+        {filteredPOs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <td colSpan={8} className="text-center py-10 text-gray-500">
-                    No purchase orders found.
-                  </td>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">PO #</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Supplier</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paid</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Balance Due</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredPOs.map((po) => {
+                    const supplier = state.suppliers.find(s => s.id === po.supplierId);
+                    const { grandTotal, totalPaid, balanceDue } = getPOTotals(po);
+                    return (
+                      <tr key={po.id} className="dark:hover:bg-gray-700/50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{po.poNumber}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                          <button onClick={() => onViewSupplier(po.supplierId)} className="hover:underline text-brand-blue">
+                              {supplier?.name || 'N/A'}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{po.orderDate}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(grandTotal)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">{formatCurrency(totalPaid)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600">{formatCurrency(balanceDue)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <StatusEditor
+                              item={po}
+                              status={po.status}
+                              statusEnum={PurchaseOrderStatus}
+                              updateActionType="UPDATE_PURCHASE_ORDER"
+                              getStatusColor={getStatusColor}
+                          />
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex justify-end items-center space-x-1">
+                            <button onClick={() => setPoToPreview(po)} className="text-blue-600 hover:text-blue-900 p-1" title="Preview PO"><Eye className="h-4 w-4"/></button>
+                            <button onClick={() => handleEdit(po)} className="text-indigo-600 hover:text-indigo-900 p-1" title="Edit PO"><Edit className="h-4 w-4"/></button>
+                            <button onClick={() => handleDelete(po.id)} className="text-red-600 hover:text-red-900 p-1" title="Delete PO"><Trash2 className="h-4 w-4"/></button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+             <EmptyState
+                Icon={ShoppingCart}
+                title="Create Your First Purchase Order"
+                message="Manage your inventory purchases by creating POs for your suppliers."
+                actionButton={<button onClick={handleAddNew} className="bg-brand-blue text-white px-4 py-2 rounded-md hover:bg-brand-blue-light transition-colors">Add New PO</button>}
+            />
+        )}
       </div>
 
       {showForm && (

@@ -88,22 +88,22 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
 
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
       {/* Main Content Area */}
-      <div className="lg:col-span-2 space-y-8">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          <div className="xl:col-span-2">
+      <div className="xl:col-span-2 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
             <GreetingCard />
           </div>
-          <div className="xl:col-span-1">
+          <div className="lg:col-span-1">
             <QuickActions setCurrentPage={setCurrentPage} />
           </div>
         </div>
         
         {process.env.API_KEY && <AIActions />}
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Last 6 Months Overview</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Last 6 Months Overview</h2>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
@@ -116,10 +116,10 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
                   <stop offset="95%" stopColor="#f87171" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <CartesianGrid strokeDasharray="3 3" />
-              <Tooltip formatter={(value: number) => formatCurrency(value)} />
+              <XAxis dataKey="name" stroke="var(--text-color)" />
+              <YAxis stroke="var(--text-color)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)"/>
+              <Tooltip contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border-color)' }} />
               <Legend />
               <Area type="monotone" dataKey="income" stroke="#4ade80" fillOpacity={1} fill="url(#colorIncome)" />
               <Area type="monotone" dataKey="expenses" stroke="#f87171" fillOpacity={1} fill="url(#colorExpenses)" />
@@ -127,22 +127,22 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-           <h2 className="text-xl font-semibold text-gray-700 mb-4">Recent Invoices</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+           <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Recent Invoices</h2>
             <ul className="space-y-4">
                 {state.invoices.slice(0, 5).map(inv => {
                     const customer = state.customers.find(c => c.id === inv.customerId);
                     return (
-                        <li key={inv.id} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-md transition-colors">
+                        <li key={inv.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md transition-colors">
                             <div className="flex items-center space-x-4">
                                 <Avatar name={customer?.name || '?'} />
                                 <div>
-                                    <p className="font-semibold text-gray-800">{inv.invoiceNumber}</p>
-                                    <p className="text-sm text-gray-500">{customer?.name || 'Unknown Customer'}</p>
+                                    <p className="font-semibold text-gray-800 dark:text-gray-100">{inv.invoiceNumber}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{customer?.name || 'Unknown Customer'}</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="font-semibold text-lg text-gray-900">{formatCurrency(getInvoiceTotals(inv).grandTotal)}</p>
+                                <p className="font-semibold text-lg text-gray-900 dark:text-white">{formatCurrency(getInvoiceTotals(inv).grandTotal)}</p>
                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                                     inv.status === InvoiceStatus.Paid ? 'bg-green-100 text-green-800' :
                                     inv.status === InvoiceStatus.PartiallyPaid ? 'bg-yellow-100 text-yellow-800' :
@@ -153,23 +153,23 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
                         </li>
                     )
                 })}
-                 {state.invoices.length === 0 && <p className="text-gray-500 text-center py-4">No invoices yet.</p>}
+                 {state.invoices.length === 0 && <p className="text-gray-500 dark:text-gray-400 text-center py-4">No invoices yet.</p>}
             </ul>
         </div>
       </div>
 
       {/* Sidebar with Stats */}
-      <div className="lg:col-span-1 space-y-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">This Month</h3>
+      <div className="xl:col-span-1 space-y-8">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">This Month</h3>
             <div className="space-y-4">
                 <StatCard title="Income" value={formatCurrency(totalIncomeThisMonth)} IconComponent={CircleDollarSign} color="green" />
                 <StatCard title="Expenses" value={formatCurrency(totalExpensesThisMonth)} IconComponent={TrendingDown} color="red" />
             </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Overall</h3>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Overall</h3>
             <div className="space-y-4">
                 <StatCard title="Total Dues" value={formatCurrency(totalDues)} IconComponent={Clock} color="yellow" />
                 <StatCard title="Total Customers" value={state.customers.length.toString()} IconComponent={Users} color="blue" />
@@ -177,27 +177,27 @@ const DashboardPage: React.FC<DashboardPageProps> = React.memo(({ setCurrentPage
             </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-           <h2 className="text-xl font-semibold text-gray-700 mb-4">Recent Expenses</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+           <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Recent Expenses</h2>
             <ul className="space-y-4">
                 {state.expenses.slice(0, 5).map(exp => {
                     const expenseAccount = state.accounts.find(a => a.id === exp.debitAccountId);
                     return (
-                         <li key={exp.id} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-md transition-colors">
+                         <li key={exp.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md transition-colors">
                             <div className="flex items-center space-x-4">
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600">
                                     <TrendingDown className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-gray-800">{expenseAccount?.name || 'Uncategorized'}</p>
-                                    <p className="text-sm text-gray-500 max-w-[150px] truncate">{exp.description}</p>
+                                    <p className="font-semibold text-gray-800 dark:text-gray-100">{expenseAccount?.name || 'Uncategorized'}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 max-w-[150px] truncate">{exp.description}</p>
                                 </div>
                             </div>
                             <p className="font-semibold text-lg text-red-600">-{formatCurrency(exp.amount)}</p>
                         </li>
                     );
                 })}
-                {state.expenses.length === 0 && <p className="text-gray-500 text-center py-4">No expenses recorded yet.</p>}
+                {state.expenses.length === 0 && <p className="text-gray-500 dark:text-gray-400 text-center py-4">No expenses recorded yet.</p>}
             </ul>
         </div>
       </div>
